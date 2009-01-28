@@ -12,8 +12,7 @@ proc_relations = getattr(settings, 'SUPERTAGGING_PROCESS_RELATIONS', True)
 proc_topics = getattr(settings, 'SUPERTAGGING_PROCESS_TOPICS', True)
 debug = getattr(settings, 'SUPERTAGGING_DEBUG', False)
 exclusions = getattr(settings, 'SUPERTAGGING_TAG_TYPE_EXCLUSIONS', [])
-
-
+api_key = getattr(settings, 'SUPERTAGGING_CALAIS_API_KEY')
 
 def save_handler(sender, **kwargs):
     try:
@@ -39,7 +38,7 @@ def save_handler(sender, **kwargs):
             else:
                 data = unicode_to_ascii(unicode(data), 'utf-8')
             
-            process(field, data, inst, process_type, user_dir, proc_dir, proc_relations, proc_topics, exclusions)
+            process(api_key, field, data, inst, process_type, user_dir, proc_dir, proc_relations, proc_topics, exclusions)
     except Exception, e:
         if debug: raise Exception(e)
         

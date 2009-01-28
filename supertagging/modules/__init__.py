@@ -7,22 +7,25 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 
-
-from calais import Calais
+try:
+    from calais import Calais
+except ImportError:
+    Calais = None
 
 from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem
 
-API_KEY = getattr(settings, 'SUPERTAGGING_CALAIS_API_KEY')
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
-def process(field, data, obj, process_type, user_directives, processing_directives, process_relations, process_topics, exclusions):
+def process(api_key, field, data, obj, process_type, user_directives, processing_directives, process_relations, process_topics, exclusions):
     """
     Process the data.
     """
+    if not Calais:
+        raise "python-calais module was not found."
     # Create the instance of Calais and setup the parameters,
     # see open-calais.com for more information about user directives,
     # and processing directives
-    c = Calais(API_KEY)
+    c = Calais(api_key)
     c.user_directives.update(user_directives)
     c.processing_directives.update(processing_directives)
     c.processing_directives['contentType'] = process_type
