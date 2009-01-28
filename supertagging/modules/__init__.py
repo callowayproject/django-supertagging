@@ -16,7 +16,8 @@ from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, Sup
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
-def process(api_key, field, data, obj, process_type, user_directives, processing_directives, process_relations, process_topics, exclusions):
+def process(api_key, field, data, obj, process_type='TEXT/RAW', user_directives={}, 
+            processing_directive={}, process_relations=False, process_topics=False, exclusions=[]):
     """
     Process the data.
     """
