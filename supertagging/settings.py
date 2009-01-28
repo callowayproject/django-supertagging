@@ -7,6 +7,8 @@ CALAIS_PROCESING_DIRECTIVES = {}
 CALAIS_EXTERNAL_METADATA = {}
 CALAIS_PROCESS_RELATIONS = True
 CALAIS_PROCESS_TOPICS = True
+# IS THIS REALLY NEEDED?
+CALAIS_ENTITY_TYPE_EXCLUSIONS = ['URL',]
 CALAIS_MODULES = {
     'app.model': {'fields':({'name': 'content', 'content_type':'TEXT/RAW'},
                             {'name': 'tease',},)}
