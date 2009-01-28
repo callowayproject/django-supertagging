@@ -1,10 +1,10 @@
 from django.contrib import admin
 
 class SuperTagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'properties' )
+    list_display = ('name', 'stype', 'properties' )
     ordering = ('name', )
-    search_fields = ('type', 'name', )
-    list_filter = ('type', )
+    search_fields = ('stype', 'name', )
+    list_filter = ('stype', )
     
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
@@ -16,7 +16,7 @@ class SuperTaggedRelationItemAdmin(admin.ModelAdmin):
     
     
 class SuperTagRelationAdmin(admin.ModelAdmin):
-    list_display = ('tag', 'name', 'type', 'properties')
+    list_display = ('tag', 'name', 'stype', 'properties')
     ordering = ('tag', )
-    search_fields = ('type', 'name', 'tag')
-    list_filter = ('type', 'name', )
+    search_fields = ('stype', 'name', 'tag')
+    list_filter = ('stype', 'name', )
