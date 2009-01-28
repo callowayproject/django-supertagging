@@ -5,22 +5,24 @@ from django.conf import settings
 from supertagging.modules import process, clean_up
 from supertagging.utils import unicode_to_ascii
 
-mod = getattr(settings, 'CALAIS_MODULES', {})
-user_dir = getattr(settings, 'CALAIS_USER_DIRECTIVES', {})
-proc_dir = getattr(settings, 'CALAIS_PROCESSING_DIRECTIVES', {})
-proc_relations = getattr(settings, 'CALAIS_PROCESS_RELATIONS', True)
-proc_topics = getattr(settings, 'CALAIS_PROCESS_TOPICS', True)
-debug = getattr(settings, 'CALAUS_DEBUG', False)
-exclusions = getattr(settings, 'CALAIS_ENTITY_TYPE_EXCLUSIONS', [])
+mod = getattr(settings, 'SUPERTAGGING_MODULES', {})
+user_dir = getattr(settings, 'SUPERTAGGING_CALAIS_USER_DIRECTIVES', {})
+proc_dir = getattr(settings, 'SUPERTAGGING_CALAIS_PROCESSING_DIRECTIVES', {})
+proc_relations = getattr(settings, 'SUPERTAGGING_PROCESS_RELATIONS', True)
+proc_topics = getattr(settings, 'SUPERTAGGING_PROCESS_TOPICS', True)
+debug = getattr(settings, 'SUPERTAGGING_DEBUG', False)
+exclusions = getattr(settings, 'SUPERTAGGING_TAG_TYPE_EXCLUSIONS', [])
+
+
 
 def save_handler(sender, **kwargs):
     try:
         inst = kwargs['instance']
         params = mod['%s.%s' % (sender._meta.app_label, sender._meta.module_name)]
         
-        defaut_cont_type = 'TEXT/RAW'
+        default_process_type = 'TEXT/RAW'
         if 'contentType' in proc_dir:
-            defaut_cont_type = proc_dir['contentType']
+            default_process_type = proc_dir['contentType']
             
         if 'fields' not in params:
             raise Exception('No "fields" found.')
@@ -28,7 +30,7 @@ def save_handler(sender, **kwargs):
         for item in params['fields']:
             d = item.copy()
             field = d.pop('name')
-            content_type = d.pop('content_type', defaut_cont_type)
+            process_type = d.pop('process_type', default_process_type)
             
             data = getattr(inst, field)
             # This is really needed?
@@ -37,7 +39,7 @@ def save_handler(sender, **kwargs):
             else:
                 data = unicode_to_ascii(unicode(data), 'utf-8')
             
-            process(field, data, inst, content_type, user_dir, proc_dir, proc_relations, proc_topics, exclusions)
+            process(field, data, inst, process_type, user_dir, proc_dir, proc_relations, proc_topics, exclusions)
     except Exception, e:
         if debug: raise Exception(e)
         
