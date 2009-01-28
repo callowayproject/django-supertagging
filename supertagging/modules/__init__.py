@@ -12,10 +12,10 @@ from calais import Calais
 
 from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem
 
-API_KEY = getattr(settings, 'CALAIS_API_KEY')
+API_KEY = getattr(settings, 'SUPERTAGGING_CALAIS_API_KEY')
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
-def process(field, data, obj, content_type, user_directives, processing_directives, process_relations, process_topics, exclusions):
+def process(field, data, obj, process_type, user_directives, processing_directives, process_relations, process_topics, exclusions):
     """
     Process the data.
     """
@@ -25,25 +25,25 @@ def process(field, data, obj, content_type, user_directives, processing_directiv
     c = Calais(API_KEY)
     c.user_directives.update(user_directives)
     c.processing_directives.update(processing_directives)
-    c.processing_directives['contentType'] = content_type
+    c.processing_directives['contentType'] = process_type
     # Analyze the text (data)
     result = c.analyze(data)
     
     # Retrieve the Django content type for the obj
-    cont_type = ContentType.objects.get_for_model(obj)
+    ctype = ContentType.objects.get_for_model(obj)
     # Remove existing items, this ensures tagged items are updated correctly
-    SuperTaggedItem.objects.filter(content_type=cont_type, object_id=obj.pk, field=field).delete()
-    SuperTaggedRelationItem.objects.filter(content_type=cont_type, object_id=obj.pk, field=field).delete()
+    SuperTaggedItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
+    SuperTaggedRelationItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
     
     # Process entities, relations and topics
     if hasattr(result, 'entities'):
-        entities = _processEntities(field, result.entities, obj, cont_type, exclusions)
+        entities = _processEntities(field, result.entities, obj, ctype, exclusions, process_type)
         
     if hasattr(result, 'relations') and process_relations:
-        relations = _processRelations(field, result.relations, obj, cont_type)
+        relations = _processRelations(field, result.relations, obj, ctype, process_type)
         
     if hasattr(result, 'topics') and process_topics:
-        topics =  _processTopics(field, result.topics, obj, cont_type)
+        topics =  _processTopics(field, result.topics, obj, ctype)
     
 def clean_up(obj):
     """
@@ -56,7 +56,7 @@ def clean_up(obj):
     # TODO, clean up tags that are no related items?
     # Same for relations?
     
-def _processEntities(field, data, obj, cont_type, exclusions):
+def _processEntities(field, data, obj, ctype, exclusions, process_type):
     """
     Process Entities.
     """
@@ -83,14 +83,14 @@ def _processEntities(field, data, obj, cont_type, exclusions):
             # should elimiate entities returned with different names such as 
             # 'Washington' and 'Washington DC' but same id
             try:
-                mit = SuperTaggedItem.objects.get(tag=tag, content_type=cont_type, object_id=obj.pk, field=field)
+                mit = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, object_id=obj.pk, field=field)
                 mit.instances.append(inst)
                 mit.save()
             except SuperTaggedItem.DoesNotExist:
                 # Create the record that will associate content to tags
-                it = SuperTaggedItem.objects.create(tag=tag, content_type=cont_type, object_id=obj.pk, field=field, relevance=rel, instances=inst)
+                it = SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, relevance=rel, instances=inst)
         
-def _processRelations(field, data, obj, cont_type):
+def _processRelations(field, data, obj, ctype, process_type):
     """
     Process Relations
     """
@@ -126,9 +126,9 @@ def _processRelations(field, data, obj, cont_type):
             entity = SuperTag.objects.get(pk=entity_value)
             rel_item, rel_created = SuperTagRelation.objects.get_or_create(tag=entity, name=entity_key, stype=rel_type, properties=_vals)
             
-            SuperTaggedRelationItem.objects.create(relation=rel_item, content_type=cont_type, object_id=obj.pk, field=field, instances=inst) 
+            SuperTaggedRelationItem.objects.create(relation=rel_item, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, instances=inst) 
             
-def _processTopics(field, data, obj, cont_type):
+def _processTopics(field, data, obj, ctype):
     """
     Process Topics, this opertaion is similar to _processEntities, the only
     difference is that there are no instances
@@ -148,7 +148,7 @@ def _processTopics(field, data, obj, cont_type):
         tag.properties = di
         tag.save()
         
-        SuperTaggedItem.objects.create(tag=tag, content_type=cont_type, object_id=obj.pk, field=field)
+        SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field)
         
 def _getEntityText(key):
     """
