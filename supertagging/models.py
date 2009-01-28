@@ -373,6 +373,7 @@ class SuperTaggedItem(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     field = models.CharField(max_length=100)
+    process_type = models.CharField(max_length=20, null=True, blank=True)
     relevance = models.IntegerField(null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
     
@@ -388,6 +389,7 @@ class SuperTaggedRelationItem(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     field = models.CharField(max_length=100)
+    process_type = models.CharField(max_length=20, null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
     
     objects = SuperTaggedRelationItemManager()
