@@ -5,6 +5,8 @@ Django-SuperTagging
 import re
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.template.defaultfilters import slugify
+
 
 from calais import Calais
 
@@ -13,7 +15,7 @@ from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, Sup
 API_KEY = getattr(settings, 'CALAIS_API_KEY')
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
-def process(field, data, obj, content_type, user_directives, processing_directives, process_relations, process_topics):
+def process(field, data, obj, content_type, user_directives, processing_directives, process_relations, process_topics, exclusions):
     """
     Process the data.
     """
@@ -35,7 +37,7 @@ def process(field, data, obj, content_type, user_directives, processing_directiv
     
     # Process entities, relations and topics
     if hasattr(result, 'entities'):
-        entities = _processEntities(field, result.entities, obj, cont_type)
+        entities = _processEntities(field, result.entities, obj, cont_type, exclusions)
         
     if hasattr(result, 'relations') and process_relations:
         relations = _processRelations(field, result.relations, obj, cont_type)
@@ -54,7 +56,7 @@ def clean_up(obj):
     # TODO, clean up tags that are no related items?
     # Same for relations?
     
-def _processEntities(field, data, obj, cont_type):
+def _processEntities(field, data, obj, cont_type, exclusions):
     """
     Process Entities.
     """
@@ -64,17 +66,29 @@ def _processEntities(field, data, obj, cont_type):
         inst = entity.pop('instances', {})
         
         pk = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
-        type = entity.pop('_type', '')
-        name = entity.pop('name', '').lower()
-        try:
-            tag = SuperTag.objects.get(pk=pk)
-        except SuperTag.DoesNotExist:
-            tag = SuperTag.objects.create(id=pk, type=type, name=name)
+        stype = entity.pop('_type', '')
         
-        tag.properties = entity
-        tag.save() 
-        # Create the record that will associate content to tags
-        it = SuperTaggedItem.objects.create(tag=tag, content_type=cont_type, object_id=obj.pk, field=field, relevance=rel, instances=inst)
+        if stype.lower() not in exclusions:
+            name = entity.pop('name', '').lower()
+            slug = slugify(name)
+            try:
+                tag = SuperTag.objects.get(pk=pk)
+            except SuperTag.DoesNotExist:
+                tag = SuperTag.objects.create(id=pk, slug=slug, stype=stype, name=name)
+        
+            tag.properties = entity
+            tag.save() 
+            #TODO: check to make sure that the entity is not already attached
+            # to the content object, if it is, just append the instances. This
+            # should elimiate entities returned with different names such as 
+            # 'Washington' and 'Washington DC' but same id
+            try:
+                mit = SuperTaggedItem.objects.get(tag=tag, content_type=cont_type, object_id=obj.pk, field=field)
+                mit.instances.append(inst)
+                mit.save()
+            except SuperTaggedItem.DoesNotExist:
+                # Create the record that will associate content to tags
+                it = SuperTaggedItem.objects.create(tag=tag, content_type=cont_type, object_id=obj.pk, field=field, relevance=rel, instances=inst)
         
 def _processRelations(field, data, obj, cont_type):
     """
@@ -110,7 +124,7 @@ def _processRelations(field, data, obj, cont_type):
             _vals.update(props)
             
             entity = SuperTag.objects.get(pk=entity_value)
-            rel_item, rel_created = SuperTagRelation.objects.get_or_create(tag=entity, name=entity_key, type=rel_type, properties=_vals)
+            rel_item, rel_created = SuperTagRelation.objects.get_or_create(tag=entity, name=entity_key, stype=rel_type, properties=_vals)
             
             SuperTaggedRelationItem.objects.create(relation=rel_item, content_type=cont_type, object_id=obj.pk, field=field, instances=inst) 
             
@@ -123,12 +137,13 @@ def _processTopics(field, data, obj, cont_type):
         di.pop('__reference')
         
         pk = re.match(REF_REGEX, str(di.pop('category'))).group('key')
-        type = 'Topic',
+        stype = 'Topic'
         name = di.pop('categoryName', '').lower()
+        slug = slugify(name)
         try:
             tag = SuperTag.objects.get(pk=pk)
         except SuperTag.DoesNotExist:
-            tag = SuperTag.objects.create(id=pk, type=type, name=name)
+            tag = SuperTag.objects.create(id=pk, slug=slug, stype=stype, name=name)
             
         tag.properties = di
         tag.save()

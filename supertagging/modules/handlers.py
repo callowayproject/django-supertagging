@@ -11,6 +11,7 @@ proc_dir = getattr(settings, 'CALAIS_PROCESSING_DIRECTIVES', {})
 proc_relations = getattr(settings, 'CALAIS_PROCESS_RELATIONS', True)
 proc_topics = getattr(settings, 'CALAIS_PROCESS_TOPICS', True)
 debug = getattr(settings, 'CALAUS_DEBUG', False)
+exclusions = getattr(settings, 'CALAIS_ENTITY_TYPE_EXCLUSIONS', [])
 
 def save_handler(sender, **kwargs):
     try:
@@ -36,7 +37,7 @@ def save_handler(sender, **kwargs):
             else:
                 data = unicode_to_ascii(unicode(data), 'utf-8')
             
-            process(field, data, inst, content_type, user_dir, proc_dir, proc_relations, proc_topics)
+            process(field, data, inst, content_type, user_dir, proc_dir, proc_relations, proc_topics, exclusions)
     except Exception, e:
         if debug: raise Exception(e)
         
