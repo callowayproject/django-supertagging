@@ -16,8 +16,10 @@ from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, Sup
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
+RESOLVE_KEYS = getattr(settings, 'SUPERTAGGING_RESOLVE_PROPERTY_KEYS', False)
+
 def process(api_key, field, data, obj, process_type='TEXT/RAW', user_directives={}, 
-            processing_directive={}, process_relations=False, process_topics=False, exclusions=[]):
+            processing_directives={}, process_relations=False, process_topics=False, exclusions=[]):
     """
     Process the data.
     """
@@ -158,9 +160,12 @@ def _getEntityText(key):
     """
     Try to resolve the entity given the key
     """
-    try:
-        r = SuperTag.objects.get(pk=key)
-        return r.name
-    except SuperTag.DoesNotExist:
-        return key
+    if RESOLVE_KEYS:
+        try:
+            r = SuperTag.objects.get(pk=key)
+            return r.name
+        except SuperTag.DoesNotExist:
+            return key
+    
+    return key
         

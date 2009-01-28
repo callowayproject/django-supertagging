@@ -18,3 +18,7 @@ SUPERTAGGING_MODULES = {
     'app.model': {'fields':({'name': 'content', 'content_type':'TEXT/RAW'},
                             {'name': 'tease',},)}
 }
+# This value will try to resolve the key's found in a property list
+# so that the name of the tag will be available, if True, this will
+# result in extra lookups
+SUPERTAGGING_RESOLVE_PROPERTY_KEYS = True
