@@ -2,7 +2,7 @@ from django.db import models, connection
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
-from supertagging.modules.fields import PickledObjectField
+from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
 from supertagging.utils import LOGARITHMIC
 
