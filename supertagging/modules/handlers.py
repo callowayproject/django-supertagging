@@ -32,7 +32,7 @@ def save_handler(sender, **kwargs):
             else:
                 data = unicode_to_ascii(unicode(data), 'utf-8')
             
-            process(field, data, inst, process_type)
+            process(field, data, inst, proc_type)
     except Exception, e:
         if settings.ST_DEBUG: raise Exception(e)
         

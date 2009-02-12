@@ -26,7 +26,7 @@ def process(field, data, obj, process_type='TEXT/RAW'):
     # Create the instance of Calais and setup the parameters,
     # see open-calais.com for more information about user directives,
     # and processing directives
-    c = Calais(api_key)
+    c = Calais(settings.API_KEY)
     c.user_directives.update(settings.USER_DIR)
     c.processing_directives.update(settings.PROCESSING_DIR)
     c.processing_directives['contentType'] = process_type
@@ -41,7 +41,7 @@ def process(field, data, obj, process_type='TEXT/RAW'):
     
     # Process entities, relations and topics
     if hasattr(result, 'entities'):
-        entities = _processEntities(field, result.entities, obj, ctype, exclusions, process_type)
+        entities = _processEntities(field, result.entities, obj, ctype, process_type)
         
     if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
         relations = _processRelations(field, result.relations, obj, ctype, process_type)
@@ -60,7 +60,7 @@ def clean_up(obj):
     # TODO, clean up tags that have no related items?
     # Same for relations?
     
-def _processEntities(field, data, obj, ctype, exclusions, process_type):
+def _processEntities(field, data, obj, ctype, process_type):
     """
     Process Entities.
     """

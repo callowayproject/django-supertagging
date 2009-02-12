@@ -13,7 +13,7 @@ PROCESS_TOPICS = getattr(settings, 'SUPERTAGGING_PROCESS_TOPICS', False)
 ST_DEBUG = getattr(settings, 'SUPERTAGGING_DEBUG', False)
 
 # Tags (name) to exclude
-EXLCUSIONS = getattr(settings, 'SUPERTAGGING_TAG_TYPE_EXCLUSIONS', [])
+EXCLUSIONS = getattr(settings, 'SUPERTAGGING_TAG_TYPE_EXCLUSIONS', [])
 
 # When resolving related tags, resolve the name or keep the UID
 RESOLVE_KEYS = getattr(settings, 'SUPERTAGGING_RESOLVE_PROPERTY_KEYS', True)
