@@ -1,24 +1,22 @@
-# These are all the settings that are used to configure supertagging
+from django.conf import settings
 
-SUPERTAGGING_DEBUG = True
-SUPERTAGGING_CALAIS_API_KEY = 'your key here'
-SUPERTAGGING_CALAIS_USER_DIRECTIVES = {}
-SUPERTAGGING_CALAIS_PROCESING_DIRECTIVES = {}
-SUPERTAGGING_CALAIS_EXTERNAL_METADATA = {}
-SUPERTAGGING_PROCESS_RELATIONS = True
-SUPERTAGGING_PROCESS_TOPICS = True
-# IS THIS REALLY NEEDED?
-# The reason this was added was because url get caught by calais, though 
-# they look bad in the list of tags (the full url), we can handle it here
-# or perhaps the query? Should this method exclude the adding of these types
-# or exclude the query from returning these types?
-SUPERTAGGING_TAG_TYPE_EXCLUSIONS = ['url',]
-#SUPERTAGGING_TAG_TYPE_QUERY_EXCLUSIONS = ['url',]
-SUPERTAGGING_MODULES = {
-    'app.model': {'fields':({'name': 'content', 'content_type':'TEXT/RAW'},
-                            {'name': 'tease',},)}
-}
-# This value will try to resolve the key's found in a property list
-# so that the name of the tag will be available, if True, this will
-# result in extra lookups
-SUPERTAGGING_RESOLVE_PROPERTY_KEYS = True
+DEFAULT_PROCESS_TYPE = 'TEXT/RAW'
+
+# The models/fields to process
+MODULES = getattr(settings, 'SUPERTAGGING_MODULES', {})
+USER_DIR = getattr(settings, 'SUPERTAGGING_CALAIS_USER_DIRECTIVES', {})
+PROCESSING_DIR = getattr(settings, 'SUPERTAGGING_CALAIS_PROCESSING_DIRECTIVES', {})
+PROCESS_RELATIONS = getattr(settings, 'SUPERTAGGING_PROCESS_RELATIONS', False)
+PROCESS_TOPICS = getattr(settings, 'SUPERTAGGING_PROCESS_TOPICS', False)
+
+# If True, raise errors when errors occur
+ST_DEBUG = getattr(settings, 'SUPERTAGGING_DEBUG', False)
+
+# Tags (name) to exclude
+EXLCUSIONS = getattr(settings, 'SUPERTAGGING_TAG_TYPE_EXCLUSIONS', [])
+
+# When resolving related tags, resolve the name or keep the UID
+RESOLVE_KEYS = getattr(settings, 'SUPERTAGGING_RESOLVE_PROPERTY_KEYS', True)
+
+# Your Open-Calais API_KEY
+API_KEY = getattr(settings, 'SUPERTAGGING_CALAIS_API_KEY', None)

@@ -380,7 +380,7 @@ class SuperTaggedItem(models.Model):
     objects = SuperTaggedItemManager()
     
     def __unicode__(self):
-        return self.tag
+        return ''
         
 
 class SuperTaggedRelationItem(models.Model):

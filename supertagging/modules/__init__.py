@@ -12,14 +12,12 @@ try:
 except ImportError:
     Calais = None
 
+from supertagging import settings
 from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
-RESOLVE_KEYS = getattr(settings, 'SUPERTAGGING_RESOLVE_PROPERTY_KEYS', False)
-
-def process(api_key, field, data, obj, process_type='TEXT/RAW', user_directives={}, 
-            processing_directives={}, process_relations=False, process_topics=False, exclusions=[]):
+def process(field, data, obj, process_type='TEXT/RAW'):
     """
     Process the data.
     """
@@ -29,8 +27,8 @@ def process(api_key, field, data, obj, process_type='TEXT/RAW', user_directives=
     # see open-calais.com for more information about user directives,
     # and processing directives
     c = Calais(api_key)
-    c.user_directives.update(user_directives)
-    c.processing_directives.update(processing_directives)
+    c.user_directives.update(settings.USER_DIR)
+    c.processing_directives.update(settings.PROCESSING_DIR)
     c.processing_directives['contentType'] = process_type
     # Analyze the text (data)
     result = c.analyze(data)
@@ -45,10 +43,10 @@ def process(api_key, field, data, obj, process_type='TEXT/RAW', user_directives=
     if hasattr(result, 'entities'):
         entities = _processEntities(field, result.entities, obj, ctype, exclusions, process_type)
         
-    if hasattr(result, 'relations') and process_relations:
+    if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
         relations = _processRelations(field, result.relations, obj, ctype, process_type)
         
-    if hasattr(result, 'topics') and process_topics:
+    if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
         topics =  _processTopics(field, result.topics, obj, ctype)
     
 def clean_up(obj):
@@ -59,7 +57,7 @@ def clean_up(obj):
     SuperTaggedItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
     SuperTaggedRelationItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
     
-    # TODO, clean up tags that are no related items?
+    # TODO, clean up tags that have no related items?
     # Same for relations?
     
 def _processEntities(field, data, obj, ctype, exclusions, process_type):
@@ -74,7 +72,7 @@ def _processEntities(field, data, obj, ctype, exclusions, process_type):
         pk = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
         stype = entity.pop('_type', '')
         
-        if stype.lower() not in exclusions:
+        if stype.lower() not in settings.EXCLUSIONS:
             name = entity.pop('name', '').lower()
             slug = slugify(name)
             try:
@@ -160,7 +158,7 @@ def _getEntityText(key):
     """
     Try to resolve the entity given the key
     """
-    if RESOLVE_KEYS:
+    if settings.RESOLVE_KEYS:
         try:
             r = SuperTag.objects.get(pk=key)
             return r.name

@@ -1,4 +1,8 @@
 from django.contrib import admin
+from django.contrib.contenttypes import generic
+from supertagging.models import SuperTag, SuperTaggedItem
+from django.contrib.contenttypes.models import ContentType
+
 
 class SuperTagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'stype', 'properties' )
@@ -21,3 +25,5 @@ class SuperTagRelationAdmin(admin.ModelAdmin):
     ordering = ('tag', )
     search_fields = ('stype', 'name', 'tag')
     list_filter = ('stype', 'name', )
+    
+

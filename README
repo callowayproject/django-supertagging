@@ -1,0 +1,11 @@
+Django - Super Tagging
+
+Inspired by django-tagging, this project came up when we wanted to 
+automate content tagging. Using OpenCalais service we are able to retrieve
+a large array of data, including basic entities (tags) and relations (attributes
+about the tag).
+
+Prerequisites 
+	- simplejson ( http://pypi.python.org/pypi/simplejson )
+	- python-calais 1.4+ ( http://code.google.com/p/python-calais/ )
+	
