@@ -1,4 +1,4 @@
-Django - Super Tagging
+Django SuperTagging
 
 Inspired by django-tagging, this project came up when we wanted to 
 automate content tagging. Using OpenCalais service we are able to retrieve
@@ -7,5 +7,5 @@ about the tag).
 
 Prerequisites 
 	- simplejson ( http://pypi.python.org/pypi/simplejson )
-	- python-calais 1.4+ ( http://code.google.com/p/python-calais/ )
+	- python-calais 1.4 ( http://code.google.com/p/python-calais/ )
 	
