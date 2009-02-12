@@ -30,7 +30,7 @@ def save_handler(sender, **kwargs):
             if isinstance(data, unicode):
                 data = unicode_to_ascii(data)
             else:
-                data = unicode_to_ascii(unicode(data), 'utf-8')
+                data = unicode_to_ascii(unicode(data, 'utf-8'))
             
             process(field, data, inst, proc_type)
     except Exception, e:
