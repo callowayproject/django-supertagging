@@ -12,9 +12,6 @@ qn = connection.ops.quote_name
 ##   MANAGERS    ##
 ###################
 
-# Some methods were borrowed from django-tagging
-# such as usage_for_model, cloud_for_model, _get_usage, usage_for_queryset
-
 class SuperTagManager(models.Manager):
     
     def get_for_object(self, obj):
@@ -140,8 +137,8 @@ class SuperTagManager(models.Manager):
 
         ``distribution`` defines the type of font size distribution
         algorithm which will be used - logarithmic or linear. It must
-        be either ``tagging.utils.LOGARITHMIC`` or
-        ``tagging.utils.LINEAR``.
+        be either ``supertagging.utils.LOGARITHMIC`` or
+        ``supertagging.utils.LINEAR``.
 
         To limit the tags displayed in the cloud to those associated
         with a subset of the Model's instances, pass a dictionary of
