@@ -227,10 +227,10 @@ def do_tagged_objects(parser, token):
         raise TemplateSyntaxError(_("fourth argument to %s tag must be 'as'") % bits[0])
     return TaggedObjectsNode(bits[1], bits[3], bits[5])
 
-register.tag('tags_for_model', do_tags_for_model)
-register.tag('tag_cloud_for_model', do_tag_cloud_for_model)
-register.tag('tags_for_object', do_tags_for_object)
-register.tag('tagged_objects', do_tagged_objects)
+register.tag('supertags_for_model', do_tags_for_model)
+register.tag('supertag_cloud_for_model', do_tag_cloud_for_model)
+register.tag('supertags_for_object', do_tags_for_object)
+register.tag('supertagged_objects', do_tagged_objects)
 
 
 class RelationsForTagNode(Node):
@@ -266,4 +266,4 @@ def do_relations_for_tag(parser, token):
         raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
     return RelationsForTagNode(bits[1], bits[3])
 
-register.tag('relations_for_tag', do_relations_for_tag)
+register.tag('relations_for_supertag', do_relations_for_tag)
