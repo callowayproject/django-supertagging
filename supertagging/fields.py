@@ -7,31 +7,20 @@ try:
 except ImportError:
     import pickle
 
-class PickledObject(str):
-    """A subclass of string so it can be told whether a string is
-        a pickled object or not (if the object is an instance of this class
-        then it must [well, should] be a pickled one)."""
-    pass
-    
 class PickledObjectField(models.Field):
     __metaclass__ = models.SubfieldBase
     
     def to_python(self, value):
-        if isinstance(value, PickledObject):
-            # If the value is a definite pickle; and an error is raised in de-pickling
-            # it should be allowed to propogate.
+        try:
             return pickle.loads(str(value))
-        else:
-            try:
-                return pickle.loads(str(value))
-            except:
-                # If an error was raised, just return the plain value
-                return value
+        except:
+            # If an error was raised, just return the plain value
+            return value
                 
     def get_db_prep_save(self, value):
-        if value is not None and not isinstance(value, PickledObject):
-            value = PickledObject(pickle.dumps(value))
-        return value
+        if value is not None:
+            value = pickle.dumps(value)
+        return str(value)
         
     def get_internal_type(self): 
         return 'TextField'

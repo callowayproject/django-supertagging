@@ -3,7 +3,7 @@
 
 from django.test import TestCase
 from django.db import models
-from fields import PickledObjectField
+from supertagging.fields import PickledObjectField
 
 class TestingModel(models.Model):
     pickle_field = PickledObjectField()
@@ -38,3 +38,4 @@ class PickledObjectFieldTests(TestCase):
             model_test.save()
             self.assertEquals(value, TestingModel.objects.get(pickle_field__exact=value).pickle_field)
             model_test.delete()
+            
