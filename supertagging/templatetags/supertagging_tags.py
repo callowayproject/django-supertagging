@@ -18,7 +18,7 @@ class TagsForModelNode(Node):
     def render(self, context):
         model = get_model(*self.model.split('.'))
         if model is None:
-            raise TemplateSyntaxError(_('tags_for_model tag was given an invalid model: %s') % self.model)
+            raise TemplateSyntaxError(_('supertags_for_model tag was given an invalid model: %s') % self.model)
         context[self.context_var] = SuperTag.objects.usage_for_model(model, counts=self.counts)
         return ''
 
@@ -31,7 +31,7 @@ class TagCloudForModelNode(Node):
     def render(self, context):
         model = get_model(*self.model.split('.'))
         if model is None:
-            raise TemplateSyntaxError(_('tag_cloud_for_model tag was given an invalid model: %s') % self.model)
+            raise TemplateSyntaxError(_('supertag_cloud_for_model tag was given an invalid model: %s') % self.model)
         context[self.context_var] = \
             SuperTag.objects.cloud_for_model(model, **self.kwargs)
         return ''
@@ -55,7 +55,7 @@ class TaggedObjectsNode(Node):
     def render(self, context):
         model = get_model(*self.model.split('.'))
         if model is None:
-            raise TemplateSyntaxError(_('tagged_objects tag was given an invalid model: %s') % self.model)
+            raise TemplateSyntaxError(_('supertagged_objects tag was given an invalid model: %s') % self.model)
         context[self.context_var] = \
             SuperTaggedItem.objects.get_by_model(model, self.tag.resolve(context))
         return ''
@@ -67,13 +67,13 @@ def do_tags_for_model(parser, token):
 
     Usage::
 
-       {% tags_for_model [model] as [varname] %}
+       {% supertags_for_model [model] as [varname] %}
 
     The model is specified in ``[appname].[modelname]`` format.
 
     Extended usage::
 
-       {% tags_for_model [model] as [varname] with counts %}
+       {% supertags_for_model [model] as [varname] with counts %}
 
     If specified - by providing extra ``with counts`` arguments - adds
     a ``count`` attribute to each tag containing the number of
@@ -81,8 +81,8 @@ def do_tags_for_model(parser, token):
 
     Examples::
 
-       {% tags_for_model products.Widget as widget_tags %}
-       {% tags_for_model products.Widget as widget_tags with counts %}
+       {% supertags_for_model products.Widget as widget_tags %}
+       {% supertags_for_model products.Widget as widget_tags with counts %}
 
     """
     bits = token.contents.split()
@@ -108,13 +108,13 @@ def do_tag_cloud_for_model(parser, token):
 
     Usage::
 
-       {% tag_cloud_for_model [model] as [varname] %}
+       {% supertag_cloud_for_model [model] as [varname] %}
 
     The model is specified in ``[appname].[modelname]`` format.
 
     Extended usage::
 
-       {% tag_cloud_for_model [model] as [varname] with [options] %}
+       {% supertag_cloud_for_model [model] as [varname] with [options] %}
 
     Extra options can be provided after an optional ``with`` argument,
     with each option being specified in ``[name]=[value]`` format. Valid
@@ -133,8 +133,8 @@ def do_tag_cloud_for_model(parser, token):
 
     Examples::
 
-       {% tag_cloud_for_model products.Widget as widget_tags %}
-       {% tag_cloud_for_model products.Widget as widget_tags with steps=9 min_count=3 distribution=log %}
+       {% supertag_cloud_for_model products.Widget as widget_tags %}
+       {% supertag_cloud_for_model products.Widget as widget_tags with steps=9 min_count=3 distribution=log %}
 
     """
     bits = token.contents.split()
@@ -187,11 +187,11 @@ def do_tags_for_object(parser, token):
 
     Usage::
 
-       {% tags_for_object [object] as [varname] %}
+       {% supertags_for_object [object] as [varname] %}
 
     Example::
 
-        {% tags_for_object foo_object as tag_list %}
+        {% supertags_for_object foo_object as tag_list %}
     """
     bits = token.contents.split()
     if len(bits) != 4:
@@ -207,7 +207,7 @@ def do_tagged_objects(parser, token):
 
     Usage::
 
-       {% tagged_objects [tag] in [model] as [varname] %}
+       {% supertagged_objects [tag] in [model] as [varname] %}
 
     The model is specified in ``[appname].[modelname]`` format.
 
@@ -215,7 +215,7 @@ def do_tagged_objects(parser, token):
 
     Example::
 
-        {% tagged_objects comedy_tag in tv.Show as comedies %}
+        {% supertagged_objects comedy_tag in tv.Show as comedies %}
 
     """
     bits = token.contents.split()
