@@ -1,6 +1,7 @@
 from django.db import models, connection
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.template.defaultfilters import slugify
 
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
@@ -13,7 +14,32 @@ qn = connection.ops.quote_name
 ###################
 
 class SuperTagManager(models.Manager):
-    
+    def update_tags(self, obj, tag_names):
+        """
+        Update tags associated with an object.
+        """
+        ctype = ContentType.objects.get_for_model(obj)
+        current_tags = list(self.filter(supertaggeditem__content_type__pk=ctype.pk,
+                                        supertaggeditem__object_id=obj.pk))
+                                        
+        updated_tag_names = parse_tag_input(tag_names)
+        # Always lower case tags
+        updated_tag_names = [t.lower() for t in updated_tag_names]
+
+        from supertagging.modules import process
+        # Process the tags with Calais
+        processed_tags = process(obj, updated_tag_names)
+        
+        for t in updated_tag_names:
+            if t not in [p.name for p in processed_tags]:
+                try:
+                    tag = self.get(name__iexact=t)
+                except:
+                    tag = self.create(id=t, name=t, slug=slugify(t), stype='Custom')
+                    
+                SuperTaggedItem._default_manager.create(tag=tag, content_object=obj, field='None')
+                
+                
     def get_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
 

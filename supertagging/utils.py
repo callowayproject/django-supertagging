@@ -116,10 +116,10 @@ def parse_tag_input(input):
     # Special case - if there are no commas or double quotes in the
     # input, we don't *do* a recall... I mean, we know we only need to
     # split on spaces.
-    if u',' not in input and u'"' not in input:
-        words = list(set(split_strip(input, u' ')))
-        words.sort()
-        return words
+    #if u',' not in input and u'"' not in input:
+    #    words = list(set(split_strip(input, u' ')))
+    #    words.sort()
+    #    return words
 
     words = []
     buffer = []
@@ -250,7 +250,7 @@ def get_tag_list(tags):
     elif isinstance(tags, QuerySet) and tags.model is SuperTag:
         return tags
     elif isinstance(tags, types.StringTypes):
-        return Tag.objects.filter(name__in=parse_tag_input(tags))
+        return SuperTag.objects.filter(name__in=parse_tag_input(tags))
     elif isinstance(tags, (types.ListType, types.TupleType)):
         if len(tags) == 0:
             return tags
@@ -264,7 +264,7 @@ def get_tag_list(tags):
                 contents.add('int')
         if len(contents) == 1:
             if 'string' in contents:
-                return Tag.objects.filter(name__in=[force_unicode(tag) \
+                return SuperTag.objects.filter(name__in=[force_unicode(tag) \
                                                     for tag in tags])
             elif 'tag' in contents:
                 return tags
@@ -286,16 +286,16 @@ def get_tag(tag):
 
     If no matching tag can be found, ``None`` will be returned.
     """
-    from tagging.models import Tag
-    if isinstance(tag, Tag):
+    from supertagging.models import SuperTag
+    if isinstance(tag, SuperTag):
         return tag
 
     try:
         if isinstance(tag, types.StringTypes):
-            return Tag.objects.get(name=tag)
+            return SuperTag.objects.get(name=tag)
         elif isinstance(tag, (types.IntType, types.LongType)):
-            return Tag.objects.get(id=tag)
-    except Tag.DoesNotExist:
+            return SuperTag.objects.get(id=tag)
+    except SuperTag.DoesNotExist:
         pass
 
     return None
