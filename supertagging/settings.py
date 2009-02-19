@@ -12,11 +12,17 @@ PROCESS_TOPICS = getattr(settings, 'SUPERTAGGING_PROCESS_TOPICS', False)
 # If True, raise errors when errors occur
 ST_DEBUG = getattr(settings, 'SUPERTAGGING_DEBUG', False)
 
-# Tags (name) to exclude
+# Tags (name) to exclude, this will exclude tags from being saved.
 EXCLUSIONS = getattr(settings, 'SUPERTAGGING_TAG_TYPE_EXCLUSIONS', [])
+
+# Tags will be saved, but not returned in the queries
+QUERY_EXCLUSIONS = getattr(settings, 'SUPERTAGGING_TAG_TYPE_QUERY_EXCLUSIONS', [])
 
 # When resolving related tags, resolve the name or keep the UID
 RESOLVE_KEYS = getattr(settings, 'SUPERTAGGING_RESOLVE_PROPERTY_KEYS', True)
 
 # Your Open-Calais API_KEY
 API_KEY = getattr(settings, 'SUPERTAGGING_CALAIS_API_KEY', None)
+
+# Auto process tags, (sets up post save and delete signals)
+AUTO_PROCESS = getattr(settings, 'SUPERTAGGING_AUTO_PROCESS', False)
