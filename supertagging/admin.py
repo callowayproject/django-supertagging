@@ -1,6 +1,5 @@
 from django.contrib import admin
-from django.contrib.contenttypes import generic
-from supertagging.models import SuperTag, SuperTaggedItem
+from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -27,3 +26,7 @@ class SuperTagRelationAdmin(admin.ModelAdmin):
     list_filter = ('stype', 'name', )
     
 
+admin.site.register(SuperTag, SuperTagAdmin)
+admin.site.register(SuperTaggedItem, SuperTaggedItemAdmin)
+admin.site.register(SuperTagRelation, SuperTagRelationAdmin)
+admin.site.register(SuperTaggedRelationItem, SuperTaggedRelationItemAdmin)
