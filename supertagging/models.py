@@ -66,7 +66,7 @@ class SuperTagManager(models.Manager):
        model_table = qn(model._meta.db_table)
        model_pk = '%s.%s' % (model_table, qn(model._meta.pk.column))
        query = """
-       SELECT DISTINCT %(tag)s.id, %(tag)s.name%(count_sql)s
+       SELECT DISTINCT %(tag)s.id, %(tag)s.name%(count_sql)s, %(tag)s.slug
        FROM
            %(tag)s
            INNER JOIN %(tagged_item)s
@@ -96,7 +96,7 @@ class SuperTagManager(models.Manager):
        cursor.execute(query % (extra_joins, extra_criteria, min_count_sql), params)
        tags = []
        for row in cursor.fetchall():
-           t = self.model(*row[:2])
+           t = self.model(id=row[0],name=row[1], slug=row[3])
            if counts:
                t.count = row[2]
            tags.append(t)
