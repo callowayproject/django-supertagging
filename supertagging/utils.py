@@ -250,7 +250,8 @@ def get_tag_list(tags):
     elif isinstance(tags, QuerySet) and tags.model is SuperTag:
         return tags
     elif isinstance(tags, types.StringTypes):
-        return SuperTag.objects.filter(name__in=parse_tag_input(tags))
+        return SuperTag.objects.filter(name__in=parse_tag_input(tags))\
+                |SuperTag.objects.filter(slug__in=parse_tag_input(tags))
     elif isinstance(tags, (types.ListType, types.TupleType)):
         if len(tags) == 0:
             return tags
@@ -264,8 +265,8 @@ def get_tag_list(tags):
                 contents.add('int')
         if len(contents) == 1:
             if 'string' in contents:
-                return SuperTag.objects.filter(name__in=[force_unicode(tag) \
-                                                    for tag in tags])
+                return SuperTag.objects.filter(name__in=[force_unicode(tag) for tag in tags])\
+                        |SuperTag.objects.filter(slug__in=[force_unicode(tag) for tag in tags])
             elif 'tag' in contents:
                 return tags
             elif 'int' in contents:
