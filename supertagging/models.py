@@ -33,7 +33,8 @@ class SuperTagManager(models.Manager):
         for t in updated_tag_names:
             if t not in [p.name for p in processed_tags]:
                 try:
-                    tag = self.get(name__iexact=t)
+                    tags = self.filter(name__iexact=t)
+                    tag = tags[0] # Take the first found tag with the same name.
                 except:
                     tag = self.create(id=t, name=t, slug=slugify(t), stype='Custom')
                     
