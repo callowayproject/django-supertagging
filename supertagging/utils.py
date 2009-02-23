@@ -36,6 +36,13 @@ CHAR_REPLACEMENT = {
     0x00BE: u"3/4", # VULGAR FRACTION THREE QUARTERS
     0x2156: u"2/5", # VULGAR FRACTION TWO FIFTHS
     0x2154: u"2/3", # VULGAR FRACTION TWO THIRDS
+    0x2019: 0x0027, 
+    0x201c: 0x0022, 
+    0x201d: 0x0022, 
+    0x2013: u"-", 
+    0x2014: u"-", 
+    0x00e9: u"e", # Note exactly equivalent 
+    0x00a0: 0x0020,
 }
 
 

@@ -53,13 +53,12 @@ def process(obj, tags=[]):
         
         data = getattr(obj, field)
         
-        #if isinstance(data, unicode):
-        #    data = unicode_to_ascii(data)
-        #else:
-        #    data = unicode_to_ascii(unicode(data, 'utf-8'))
+        if isinstance(data, unicode):
+            data = unicode_to_ascii(data)
+        else:
+            data = unicode_to_ascii(unicode(data, 'utf-8'))
 
-            
-        data = force_unicode(getattr(obj, field))
+        #data = force_unicode(getattr(obj, field))
         
         # Analyze the text (data)
         result = c.analyze(data)
