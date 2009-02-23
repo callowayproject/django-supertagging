@@ -118,9 +118,11 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
                 
             slug = slugify(name)
             try:
-                tag = SuperTag.objects.get(pk=pk)
+                tag = SuperTag.objects.get(name__iexact=name)
             except SuperTag.DoesNotExist:
                 tag = SuperTag.objects.create(id=pk, slug=slug, stype=stype, name=name)
+            except SuperTag.MultipleObjectsReturned:
+                tag = SuperTag.objects.filter(name__iexact=name)[0]
     
             tag.properties = entity
             tag.save()
