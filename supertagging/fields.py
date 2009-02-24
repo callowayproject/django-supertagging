@@ -7,29 +7,29 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-    
+
 from supertagging import settings
 from supertagging.utils import edit_string_for_tags
 
 class PickledObjectField(models.Field):
     """ Django snippet - http://www.djangosnippets.org/snippets/513/ """
     __metaclass__ = models.SubfieldBase
-    
+
     def to_python(self, value):
         try:
             return pickle.loads(str(value))
         except:
             # If an error was raised, just return the plain value
             return value
-                
+
     def get_db_prep_save(self, value):
         if value is not None:
-            value = pickle.dumps(force_unicode(value))
+            value = pickle.dumps(value)
         return str(value)
-        
-    def get_internal_type(self): 
+
+    def get_internal_type(self):
         return 'TextField'
-        
+
     def get_db_prep_lookup(self, lookup_type, value):
         if lookup_type == 'exact':
             value = self.get_db_prep_save(value)
@@ -39,8 +39,8 @@ class PickledObjectField(models.Field):
             return super(PickledObjectField, self).get_db_prep_lookup(lookup_type, value)
         else:
             raise TypeError('Lookup type %s is not supported.' % lookup_type)
-            
-            
+
+
 
 class SuperTagField(TextField):
     """
@@ -105,7 +105,7 @@ class SuperTagField(TextField):
             raise AttributeError(_('%s can only be set on instances.') % self.name)
 
         tags = edit_string_for_tags(SuperTag.objects.get_for_object(instance))
-        
+
         new_value = []
         if not value:
             value = tags
@@ -113,13 +113,13 @@ class SuperTagField(TextField):
             for tag in tags.split(','):
                 if tag in value.split(','):
                     new_value.append(tag)
-                    
+
             for tag in value.split(','):
                 if tag not in new_value:
                     new_value.append(tag)
-            
+
             value = ','.join([t for t in new_value])
-            
+
         self._set_instance_tag_cache(instance, value)
 
     def _save(self, **kwargs): #signal, sender, instance):
