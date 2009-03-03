@@ -21,7 +21,7 @@ class SuperTagManager(models.Manager):
         ctype = ContentType.objects.get_for_model(obj)
         current_tags = list(self.filter(supertaggeditem__content_type__pk=ctype.pk,
                                         supertaggeditem__object_id=obj.pk))
-                                        
+
         updated_tag_names = parse_tag_input(tag_names)
         # Always lower case tags
         updated_tag_names = [t.lower() for t in updated_tag_names]
@@ -29,7 +29,7 @@ class SuperTagManager(models.Manager):
         from supertagging.modules import process
         # Process the tags with Calais
         processed_tags = process(obj, updated_tag_names)
-        
+
         for t in updated_tag_names:
             if t not in [p.name for p in processed_tags]:
                 try:
@@ -37,26 +37,26 @@ class SuperTagManager(models.Manager):
                     tag = tags[0] # Take the first found tag with the same name.
                 except:
                     tag = self.create(id=t, name=t, slug=slugify(t), stype='Custom')
-                    
+
                 SuperTaggedItem._default_manager.create(tag=tag, content_object=obj, field='None')
-                
-                
+
+
     def get_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
 
         ids = self.filter(supertaggeditem__content_type__pk=ctype.pk,
                            supertaggeditem__object_id=obj.pk).exclude(stype='Topic').values('id')
-                           
+
         return self.filter(id__in=ids)
-                           
+
     def get_topics_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
         ids = self.filter(supertaggeditem__content_type__pk=ctype.pk,
                            supertaggeditem__object_id=obj.pk, stype='Topic').values('id')
-        
+
         return self.filter(id__in=ids)
-             
-             
+
+
     def _get_usage(self, model, counts=False, min_count=None, extra_joins=None, extra_criteria=None, params=None):
        """
        Perform the custom SQL query for ``usage_for_model`` and
@@ -77,7 +77,7 @@ class SuperTagManager(models.Manager):
            %%s
        WHERE %(tagged_item)s.content_type_id = %(content_type_id)s
            %%s
-       GROUP BY %(tag)s.id, %(tag)s.name
+       GROUP BY %(tag)s.id, %(tag)s.name, %(tag)s.slug
        %%s
        ORDER BY %(tag)s.name ASC""" % {
            'tag': qn(self.model._meta.db_table),
@@ -94,6 +94,10 @@ class SuperTagManager(models.Manager):
            params.append(min_count)
 
        cursor = connection.cursor()
+       print """
+       The raw sql is :
+       %s
+       """%query
        cursor.execute(query % (extra_joins, extra_criteria, min_count_sql), params)
        tags = []
        for row in cursor.fetchall():
@@ -101,7 +105,7 @@ class SuperTagManager(models.Manager):
            if counts:
                t.count = row[2]
            tags.append(t)
-       return tags              
+       return tags
     def usage_for_model(self, model, counts=False, min_count=None, filters=None):
        """
        Obtain a list of tags associated with instances of the given
@@ -127,8 +131,8 @@ class SuperTagManager(models.Manager):
            queryset.query.add_filter(f)
        usage = self.usage_for_queryset(queryset, counts, min_count)
 
-       return usage  
-       
+       return usage
+
     def usage_for_queryset(self, queryset, counts=False, min_count=None):
        """
        Obtain a list of tags associated with instances of a model
@@ -149,8 +153,8 @@ class SuperTagManager(models.Manager):
            extra_criteria = 'AND %s' % where
        else:
            extra_criteria = ''
-       return self._get_usage(queryset.model, counts, min_count, extra_joins, extra_criteria, params)   
-                  
+       return self._get_usage(queryset.model, counts, min_count, extra_joins, extra_criteria, params)
+
     def cloud_for_model(self, model, steps=4, distribution=LOGARITHMIC,
                        filters=None, min_count=None):
         """
@@ -178,16 +182,16 @@ class SuperTagManager(models.Manager):
         """
         tags = list(self.usage_for_model(model, counts=True, filters=filters,
                                         min_count=min_count))
-        return calculate_cloud(tags, steps, distribution)      
-           
-                           
+        return calculate_cloud(tags, steps, distribution)
+
+
 class SuperTagRelationManager(models.Manager):
     def get_for_tag(self, tag):
         return self.filter(tag__pk=tag.id)
 
 
 class SuperTaggedItemManager(models.Manager):
-    
+
     def get_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified
@@ -221,7 +225,7 @@ class SuperTaggedItemManager(models.Manager):
             ],
             params=[content_type.pk, tag.pk],
         )
-        
+
     def get_intersection_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified
@@ -356,11 +360,11 @@ class SuperTaggedItemManager(models.Manager):
                     if object_id in object_dict]
         else:
             return []
-    
-    
+
+
 class SuperTaggedRelationItemManager(models.Manager):
     pass
-    
+
 
 ###################
 ##    MODELS     ##
@@ -371,25 +375,25 @@ class SuperTag(models.Model):
     slug = models.SlugField(max_length=150)
     stype = models.CharField("Type", max_length=100)
     properties = PickledObjectField(null=True, blank=True)
-    
+
     objects = SuperTagManager()
-    
+
     def __unicode__(self):
         return self.name
-        
 
-        
+
+
 class SuperTagRelation(models.Model):
     tag = models.ForeignKey(SuperTag)
     stype = models.CharField("Type", max_length=100)
     name = models.CharField(max_length=150)
     properties = PickledObjectField(null=True, blank=True)
-    
+
     objects = SuperTagRelationManager()
-    
+
     def __unicode__(self):
         return self.stype
-        
+
 
 class SuperTaggedItem(models.Model):
     tag = models.ForeignKey(SuperTag)
@@ -400,12 +404,12 @@ class SuperTaggedItem(models.Model):
     process_type = models.CharField(max_length=20, null=True, blank=True)
     relevance = models.IntegerField(null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
-    
+
     objects = SuperTaggedItemManager()
-    
+
     def __unicode__(self):
         return ''
-        
+
 
 class SuperTaggedRelationItem(models.Model):
     relation = models.ForeignKey(SuperTagRelation)
@@ -415,10 +419,8 @@ class SuperTaggedRelationItem(models.Model):
     field = models.CharField(max_length=100)
     process_type = models.CharField(max_length=20, null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
-    
+
     objects = SuperTaggedRelationItemManager()
-    
+
     def __unicode__(self):
         return self.relation
-        
-        
