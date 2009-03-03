@@ -94,10 +94,6 @@ class SuperTagManager(models.Manager):
            params.append(min_count)
 
        cursor = connection.cursor()
-       print """
-       The raw sql is :
-       %s
-       """%query
        cursor.execute(query % (extra_joins, extra_criteria, min_count_sql), params)
        tags = []
        for row in cursor.fetchall():
