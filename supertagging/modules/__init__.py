@@ -3,7 +3,7 @@ Django-SuperTagging
 
 """
 import re
-from django.conf import settings
+from supertagging import settings
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils.encoding import force_unicode
@@ -22,6 +22,10 @@ def process(obj, tags=[]):
     """
     Process the data.
     """
+    if not settings.AUTO_PROCESS:
+        # if this AUTO_PROCESS is False we don't want to
+        # use open calais
+        return ""
     if not Calais:
         raise ImportError("python-calais module was not found.")
     if not settings.API_KEY:

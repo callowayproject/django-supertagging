@@ -5,19 +5,17 @@ from supertagging import settings
 from supertagging.modules import process, clean_up
 
 def save_handler(sender, **kwargs):
-    if settings.AUTO_PROCESS:
-        try:
-            process(kwargs['instance'])
-        except Exception, e:
-            if settings.ST_DEBUG: raise Exception(e)
+    try:
+        process(kwargs['instance'])
+    except Exception, e:
+        if settings.ST_DEBUG: raise Exception(e)
 
 def delete_handler(sender, **kwargs):
-    if settings.AUTO_PROCESS:
-        try:
-            if 'instance' in kwargs:
-                clean_up(kwargs['instance'])
-        except Exception, e:
-            if settings.ST_DEBUG: raise Exception(e)
+    try:
+        if 'instance' in kwargs:
+            clean_up(kwargs['instance'])
+    except Exception, e:
+        if settings.ST_DEBUG: raise Exception(e)
 
 def setup():
     if not settings.AUTO_PROCESS:
