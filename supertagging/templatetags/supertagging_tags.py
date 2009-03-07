@@ -60,6 +60,20 @@ class TaggedObjectsNode(Node):
             SuperTaggedItem.objects.get_by_model(model, self.tag.resolve(context))
         return ''
 
+class RelatedObjectsForObjectNode(Node):
+    def __init__(self, obj, model, context_var):
+        self.obj = Variable(obj)
+        self.context_var = context_var
+        self.model = model
+
+    def render(self, context):
+        model = get_model(*self.model.split('.'))
+        if model is None:
+            raise TemplateSyntaxError(_('supertagged_objects tag was given an invalid model: %s') % self.model)
+        context[self.context_var] = \
+            SuperTaggedItem.objects.get_related(self.obj.resolve(context),model)
+        return ''
+
 def do_tags_for_model(parser, token):
     """
     Retrieves a list of ``Tag`` objects associated with a given model
@@ -227,10 +241,38 @@ def do_tagged_objects(parser, token):
         raise TemplateSyntaxError(_("fourth argument to %s tag must be 'as'") % bits[0])
     return TaggedObjectsNode(bits[1], bits[3], bits[5])
 
+def do_related_objects_for_object(parser, token):
+    """
+    Retrieves a list of related objects of a given model which shares tags
+     with the given ``obj`` and stores them in a context variable.
+
+    Usage::
+
+       {% related_objects_for_object [obj] in [model] as [varname] %}
+
+    The model is specified in ``[appname].[modelname]`` format.
+
+    The obj must be an instance of the ``model``.
+
+    Example::
+
+        {% related_objects_for_object show in tv.Show as related_objects %}
+
+    """
+    bits = token.contents.split()
+    if len(bits) != 6:
+        raise TemplateSyntaxError(_('%s tag requires exactly five arguments') % bits[0])
+    if bits[2] != 'in':
+        raise TemplateSyntaxError(_("second argument to %s tag must be 'in'") % bits[0])
+    if bits[4] != 'as':
+        raise TemplateSyntaxError(_("fourth argument to %s tag must be 'as'") % bits[0])
+    return RelatedObjectsForObjectNode(bits[1], bits[3], bits[5])
+
 register.tag('supertags_for_model', do_tags_for_model)
 register.tag('supertag_cloud_for_model', do_tag_cloud_for_model)
 register.tag('supertags_for_object', do_tags_for_object)
 register.tag('supertagged_objects', do_tagged_objects)
+register.tag('related_objects_for_object', do_related_objects_for_object)
 
 
 class RelationsForTagNode(Node):
@@ -242,22 +284,22 @@ class RelationsForTagNode(Node):
         context[self.context_var] = \
             SuperTagRelation.objects.get_for_tag(self.obj.resolve(context))
         return ''
-        
-        
+
+
 def do_relations_for_tag(parser, token):
     """
     Retrieves a list of ``Relations`` for a given ``Tag``
-    
+
     Usage::
-        
+
         {% relations_for_tag [tag] as [varname] %}
-        
+
     The tag must of an instance of a ``Tag``, not the name of a tag.
-    
+
     Example::
-    
+
         {% relations_for_tag state_tag as relations %}
-        
+
     """
     bits = token.contents.split()
     if len(bits) != 4:
