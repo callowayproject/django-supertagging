@@ -50,48 +50,53 @@ def process(obj, tags=[]):
 
     processed_tags = []
     for item in params['fields']:
-        d = item.copy()
-        field = d.pop('name')
-        proc_type = d.pop('process_type', process_type)
+        try:
+            d = item.copy()
+            field = d.pop('name')
+            proc_type = d.pop('process_type', process_type)
 
-        data = getattr(obj, field)
+            data = getattr(obj, field)
 
-        data = force_unicode(getattr(obj, field))
+            data = force_unicode(getattr(obj, field))
 
-        # Analyze the text (data)
-        result = c.analyze(data)
+            # Analyze the text (data)
+            result = c.analyze(data)
 
-        # Retrieve the Django content type for the obj
-        ctype = ContentType.objects.get_for_model(obj)
-        # Remove existing items, this ensures tagged items are updated correctly
-        SuperTaggedItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
-        if settings.PROCESS_RELATIONS:
-            SuperTaggedRelationItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
+            # Retrieve the Django content type for the obj
+            ctype = ContentType.objects.get_for_model(obj)
+            # Remove existing items, this ensures tagged items are updated correctly
+            SuperTaggedItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
+            if settings.PROCESS_RELATIONS:
+                SuperTaggedRelationItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
 
-        entities, relations, topics = [], [], []
-        # Process entities, relations and topics
-        if hasattr(result, 'entities'):
-            entities = _processEntities(field, result.entities, obj, ctype, proc_type, tags)
+            entities, relations, topics = [], [], []
+            # Process entities, relations and topics
+            if hasattr(result, 'entities'):
+                entities = _processEntities(field, result.entities, obj, ctype, proc_type, tags)
 
-        if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
-            relations = _processRelations(field, result.relations, obj, ctype, proc_type, tags)
+            if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
+                relations = _processRelations(field, result.relations, obj, ctype, proc_type, tags)
 
-        if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
-            topics =  _processTopics(field, result.topics, obj, ctype, tags)
+            if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
+                topics =  _processTopics(field, result.topics, obj, ctype, tags)
 
-        processed_tags.extend(entities)
-        processed_tags.extend(topics)
-
+            processed_tags.extend(entities)
+            processed_tags.extend(topics)
+        except Exception, e:
+            if settings.ST_DEBUG: raise Exception(e)
+            continue
     return processed_tags
 
 def clean_up(obj):
     """
     When an object is removed, remove all the super tagged items and super tagged relation items
     """
-    cont_type = ContentType.objects.get_for_model(obj)
-    SuperTaggedItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
-    SuperTaggedRelationItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
-
+    try:
+        cont_type = ContentType.objects.get_for_model(obj)
+        SuperTaggedItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
+        SuperTaggedRelationItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
+    except Exception, e:
+        if settings.ST_DEBUG: raise Exception(e)
     # TODO, clean up tags that have no related items?
     # Same for relations?
 
