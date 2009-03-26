@@ -3,7 +3,6 @@ Django-SuperTagging
 
 """
 import re
-from supertagging import settings
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils.encoding import force_unicode
@@ -27,9 +26,15 @@ def process(obj, tags=[]):
         # use open calais
         return ""
     if not Calais:
-        raise ImportError("python-calais module was not found.")
+        if settings.ST_DEBUG:
+            raise ImportError("python-calais module was not found.")
+        else:
+            return
     if not settings.API_KEY:
-        raise ValueError('Calais API KEY is missing.')
+        if settings.ST_DEBUG:
+            raise ValueError('Calais API KEY is missing.')
+        else:
+            return
 
     params = settings.MODULES['%s.%s' % (obj._meta.app_label, obj._meta.module_name)]
 
@@ -38,7 +43,10 @@ def process(obj, tags=[]):
         d_proc_type = proc_dir['contentType']
 
     if 'fields' not in params:
-        raise Exception('No "fields" found.')
+        if settings.ST_DEBUG:
+            raise Exception('No "fields" found.')
+        else:
+            return
 
     # Create the instance of Calais and setup the parameters,
     # see open-calais.com for more information about user directives,
@@ -58,7 +66,7 @@ def process(obj, tags=[]):
             data = getattr(obj, field)
 
             data = force_unicode(getattr(obj, field))
-
+            
             # Analyze the text (data)
             result = c.analyze(data)
 
