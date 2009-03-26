@@ -5,7 +5,7 @@ from django.template.defaultfilters import slugify
 
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
-from supertagging.utils import LOGARITHMIC
+from supertagging.utils import LOGARITHMIC, markup_content
 
 qn = connection.ops.quote_name
 
@@ -187,7 +187,11 @@ class SuperTagRelationManager(models.Manager):
 
 
 class SuperTaggedItemManager(models.Manager):
-
+    def embed_supertags(self, obj, field, rel=0):
+        ctype = ContentType.objects.get_for_model(obj)
+        items = self.filter(object_id=obj.pk, content_type__pk=ctype.pk, field=field, relevance__gte=rel)
+        return markup_content(items, obj, field)
+    
     def get_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified

@@ -1,5 +1,3 @@
-""" Django snippet - http://www.djangosnippets.org/snippets/588/"""
-
 #####################################
 #   Borrowed from django-tagging    #
 #####################################
@@ -9,12 +7,61 @@ import types
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
-
+from django.template.defaultfilters import slugify
+from django.template.loader import render_to_string
 # Python 2.3 compatibility
 try:
     set
 except NameError:
     from sets import Set as set
+
+from operator import itemgetter
+
+
+def markup_content(items, obj, field, markup_template='supertagging/markup.html'):
+    """
+    Takes all the items (SuperTaggedItems), and retrieves all the 'instances' to 
+    embed the markup_template.
+    """
+    value = getattr(obj, field, '')
+    full = []
+    for item in items:
+        i = item.instances
+        for v in i:
+            v['supertag'] = item.tag
+        full.extend(i)
+
+    # Sort the list by the inner dict offset value in reverse
+    full.sort(lambda x,y: cmp(x['offset'],y['offset']), reverse=True)
+    
+    for n, i in enumerate(full):
+        if 'offset' in i and 'length' in i and 'exact' in i:
+            off, le, act_val = i['offset'], i['length'], i['exact']
+        else:
+            continue
+            
+        tag = i['supertag']
+        
+        val = render_to_string(markup_template, {'tag': tag, 'actual_value': act_val})
+        #val = DEFAULT_MARKUP % (tag.slug, val)
+        pre, suf, repl = '','',''
+        try:
+            pre = value[:off+1]
+            suf = value[(off+le)+1:]
+            repl = value[off+1:(off+le)+1]
+            # This tests to make sure the next tag does not overlap 
+            # the current tag
+            if n != 0:
+                if 'offset' in full[n-1]:
+                    prev_off = full[n-1]['offset']
+                    if ((off+1)+le) > prev_off:
+                        continue
+        except:
+            pass
+            
+        value = pre+val+suf
+    return value
+
 
 def parse_tag_input(input):
     """
