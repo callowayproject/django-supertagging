@@ -22,6 +22,9 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
     """
     Takes all the items (SuperTaggedItems), and retrieves all the 'instances' to 
     embed the markup_template.
+    
+    #TODO, this only works on raw text, when other html is found it might
+            add html within other html.
     """
     value = getattr(obj, field, '')
     full = []
