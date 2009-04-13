@@ -6,6 +6,7 @@ import re
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils.encoding import force_unicode
+from django.db.models.loading import get_model
 
 try:
     from calais import Calais
@@ -21,23 +22,36 @@ def process(obj, tags=[]):
     """
     Process the data.
     """
-    if not settings.AUTO_PROCESS:
-        # if this AUTO_PROCESS is False we don't want to
-        # use open calais
-        return ""
+    # In the case when we want to turn off ALL processing of data, while
+    # preserving AUTO_PROCESS 
+    if not settings.ENABLED:
+        return
+        
     if not Calais:
         if settings.ST_DEBUG:
             raise ImportError("python-calais module was not found.")
-        else:
-            return
+        return
+
     if not settings.API_KEY:
         if settings.ST_DEBUG:
             raise ValueError('Calais API KEY is missing.')
-        else:
+        return
+
+    try:
+        params = settings.MODULES['%s.%s' % (obj._meta.app_label, obj._meta.module_name)]
+        model = get_model(obj._meta.app_label, obj._meta.module_name)
+    except KeyError, e:
+        if settings.ST_DEBUG:
+            raise KeyError(e)
+        return
+        
+    if params.has_key('match_kwargs'):
+        try:
+            # Make sure this obj matches the match kwargs
+            obj = model.objects.get(pk=obj.pk, **params['match_kwargs'])
+        except model.DoesNotExist:
             return
-
-    params = settings.MODULES['%s.%s' % (obj._meta.app_label, obj._meta.module_name)]
-
+        
     process_type = settings.DEFAULT_PROCESS_TYPE
     if 'contentType' in settings.PROCESSING_DIR:
         d_proc_type = proc_dir['contentType']
@@ -60,6 +74,7 @@ def process(obj, tags=[]):
     for item in params['fields']:
         try:
             d = item.copy()
+            
             field = d.pop('name')
             proc_type = d.pop('process_type', process_type)
 
