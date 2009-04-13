@@ -26,3 +26,7 @@ API_KEY = getattr(settings, 'SUPERTAGGING_CALAIS_API_KEY', None)
 
 # Auto process tags, (sets up post save and delete signals)
 AUTO_PROCESS = getattr(settings, 'SUPERTAGGING_AUTO_PROCESS', False)
+
+# Set the process to be enabled. This will allow enabling and disabling
+# the processing of tagging while preserving AUTO_PROCESS
+ENABLED = getattr(settings, 'SUPERTAGGING_ENABLED', True)
