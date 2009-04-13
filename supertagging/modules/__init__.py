@@ -98,7 +98,7 @@ def process(obj, tags=[]):
                 entities = _processEntities(field, result.entities, obj, ctype, proc_type, tags)
 
             if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
-                relations = _processRelations(field, result.relations, obj, ctype, proc_type, tags)
+                relations = _processRelations(field, result.relations, obj, ctype, proc_type, tags)                
 
             if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
                 topics =  _processTopics(field, result.topics, obj, ctype, tags)
@@ -128,7 +128,8 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
     Process Entities.
     """
     processed_tags = []
-    for entity in data:
+    for e in data:
+        entity = e.copy()
         # Here we convert the given float value to an integer
         rel = int(float(str(entity.pop('relevance', '0'))) * 1000)
         inst = entity.pop('instances', {})
@@ -179,16 +180,22 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
     """
     Process Relations
     """
-    for di in data:
+    for d in data:
+        di = d.copy()
         di.pop('__reference')
         inst = di.pop('instances', {})
         rel_type = di.pop('_type', '')
 
         props = {}
         entities = {}
-        # Loop all the items in searh of entities (SuperTags).
+        # Loop all the items in search of entities (SuperTags).
         for k,v in di.items():
-            res = re.match(REF_REGEX, unicode(v))
+            if isinstance(v, dict):
+                ref = v.pop('__reference', '')
+            else:
+                ref = v
+                
+            res = re.match(REF_REGEX, unicode(ref))
             if res:
                 entities[k] = res.group('key')
             else:
