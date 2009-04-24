@@ -2,7 +2,7 @@
 Django-SuperTagging
 
 """
-import re
+import re, datetime
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils.encoding import force_unicode
@@ -160,7 +160,25 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
 
             tag.properties = entity
             tag.save()
-
+            
+            # Get the object's date.
+            # First look for get_latest_by in the meta class, if nothing is
+            # found check the ordering attribute in the meta class.
+            date = None
+            date_fields = []
+            if obj._meta.get_latest_by:
+                date_fields.append(obj._meta.get_latest_by)
+            else:
+                date_fields = obj._meta.ordering
+            
+            for f in date_fields:
+                f=f.lstrip('-')
+                date = getattr(obj, f, None)
+                if not isinstance(date, datetime.datetime):
+                    date = None
+                    continue
+                break
+                
             #TODO: check to make sure that the entity is not already attached
             # to the content object, if it is, just append the instances. This
             # should elimiate entities returned with different names such as
@@ -168,10 +186,11 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
             try:
                 it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, object_id=obj.pk, field=field)
                 it.instances.append(inst)
+                it.item_date = date
                 it.save()
             except SuperTaggedItem.DoesNotExist:
                 # Create the record that will associate content to tags
-                it = SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, relevance=rel, instances=inst)
+                it = SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, relevance=rel, instances=inst, item_date=date)
 
             processed_tags.append(tag)
     return processed_tags
@@ -238,6 +257,24 @@ def _processTopics(field, data, obj, ctype, tags):
         if tags and name not in tags:
             continue
 
+        # Get the object's date.
+        # First look for get_latest_by in the meta class, if nothing is
+        # found check the ordering attribute in the meta class.
+        date = None
+        date_fields = []
+        if obj._meta.get_latest_by:
+            date_fields.append(obj._meta.get_latest_by)
+        else:
+            date_fields = obj._meta.ordering
+        
+        for f in date_fields:
+            f=f.lstrip('-')
+            date = getattr(obj, f, None)
+            if not isinstance(date, datetime.datetime):
+                date = None
+                continue
+            break
+
         slug = slugify(name)
         try:
             tag = SuperTag.objects.get(pk=pk)
@@ -247,7 +284,7 @@ def _processTopics(field, data, obj, ctype, tags):
         tag.properties = di
         tag.save()
 
-        SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field)
+        SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field, item_date=date)
 
         processed_tags.append(tag)
     return processed_tags

@@ -404,7 +404,9 @@ class SuperTaggedItem(models.Model):
     process_type = models.CharField(max_length=20, null=True, blank=True)
     relevance = models.IntegerField(null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
-
+    
+    item_date = models.DateTimeField(null=True, blank=True)
+    
     objects = SuperTaggedItemManager()
 
     def __unicode__(self):
