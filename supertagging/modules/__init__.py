@@ -77,6 +77,7 @@ def process(obj, tags=[]):
             
             field = d.pop('name')
             proc_type = d.pop('process_type', process_type)
+            markup = d.pop('markup', False)
 
             data = getattr(obj, field)
 
@@ -102,7 +103,12 @@ def process(obj, tags=[]):
 
             if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
                 topics =  _processTopics(field, result.topics, obj, ctype, tags)
-
+            
+            if markup:
+                markedup_content = SuperTaggedItem.objects.embed_supertags(obj, field)
+                setattr(obj, field, markedup_content)
+                obj.save()
+                
             processed_tags.extend(entities)
             processed_tags.extend(topics)
         except Exception, e:
