@@ -29,9 +29,12 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
     value = getattr(obj, field, '')
     full = []
     for item in items:
+        if not item.instances:
+            continue
         i = item.instances
         for v in i:
-            v['supertag'] = item.tag
+            if isinstance(v, dict):
+                v['supertag'] = item.tag
         full.extend(i)
 
     # Sort the list by the inner dict offset value in reverse
@@ -44,9 +47,7 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
             continue
             
         tag = i['supertag']
-        
         val = render_to_string(markup_template, {'tag': tag, 'actual_value': act_val})
-        #val = DEFAULT_MARKUP % (tag.slug, val)
         pre, suf, repl = '','',''
         try:
             pre = value[:off+1]
@@ -59,10 +60,10 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
                     prev_off = full[n-1]['offset']
                     if ((off+1)+le) > prev_off:
                         continue
+            value = pre+val+suf
         except:
             pass
-            
-        value = pre+val+suf
+        
     return value
 
 
