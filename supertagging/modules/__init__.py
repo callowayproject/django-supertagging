@@ -245,8 +245,12 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
 
             if tags and entity_value not in tags:
                 continue
-
-            entity = SuperTag.objects.get(pk=entity_value)
+            
+            try:
+                entity = SuperTag.objects.get(pk=entity_value)
+            except SuperTag.DoesNotExist:
+                continue
+                
             rel_item, rel_created = SuperTagRelation.objects.get_or_create(tag=entity, name=entity_key, stype=rel_type, properties=_vals)
 
             SuperTaggedRelationItem.objects.create(relation=rel_item, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, instances=inst)
