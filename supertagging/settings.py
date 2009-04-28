@@ -30,3 +30,6 @@ AUTO_PROCESS = getattr(settings, 'SUPERTAGGING_AUTO_PROCESS', False)
 # Set the process to be enabled. This will allow enabling and disabling
 # the processing of tagging while preserving AUTO_PROCESS
 ENABLED = getattr(settings, 'SUPERTAGGING_ENABLED', True)
+
+# Exclude certain instances of a tag to be rendered, ie 'his', 'her' etc
+MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
