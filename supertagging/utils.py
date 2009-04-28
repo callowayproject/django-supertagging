@@ -17,6 +17,10 @@ except NameError:
 
 from operator import itemgetter
 
+def tag_instance_cmp(x, y):
+    if isinstance(x, dict) and isinstance(y, dict):
+        return cmp(x['offset'],y['offset'])
+    return cmp(1, 1)
 
 def markup_content(items, obj, field, markup_template='supertagging/markup.html'):
     """
@@ -38,7 +42,7 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
         full.extend(i)
 
     # Sort the list by the inner dict offset value in reverse
-    full.sort(lambda x,y: cmp(x['offset'],y['offset']), reverse=True)
+    full.sort(tag_instance_cmp, reverse=True)
     
     for n, i in enumerate(full):
         if 'offset' in i and 'length' in i and 'exact' in i:
@@ -50,9 +54,9 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
         val = render_to_string(markup_template, {'tag': tag, 'actual_value': act_val})
         pre, suf, repl = '','',''
         try:
-            pre = value[:off+1]
-            suf = value[(off+le)+1:]
-            repl = value[off+1:(off+le)+1]
+            pre = value[:off]
+            suf = value[(off+le):]
+            repl = value[off:(off+le)]
             # This tests to make sure the next tag does not overlap 
             # the current tag
             if n != 0:
