@@ -48,7 +48,7 @@ def markup_content(items, obj, field, markup_template='supertagging/markup.html'
     for n, i in enumerate(full):
         if 'offset' in i and 'length' in i and 'exact' in i:
             off, le, act_val = i['offset'], i['length'], i['exact']
-            if act_val in settings.MARKUP_EXCLUDES:
+            if act_val.lower() in settings.MARKUP_EXCLUDES:
                 continue
         else:
             continue
