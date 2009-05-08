@@ -61,17 +61,18 @@ class TaggedObjectsNode(Node):
         return ''
 
 class RelatedObjectsForObjectNode(Node):
-    def __init__(self, obj, model, context_var):
+    def __init__(self, obj, model, context_var, **kwargs):
         self.obj = Variable(obj)
         self.context_var = context_var
         self.model = model
+        self.kwargs = kwargs
 
     def render(self, context):
         model = get_model(*self.model.split('.'))
         if model is None:
             raise TemplateSyntaxError(_('supertagged_objects tag was given an invalid model: %s') % self.model)
         context[self.context_var] = \
-            SuperTaggedItem.objects.get_related(self.obj.resolve(context),model)
+            SuperTaggedItem.objects.get_related(self.obj.resolve(context), model, **self.kwargs)
         return ''
 
 def do_tags_for_model(parser, token):
@@ -248,7 +249,7 @@ def do_related_objects_for_object(parser, token):
 
     Usage::
 
-       {% related_objects_for_object [obj] in [model] as [varname] %}
+       {% related_objects_for_object [obj] in [model] as [varname] with [options] %}
 
     The model is specified in ``[appname].[modelname]`` format.
 
@@ -257,16 +258,47 @@ def do_related_objects_for_object(parser, token):
     Example::
 
         {% related_objects_for_object show in tv.Show as related_objects %}
+        
+        {% related_objects_for_object show in tv.Show as related_objects with min_relevance=500 %}
 
     """
     bits = token.contents.split()
-    if len(bits) != 6:
-        raise TemplateSyntaxError(_('%s tag requires exactly five arguments') % bits[0])
+    len_bits = len(bits)
+    if len_bits != 6 and len_bits not in range(7, 10):
+        raise TemplateSyntaxError(_('%s tag requires either five or between 7 and 8 arguments') % bits[0])
     if bits[2] != 'in':
         raise TemplateSyntaxError(_("second argument to %s tag must be 'in'") % bits[0])
     if bits[4] != 'as':
         raise TemplateSyntaxError(_("fourth argument to %s tag must be 'as'") % bits[0])
-    return RelatedObjectsForObjectNode(bits[1], bits[3], bits[5])
+        
+    print len_bits
+    kwargs = {}
+    if len_bits > 6:
+        if bits[6] != 'with':
+            raise TemplateSyntaxError(_("if given, 6th argument to %s tag must be 'with'") % bits[0])
+        for i in range(7, len_bits):
+            try:
+                name, value = bits[i].split('=')
+                if name in ['min_relevance', 'num']:
+                    try:
+                        kwargs[str(name)] = int(value)
+                    except ValueError:
+                        raise TemplateSyntaxError(_("%(tag)s tag's '%(option)s' option was not a valid integer: '%(value)s'") % {
+                            'tag': bits[0],
+                            'option': name,
+                            'value': value,
+                        })
+                else:
+                    raise TemplateSyntaxError(_("%(tag)s tag was given an invalid option: '%(option)s'") % {
+                        'tag': bits[0],
+                        'option': name,
+                    })
+            except ValueError:
+                raise TemplateSyntaxError(_("%(tag)s tag was given a badly formatted option: '%(option)s'") % {
+                    'tag': bits[0],
+                    'option': bits[i],
+                })
+    return RelatedObjectsForObjectNode(bits[1], bits[3], bits[5], **kwargs)
 
 register.tag('supertags_for_model', do_tags_for_model)
 register.tag('supertag_cloud_for_model', do_tag_cloud_for_model)

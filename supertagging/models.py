@@ -302,7 +302,7 @@ class SuperTaggedItemManager(models.Manager):
         else:
             return model._default_manager.none()
 
-    def get_related(self, obj, queryset_or_model, num=None):
+    def get_related(self, obj, queryset_or_model, min_relevance=0, num=None):
         """
         Retrieve a list of instances of the specified model which share
         tags with the model instance ``obj``, ordered by the number of
@@ -323,6 +323,7 @@ class SuperTaggedItemManager(models.Manager):
           AND %(tag)s.id = %(tagged_item)s.tag_id
           AND related_tagged_item.content_type_id = %(related_content_type_id)s
           AND related_tagged_item.tag_id = %(tagged_item)s.tag_id
+          AND related_tagged_item.relevance >= %(min_relevance)s
           AND %(model_pk)s = related_tagged_item.object_id"""
         if content_type.pk == related_content_type.pk:
             # Exclude the given instance itself if determining related
@@ -341,6 +342,7 @@ class SuperTaggedItemManager(models.Manager):
             'tag': qn(self.model._meta.get_field('tag').rel.to._meta.db_table),
             'content_type_id': content_type.pk,
             'related_content_type_id': related_content_type.pk,
+            'min_relevance': min_relevance,
             # Hardcoding this for now just to get tests working again - this
             # should now be handled by the query object.
             'limit_offset': num is not None and 'LIMIT %s' or '',
