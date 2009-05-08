@@ -270,8 +270,6 @@ def do_related_objects_for_object(parser, token):
         raise TemplateSyntaxError(_("second argument to %s tag must be 'in'") % bits[0])
     if bits[4] != 'as':
         raise TemplateSyntaxError(_("fourth argument to %s tag must be 'as'") % bits[0])
-        
-    print len_bits
     kwargs = {}
     if len_bits > 6:
         if bits[6] != 'with':
