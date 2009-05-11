@@ -42,12 +42,24 @@ class SuperTagManager(models.Manager):
 
 
     def get_for_object(self, obj):
+        """
+        Returns tags for an object, also returns the relevance score from 
+        the supertaggingitem table.
+        """
+        
         ctype = ContentType.objects.get_for_model(obj)
 
         ids = self.filter(supertaggeditem__content_type__pk=ctype.pk,
                            supertaggeditem__object_id=obj.pk).exclude(stype='Topic').values('id')
 
-        return self.filter(id__in=ids)
+        return self.filter(id__in=ids).extra(
+            select={'relevance':
+                '''SELECT relevance 
+                   FROM supertagging_supertaggeditem 
+                   WHERE supertagging_supertaggeditem.tag_id=supertagging_supertag.id AND 
+                         supertagging_supertaggeditem.object_id = %s AND 
+                         supertagging_supertaggeditem.content_type_id = %s
+                ''' % (obj.pk, ctype.pk)})
 
     def get_topics_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
