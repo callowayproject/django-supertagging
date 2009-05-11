@@ -314,6 +314,42 @@ class RelationsForTagNode(Node):
         context[self.context_var] = \
             SuperTagRelation.objects.get_for_tag(self.obj.resolve(context))
         return ''
+        
+        
+class RelationsForObjectNode(Node):
+    def __init__(self, obj, context_var):
+        self.obj = Variable(obj)
+        self.context_var = context_var
+
+    def render(self, context):
+        context[self.context_var] = \
+            SuperTaggedRelationItem.objects.get_for_object(self.obj.resolve(context))
+        return ''
+        
+        
+class RelationsForTagInObjectNode(Node):
+    def __init__(self, tag, obj, context_var):
+        self.obj = Variable(obj)
+        self.tag = Variable(tag)
+        self.context_var = context_var
+
+    def render(self, context):
+        context[self.context_var] = \
+            SuperTaggedRelationItem.objects.get_for_tag_in_object(
+                tag=self.tag.resolve(context), obj=self.obj.resolve(context))
+        return ''
+        
+
+class EmbedSuperTagsNode(Node):
+    def __init__(self, obj, field, rel):
+        self.field = field.strip("'")
+        self.rel = int(rel)
+        self.obj = Variable(obj)
+        
+    def render(self, context):
+        obj = self.obj.resolve(context)
+        value = SuperTaggedItem.objects.embed_supertags(obj, self.field, self.rel)
+        return value
 
 
 def do_relations_for_tag(parser, token):
@@ -338,20 +374,48 @@ def do_relations_for_tag(parser, token):
         raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
     return RelationsForTagNode(bits[1], bits[3])
 
-
-
-class EmbedSuperTagsNode(Node):
-    def __init__(self, obj, field, rel):
-        self.field = field.strip("'")
-        self.rel = int(rel)
-        self.obj = Variable(obj)
+def do_relations_for_object(parser, token):
+    """
+    Retrieves a list of ``Relations`` for a given object
+    
+    Useage::
         
-    def render(self, context):
-        obj = self.obj.resolve(context)
-        value = SuperTaggedItem.objects.embed_supertags(obj, self.field, self.rel)
-        return value
+        {% relations_for_object [object] as [varname] %}
         
+    Example::
+    
+        {% relations_for_object story as story_relations %}
         
+    """
+    bits = token.contents.split()
+    if len(bits) != 4:
+        raise TemplateSyntaxError(_('%s tag requires exactly three arguments') % bits[0])
+    if bits[2] != 'as':
+        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+    return RelationsForObjectNode(bits[1], bits[3])
+    
+def do_relations_for_tag_in_object(parser, token):
+    """
+    Retrieves a list of ``Relations`` for a given tag that is also in object
+    
+    Useage::
+        
+        {% relations_for [tag] in [object] as [varname] %}
+        
+    Example::
+    
+        {% relations_for state_tag in obj as obj_relations %}
+        
+    """
+    bits = token.contents.split()
+    if len(bits) != 6:
+        raise TemplateSyntaxError(_('%s tag requires exactly five arguments') % bits[0])
+    if bits[2] != 'in':
+        raise TemplateSyntaxError(_("second argument to %s tag must be 'in'") % bits[0])
+    if bits[4] != 'as':
+        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+    return RelationsForTagInObjectNode(bits[1], bits[3], bits[5])
+ 
 def do_embed_supertags(parser, token):
     """
     Markup content, adds links to matched tags
@@ -381,4 +445,6 @@ def do_embed_supertags(parser, token):
     
     
 register.tag('relations_for_supertag', do_relations_for_tag)
+register.tag('relations_for_object', do_relations_for_object)
+register.tag('relations_for', do_relations_for_tag_in_object)
 register.tag('embed_supertags', do_embed_supertags)

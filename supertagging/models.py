@@ -365,8 +365,16 @@ class SuperTaggedItemManager(models.Manager):
 
 
 class SuperTaggedRelationItemManager(models.Manager):
-    pass
-
+    def get_for_object(self, obj):
+        ctype = ContentType.objects.get_for_model(obj)
+        return self.filter(content_type__pk=ctype.pk, object_id=obj.pk)
+        
+    def get_for_tag_in_object(self, tag, obj):
+        print tag
+        print obj
+        ctype = ContentType.objects.get_for_model(obj)
+        return self.filter(relation__tag__pk=tag.pk, content_type__pk=ctype.pk, object_id=obj.pk)
+        
 
 ###################
 ##    MODELS     ##
