@@ -37,13 +37,14 @@ class TagCloudForModelNode(Node):
         return ''
 
 class TagsForObjectNode(Node):
-    def __init__(self, obj, context_var):
+    def __init__(self, obj, context_var, **kwargs):
         self.obj = Variable(obj)
         self.context_var = context_var
+        self.kwargs = kwargs
 
     def render(self, context):
         context[self.context_var] = \
-            SuperTag.objects.get_for_object(self.obj.resolve(context))
+            SuperTag.objects.get_for_object(self.obj.resolve(context), **self.kwargs)
         return ''
 
 class TaggedObjectsNode(Node):
@@ -202,18 +203,43 @@ def do_tags_for_object(parser, token):
 
     Usage::
 
-       {% supertags_for_object [object] as [varname] %}
+       {% supertags_for_object [object] as [varname] with [options] %}
 
     Example::
 
         {% supertags_for_object foo_object as tag_list %}
+        
+        {% supertags_for_object foo_object as tag_list with field=story %}
+        
     """
     bits = token.contents.split()
-    if len(bits) != 4:
-        raise TemplateSyntaxError(_('%s tag requires exactly three arguments') % bits[0])
+    len_bits = len(bits)
+    if len_bits != 4 and len_bits not in range(6, 7):
+        raise TemplateSyntaxError(_('%s tag requires either three or five arguments') % bits[0])
     if bits[2] != 'as':
         raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
-    return TagsForObjectNode(bits[1], bits[3])
+    kwargs = {}
+    if len_bits > 5:
+        if bits[4] != 'with':
+            raise TemplateSyntaxError(_("if given, fourth argument to %s tag must be 'with'") % bits[0])
+        for i in range(5, len_bits):
+            try:
+                name, value = bits[i].split('=')
+                if name == 'field':
+                    try:
+                        kwargs[str(name)] = str(value)
+                    except ValueError:
+                        raise TemplateSyntaxError(_("%(tag)s tag's '%(option)s' option was not valid: '%(value)s'") % {
+                            'tag': bits[0],
+                            'option': name,
+                            'value': value,
+                        })
+            except ValueError:
+                raise TemplateSyntaxError(_("%(tag)s tag was given a badly formatted option: '%(option)s'") % {
+                    'tag': bits[0],
+                    'option': bits[i],
+                })
+    return TagsForObjectNode(bits[1], bits[3], **kwargs)
 
 def do_tagged_objects(parser, token):
     """

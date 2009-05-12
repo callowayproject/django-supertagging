@@ -41,25 +41,27 @@ class SuperTagManager(models.Manager):
                 SuperTaggedItem._default_manager.create(tag=tag, content_object=obj, field='None')
 
 
-    def get_for_object(self, obj):
+    def get_for_object(self, obj, **kwargs):
         """
         Returns tags for an object, also returns the relevance score from 
         the supertaggingitem table.
         """
-        
         ctype = ContentType.objects.get_for_model(obj)
-
-        ids = self.filter(supertaggeditem__content_type__pk=ctype.pk,
-                           supertaggeditem__object_id=obj.pk).exclude(stype='Topic').values('id')
-
-        return self.filter(id__in=ids).extra(
-            select={'relevance':
-                '''SELECT relevance 
-                   FROM supertagging_supertaggeditem 
-                   WHERE supertagging_supertaggeditem.tag_id=supertagging_supertag.id AND 
-                         supertagging_supertaggeditem.object_id = %s AND 
-                         supertagging_supertaggeditem.content_type_id = %s
-                ''' % (obj.pk, ctype.pk)})
+        kwgs = {}
+        if 'field' in kwargs:
+            kwgs['supertaggeditem__field'] = kwargs['field']
+        
+        # Query to return the relevance along with the tags.
+        rel_q = '''SELECT MAX(relevance) FROM supertagging_supertaggeditem 
+                    WHERE supertagging_supertaggeditem.tag_id=supertagging_supertag.id AND 
+                        supertagging_supertaggeditem.object_id = %s AND 
+                        supertagging_supertaggeditem.content_type_id = %s
+                ''' % (obj.pk, ctype.pk)
+        
+        return self.filter(supertaggeditem__content_type__pk=ctype.pk,
+                                supertaggeditem__object_id=obj.pk,
+                                **kwgs).extra(
+                                    select={'relevance':rel_q})
 
     def get_topics_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
