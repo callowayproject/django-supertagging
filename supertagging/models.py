@@ -338,6 +338,7 @@ class SuperTaggedItemManager(models.Manager):
           AND related_tagged_item.content_type_id = %(related_content_type_id)s
           AND related_tagged_item.tag_id = %(tagged_item)s.tag_id
           AND related_tagged_item.relevance >= %(min_relevance)s
+          AND %(tagged_item)s.relevance >= %(min_relevance)s
           AND %(model_pk)s = related_tagged_item.object_id"""
         if content_type.pk == related_content_type.pk:
             # Exclude the given instance itself if determining related
