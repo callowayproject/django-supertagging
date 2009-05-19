@@ -349,8 +349,10 @@ class SuperTaggedItemManager(models.Manager):
             query += """
           AND related_tagged_item.object_id != %(tagged_item)s.object_id"""
         query += """
-        GROUP BY %(model_pk)s
-        ORDER BY %(count)s DESC
+        GROUP BY related_tagged_item.item_date,
+                 %(model_pk)s
+        ORDER BY related_tagged_item.item_date DESC,
+                 %(count)s DESC
         %(limit_offset)s"""
         query = query % {
             'model_pk': '%s.%s' % (model_table, qn(model._meta.pk.column)),
