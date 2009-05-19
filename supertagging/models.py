@@ -50,7 +50,10 @@ class SuperTagManager(models.Manager):
         kwgs = {}
         if 'field' in kwargs:
             kwgs['supertaggeditem__field'] = kwargs['field']
-        
+        if 'order_by' in kwargs:
+            order_by = kwargs['order_by']
+        else:
+            order_by = '-relevance'
         # Query to return the relevance along with the tags.
         rel_q = '''SELECT MAX(relevance) FROM supertagging_supertaggeditem 
                     WHERE supertagging_supertaggeditem.tag_id=supertagging_supertag.id AND 
@@ -61,7 +64,7 @@ class SuperTagManager(models.Manager):
         return self.filter(supertaggeditem__content_type__pk=ctype.pk,
                                 supertaggeditem__object_id=obj.pk,
                                 **kwgs).extra(
-                                    select={'relevance':rel_q})
+                                    select={'relevance':rel_q}).order_by(order_by)
 
     def get_topics_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
@@ -435,7 +438,7 @@ class SuperTaggedItem(models.Model):
     objects = SuperTaggedItemManager()
 
     def __unicode__(self):
-        return ''
+        return 'SuperTag: %s of %s, Relevance: %s' % (self.tag, self.content_object, self.relevance)
 
 
 class SuperTaggedRelationItem(models.Model):
