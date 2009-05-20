@@ -33,3 +33,6 @@ ENABLED = getattr(settings, 'SUPERTAGGING_ENABLED', True)
 
 # Exclude certain instances of a tag to be rendered, ie 'his', 'her' etc
 MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
+
+# Minimum relevance score needed when adding tags
+MIN_RELEVANCE = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE', 0)

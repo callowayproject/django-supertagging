@@ -138,6 +138,12 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
         entity = e.copy()
         # Here we convert the given float value to an integer
         rel = int(float(str(entity.pop('relevance', '0'))) * 1000)
+        
+        # Only process tags and items that greater or equal 
+        # to MIN_RELEVANCE setting
+        if rel < settings.MIN_RELEVANCE:
+            continue
+            
         inst = entity.pop('instances', {})
         ## Tidy up the encoding
         for i, j in enumerate(inst):
