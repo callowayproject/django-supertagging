@@ -167,7 +167,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
                 tag = SuperTag.objects.get(name__iexact=name)
             except SuperTag.DoesNotExist:
                 try:
-                    tag = SuperTag.objects.get(pk__iexact=pk)
+                    tag = SuperTag.objects.get(pk=pk)
                 except SuperTag.DoesNotExist:
                     tag = SuperTag.objects.create(id=pk, slug=slug, stype=stype, name=name)
             except SuperTag.MultipleObjectsReturned:
