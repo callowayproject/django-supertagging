@@ -13,6 +13,7 @@ class SuperTagAdmin(admin.ModelAdmin):
 class SuperTaggedItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'tag', 'field', 'process_type', 'relevance', 'instances')
     list_filter = ('process_type',)
+    search_fields = ('tag__name',)
     
 class SuperTaggedRelationItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'relation', 'field', 'process_type','instances')  
