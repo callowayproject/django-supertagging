@@ -456,3 +456,17 @@ class SuperTaggedRelationItem(models.Model):
 
     def __unicode__(self):
         return self.relation
+
+
+class SuperTagExclude(models.Model):
+    tag = models.ForeignKey(SuperTag, unique=True)
+    
+    
+class SuperTagGroup(models.Model):
+    """
+    Used to disambiguate tags
+    """
+    name = models.CharField(max_length=255, unique=True)
+    tags = models.ManyToManyField(SuperTag)
+    
+    

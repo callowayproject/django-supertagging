@@ -4,6 +4,8 @@ DEFAULT_PROCESS_TYPE = 'TEXT/RAW'
 
 # The models/fields to process
 MODULES = getattr(settings, 'SUPERTAGGING_MODULES', {})
+
+# OpenCalais settings
 USER_DIR = getattr(settings, 'SUPERTAGGING_CALAIS_USER_DIRECTIVES', {})
 PROCESSING_DIR = getattr(settings, 'SUPERTAGGING_CALAIS_PROCESSING_DIRECTIVES', {})
 PROCESS_RELATIONS = getattr(settings, 'SUPERTAGGING_PROCESS_RELATIONS', False)
@@ -36,3 +38,6 @@ MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
 
 # Minimum relevance score needed when adding tags
 MIN_RELEVANCE = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE', 0)
+
+# Optional, use freebase to disambiguate tags
+UES_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
