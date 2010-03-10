@@ -1,10 +1,10 @@
 from django.contrib import admin
-from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem
+from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
 from django.contrib.contenttypes.models import ContentType
 
 
 class SuperTagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'stype', 'properties' )
+    list_display = ('name', 'slug', 'subsitute', 'stype', 'properties' )
     ordering = ('name', )
     search_fields = ('stype', 'name', )
     list_filter = ('stype', )
@@ -26,8 +26,13 @@ class SuperTagRelationAdmin(admin.ModelAdmin):
     search_fields = ('stype', 'name', 'tag')
     list_filter = ('stype', 'name', )
     
+    
+class SuperTagProcessQueueAdmin(admin.ModelAdmin):
+    list_display = ('__unicode__', 'locked')
 
 admin.site.register(SuperTag, SuperTagAdmin)
 admin.site.register(SuperTaggedItem, SuperTaggedItemAdmin)
 admin.site.register(SuperTagRelation, SuperTagRelationAdmin)
 admin.site.register(SuperTaggedRelationItem, SuperTaggedRelationItemAdmin)
+admin.site.register(SuperTagProcessQueue, SuperTagProcessQueueAdmin)
+admin.site.register(SuperTagExclude)
