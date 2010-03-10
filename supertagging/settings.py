@@ -34,10 +34,18 @@ AUTO_PROCESS = getattr(settings, 'SUPERTAGGING_AUTO_PROCESS', False)
 ENABLED = getattr(settings, 'SUPERTAGGING_ENABLED', True)
 
 # Exclude certain instances of a tag to be rendered, ie 'his', 'her' etc
-MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
+# MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
 
 # Minimum relevance score needed when adding tags
 MIN_RELEVANCE = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE', 0)
 
 # Optional, use freebase to disambiguate tags
-UES_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
+USE_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
+
+# Only used if USE_FREEBASE is True, maps calais types to freebase types
+FREEBASE_TYPE_MAPPINGS = getattr(settings, 'SUPERTAGGING_FREEBASE_TYPE_MAPPINGS', {})
+
+# If set true and auto process is on, will add objects to a queue enstead 
+# of processing the item on the save. Should be used with the management
+# command.
+USE_QUEUE = getattr(settings, 'SUPERTAGGING_USE_QUEUE', False)
