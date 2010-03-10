@@ -321,3 +321,13 @@ def calculate_cloud(tags, steps=4, distribution=LOGARITHMIC):
                     tag.font_size = i + 1
                     font_set = True
     return tags
+
+def fix_name_for_freebase(value):
+    """
+    Takes a name and replaces spaces with underscores and capitalized each word
+    """
+    words = []
+    for word in value.split():
+        words.append(word.title())
+    return "_".join(words)
+    
