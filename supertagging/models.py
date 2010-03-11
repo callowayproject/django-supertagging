@@ -5,15 +5,92 @@ from django.template.defaultfilters import slugify
 
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
-from supertagging.utils import LOGARITHMIC, markup_content
+from supertagging.utils import LOGARITHMIC, markup_content, fix_name_for_freebase
+from supertagging import settings as st_settings
 
 qn = connection.ops.quote_name
+
+try:
+    import freebase
+except ImportError:
+    freebase = None
 
 ###################
 ##   MANAGERS    ##
 ###################
 
+def _retrieve_name_from_freebase(name, stype):
+    search_key = fix_name_for_freebase(name)
+    fb_type = st_settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
+    value = None
+    try:
+        # Try to get the exact match
+        value = freebase.mqlread(
+            {"name": None, "type":fb_type or [], "key": {"value": search_key}})
+    except:
+        try:
+            # Try to get a results has a generator and return its top result
+            values = freebase.mqlreaditer(
+                {"name": None, "type":fb_type or [], "key": {"value": search_key}})
+            value = values.next()
+        except:
+            pass
+            
+    if value:
+        return value["name"]
+    return name
+            
 class SuperTagManager(models.Manager):
+    def get_by_name(self, **kwargs):
+        """
+        Retireves a SuperTag by its name.
+        Can use freebase to disambiguate the names.
+        """
+        # Retrieve the object with the given arguments
+        obj = super(SuperTagManager, self).get(**kwargs)
+        # If object has a subsitute speficied, use that tag enstead
+        obj = obj.subsitute or obj
+        
+        # Return object if freebase is not used
+        if not (st_settings.USE_FREEBASE and freebase):
+            return obj
+            
+        # Try to find the name using freebase
+        fb_name = _retrieve_name_from_freebase(obj.name, obj.stype)
+        try:
+            # Try to retrieve the existing name given by freebase in our database
+            new_tag = self.get(name__iexact=fb_name)
+            # Return the new tag or the new tags subsitute
+            return new_tag.subsitute or new_tag
+        except:
+            print 'Failed'
+            # Simply return the obj if something went wrong
+            return obj
+            
+    def create_alternate(self, **kwargs):
+        """
+        Alternate method for creating SuperTags while optionally using 
+        freebase to disambiguate the names
+        """
+        # Retrieve the arguments used to create a new tag
+        name = kwargs.get("name", None)
+        stype = kwargs.get("stype", None)
+        slug = kwargs.get("slug", None)
+        
+        # Create and return the new tag if freebase is not used.
+        if not (st_settings.USE_FREEBASE and freebase and name):
+            return super(SuperTagManager, self).create(**kwargs)
+            
+        fb_name = _retrieve_name_from_freebase(name, stype)
+        try:
+            new_tag = self.get(name__iexact=fb_name)
+            return new_tag.subsitute or new_tag
+        except:
+            kwargs["name"] = fb_name.lower()
+            kwargs["slug"] = slugify(fb_name)
+            
+        return super(SuperTagManager, self).create(**kwargs)
+    
     def update_tags(self, obj, tag_names):
         """
         Update tags associated with an object.
@@ -390,10 +467,14 @@ class SuperTaggedRelationItemManager(models.Manager):
         return self.filter(content_type__pk=ctype.pk, object_id=obj.pk)
         
     def get_for_tag_in_object(self, tag, obj):
-        print tag
-        print obj
         ctype = ContentType.objects.get_for_model(obj)
         return self.filter(relation__tag__pk=tag.pk, content_type__pk=ctype.pk, object_id=obj.pk)
+        
+        
+class SuperTagExcludeManager(models.Manager):
+    def exclude_tag(self, tag):
+        if isinstance(tag, SuperTag):
+            self.get_or_create(tag=tag)
         
 
 ###################
@@ -401,6 +482,7 @@ class SuperTaggedRelationItemManager(models.Manager):
 ###################
 class SuperTag(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
+    subsitute = models.ForeignKey("self", null=True, blank=True, related_name="subsitute_tag")
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150)
     stype = models.CharField("Type", max_length=100)
@@ -455,18 +537,25 @@ class SuperTaggedRelationItem(models.Model):
     objects = SuperTaggedRelationItemManager()
 
     def __unicode__(self):
-        return self.relation
+        return unicode(self.relation)
 
 
 class SuperTagExclude(models.Model):
     tag = models.ForeignKey(SuperTag, unique=True)
     
+    objects = SuperTagExcludeManager()
     
-class SuperTagGroup(models.Model):
-    """
-    Used to disambiguate tags
-    """
-    name = models.CharField(max_length=255, unique=True)
-    tags = models.ManyToManyField(SuperTag)
+    def __unicode__(self):
+        return self.tag.name
     
+
+class SuperTagProcessQueue(models.Model):
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    locked = models.BooleanField(default=False)
     
+    def __unicode__(self):
+        return 'Queue Item: <%s> %s' % (self.content_type, self.content_object)
+        
+        
