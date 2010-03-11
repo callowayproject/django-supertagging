@@ -1,6 +1,5 @@
 """
 Django-SuperTagging
-
 """
 import re, datetime
 from django.contrib.contenttypes.models import ContentType
@@ -14,9 +13,17 @@ except ImportError:
     Calais = None
 
 from supertagging import settings
-from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem
+from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
+
+def add_to_queue(instance):
+    cont_type = ContentType.objects.get_for_model(instance)
+    SuperTagProcessQueue.objects.get_or_create(content_type=cont_type, object_id=instance.pk)
+    
+def remove_from_queue(instance):
+    cont_type = ContentType.objects.get_for_model(instance)
+    SuperTagProcessQueue.objects.get(content_type=cont_type, object_id=instance.pk).delete()
 
 def process(obj, tags=[]):
     """
@@ -38,7 +45,8 @@ def process(obj, tags=[]):
         return
 
     try:
-        params = settings.MODULES['%s.%s' % (obj._meta.app_label, obj._meta.module_name)]
+        params = settings.MODULES['%s.%s' % (obj._meta.app_label, 
+            obj._meta.module_name)]
         model = get_model(obj._meta.app_label, obj._meta.module_name)
     except KeyError, e:
         if settings.ST_DEBUG:
@@ -88,26 +96,27 @@ def process(obj, tags=[]):
 
             # Retrieve the Django content type for the obj
             ctype = ContentType.objects.get_for_model(obj)
-            # Remove existing items, this ensures tagged items are updated correctly
-            SuperTaggedItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
+            # Remove existing items, this ensures tagged items 
+            # are updated correctly
+            SuperTaggedItem.objects.filter(content_type=ctype, 
+                object_id=obj.pk, field=field).delete()
             if settings.PROCESS_RELATIONS:
-                SuperTaggedRelationItem.objects.filter(content_type=ctype, object_id=obj.pk, field=field).delete()
+                SuperTaggedRelationItem.objects.filter(content_type=ctype, 
+                    object_id=obj.pk, field=field).delete()
 
             entities, relations, topics = [], [], []
             # Process entities, relations and topics
             if hasattr(result, 'entities'):
-                entities = _processEntities(field, result.entities, obj, ctype, proc_type, tags)
+                entities = _processEntities(field, result.entities, 
+                    obj, ctype, proc_type, tags)
 
             if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
-                relations = _processRelations(field, result.relations, obj, ctype, proc_type, tags)                
+                relations = _processRelations(field, result.relations, obj, 
+                    ctype, proc_type, tags)                
 
             if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
-                topics =  _processTopics(field, result.topics, obj, ctype, tags)
-            
-            if markup:
-                markedup_content = SuperTaggedItem.objects.embed_supertags(obj, field)
-                setattr(obj, field, markedup_content)
-                obj.save()
+                topics =  _processTopics(field, result.topics, obj, 
+                    ctype, tags)
                 
             processed_tags.extend(entities)
             processed_tags.extend(topics)
@@ -118,12 +127,15 @@ def process(obj, tags=[]):
 
 def clean_up(obj):
     """
-    When an object is removed, remove all the super tagged items and super tagged relation items
+    When an object is removed, remove all the super tagged items 
+    and super tagged relation items
     """
     try:
         cont_type = ContentType.objects.get_for_model(obj)
-        SuperTaggedItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
-        SuperTaggedRelationItem.objects.filter(content_type=cont_type, object_id=obj.pk).delete()
+        SuperTaggedItem.objects.filter(content_type=cont_type, 
+            object_id=obj.pk).delete()
+        SuperTaggedRelationItem.objects.filter(content_type=cont_type, 
+            object_id=obj.pk).delete()
     except Exception, e:
         if settings.ST_DEBUG: raise Exception(e)
     # TODO, clean up tags that have no related items?
@@ -163,16 +175,24 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
                 continue
 
             slug = slugify(name)
+            tag = None
             try:
-                tag = SuperTag.objects.get(name__iexact=name)
+                tag = SuperTag.objects.get_by_name(name__iexact=name)
             except SuperTag.DoesNotExist:
                 try:
                     tag = SuperTag.objects.get(pk=pk)
                 except SuperTag.DoesNotExist:
-                    tag = SuperTag.objects.create(id=pk, slug=slug, stype=stype, name=name)
+                    tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
+                        stype=stype, name=name)
             except SuperTag.MultipleObjectsReturned:
                 tag = SuperTag.objects.filter(name__iexact=name)[0]
-
+                
+            tag = tag.subsitute or tag
+            
+            # If this tag was added to exlcude list, move onto the next item.
+            if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+                continue
+                
             tag.properties = entity
             tag.save()
             
@@ -194,18 +214,25 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
                     continue
                 break
                 
-            #TODO: check to make sure that the entity is not already attached
+            # Check to make sure that the entity is not already attached
             # to the content object, if it is, just append the instances. This
             # should elimiate entities returned with different names such as
             # 'Washington' and 'Washington DC' but same id
             try:
-                it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, object_id=obj.pk, field=field)
+                it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, 
+                    object_id=obj.pk, field=field)
                 it.instances.append(inst)
                 it.item_date = date
+                # Take the higher relevance
+                if rel > it.relevance:
+                    it.relevance = rel
                 it.save()
             except SuperTaggedItem.DoesNotExist:
                 # Create the record that will associate content to tags
-                it = SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, relevance=rel, instances=inst, item_date=date)
+                it = SuperTaggedItem.objects.create(tag=tag, 
+                    content_type=ctype, object_id=obj.pk, field=field, 
+                    process_type=process_type, relevance=rel, instances=inst, 
+                    item_date=date)
 
             processed_tags.append(tag)
     return processed_tags
@@ -254,12 +281,19 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
             
             try:
                 entity = SuperTag.objects.get(pk=entity_value)
+                entity = entity.subsitute or entity
             except SuperTag.DoesNotExist:
                 continue
                 
-            rel_item, rel_created = SuperTagRelation.objects.get_or_create(tag=entity, name=entity_key, stype=rel_type, properties=_vals)
+            if len(SuperTagExclude.objects.filter(tag__pk=entity.pk)) == 1:
+                continue
+                
+            rel_item, rel_created = SuperTagRelation.objects.get_or_create(
+                tag=entity, name=entity_key, stype=rel_type, properties=_vals)
 
-            SuperTaggedRelationItem.objects.create(relation=rel_item, content_type=ctype, object_id=obj.pk, field=field, process_type=process_type, instances=inst)
+            SuperTaggedRelationItem.objects.create(relation=rel_item, 
+                content_type=ctype, object_id=obj.pk, field=field, 
+                process_type=process_type, instances=inst)
 
 def _processTopics(field, data, obj, ctype, tags):
     """
@@ -295,15 +329,28 @@ def _processTopics(field, data, obj, ctype, tags):
             break
 
         slug = slugify(name)
+        tag = None
         try:
-            tag = SuperTag.objects.get(pk=pk)
+            tag = SuperTag.objects.get_by_name(name__iexact=name)
         except SuperTag.DoesNotExist:
-            tag = SuperTag.objects.create(id=pk, slug=slug, stype=stype, name=name)
+            try:
+                tag = SuperTag.objects.get(pk=pk)
+            except SuperTag.DoesNotExist:
+                tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
+                    stype=stype, name=name)
+        except SuperTag.MultipleObjectsReturned:
+            tag = SuperTag.objects.filter(name__iexact=name)[0]
+            
+        tag = tag.subsitute or tag
+        
+        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+            continue
 
         tag.properties = di
         tag.save()
 
-        SuperTaggedItem.objects.create(tag=tag, content_type=ctype, object_id=obj.pk, field=field, item_date=date)
+        SuperTaggedItem.objects.create(tag=tag, content_type=ctype, 
+            object_id=obj.pk, field=field, item_date=date)
 
         processed_tags.append(tag)
     return processed_tags
