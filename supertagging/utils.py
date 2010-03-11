@@ -24,54 +24,7 @@ def tag_instance_cmp(x, y):
     return cmp(1, 1)
 
 def markup_content(items, obj, field, markup_template='supertagging/markup.html'):
-    """
-    Takes all the items (SuperTaggedItems), and retrieves all the 'instances' to 
-    embed the markup_template.
-    
-    #TODO, this only works on raw text, when other html is found it might
-            add html within other html.
-    """
-    value = getattr(obj, field, '')
-    full = []
-    for item in items:
-        if not item.instances:
-            continue
-        i = item.instances
-        for v in i:
-            if isinstance(v, dict):
-                v['supertag'] = item.tag
-        full.extend(i)
-
-    # Sort the list by the inner dict offset value in reverse
-    full.sort(tag_instance_cmp, reverse=True)
-    
-    for n, i in enumerate(full):
-        if 'offset' in i and 'length' in i and 'exact' in i:
-            off, le, act_val = i['offset'], i['length'], i['exact']
-            if act_val.lower() in settings.MARKUP_EXCLUDES:
-                continue
-        else:
-            continue
-            
-        tag = i['supertag']
-        val = render_to_string(markup_template, {'tag': tag, 'actual_value': act_val})
-        pre, suf, repl = '','',''
-        try:
-            pre = value[:off]
-            suf = value[(off+le):]
-            repl = value[off:(off+le)]
-            # This tests to make sure the next tag does not overlap 
-            # the current tag
-            if n != 0:
-                if 'offset' in full[n-1]:
-                    prev_off = full[n-1]['offset']
-                    if ((off+1)+le) > prev_off:
-                        continue
-            value = pre+val+suf
-        except:
-            pass
-        
-    return value
+    raise DeprecationWarning("This method is no longer used.")
 
 
 def parse_tag_input(input):
