@@ -47,11 +47,11 @@ for dirpath, dirnames, filenames in os.walk(tagging_dir):
 
 setup(
     name = 'supertagging',
-    version="0.1",
+    version="0.2",
     description = 'An interface to the Open Calais service for semantic markup.',
     author = 'Jose Soares',
     author_email = 'jsoares@washingtontimes.com',
-    url = 'http://opensource.washingtontimes.com/projects/django-supertagging/',
+    url = 'http://opensource.washingtontimes.com/projects/supertagging/',
     packages = packages,
     data_files = data_files,
     classifiers = [
