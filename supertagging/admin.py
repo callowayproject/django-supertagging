@@ -9,6 +9,8 @@ class SuperTagAdmin(admin.ModelAdmin):
     search_fields = ('stype', 'name', )
     list_filter = ('stype', )
     
+    raw_id_fields = ('subsitute',)
+    
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'tag', 'field', 'process_type', 'relevance', 'instances')
@@ -29,10 +31,16 @@ class SuperTagRelationAdmin(admin.ModelAdmin):
     
 class SuperTagProcessQueueAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'locked')
+    
+class SuperTagExcludeAdmin(admin.ModelAdmin):
+    list_display = ('tag',)
+    
+    raw_id_fields = ('tag',)
+    
 
 admin.site.register(SuperTag, SuperTagAdmin)
 admin.site.register(SuperTaggedItem, SuperTaggedItemAdmin)
 admin.site.register(SuperTagRelation, SuperTagRelationAdmin)
 admin.site.register(SuperTaggedRelationItem, SuperTaggedRelationItemAdmin)
 admin.site.register(SuperTagProcessQueue, SuperTagProcessQueueAdmin)
-admin.site.register(SuperTagExclude)
+admin.site.register(SuperTagExclude, SuperTagExcludeAdmin)
