@@ -556,6 +556,8 @@ class SuperTagProcessQueue(models.Model):
     locked = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return 'Queue Item: <%s> %s' % (self.content_type, self.content_object)
+        return 'Queue Item: <%s> %s' % (
+            self.content_type, 
+            unicode(str(self.content_object), 'utf-8'))
         
         
