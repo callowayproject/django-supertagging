@@ -3,6 +3,15 @@ from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, Sup
 from django.contrib.contenttypes.models import ContentType
 
 
+def lock_items(modeladmin, request, queryset):
+    queryset.update(locked=True)
+lock_items.short_description = "Lock selected Queue Items"
+
+def unlock_items(modeladmin, request, queryset):
+    queryset.update(locked=False)
+unlock_items.short_description = "Unlock selected Queue Items"
+
+
 class SuperTagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'subsitute', 'stype', 'properties' )
     ordering = ('name', )
@@ -31,6 +40,8 @@ class SuperTagRelationAdmin(admin.ModelAdmin):
     
 class SuperTagProcessQueueAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'locked')
+    actions = [lock_items, unlock_items]
+    
     
 class SuperTagExcludeAdmin(admin.ModelAdmin):
     list_display = ('tag',)
