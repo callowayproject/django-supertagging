@@ -10,15 +10,24 @@ from supertagging.utils import LINEAR, LOGARITHMIC
 register = Library()
 
 class TagsForModelNode(Node):
-    def __init__(self, model, context_var, counts):
+    def __init__(self, model, context_var, counts, **kwargs):
         self.model = model
         self.context_var = context_var
         self.counts = counts
+        self.kwargs = kwargs
 
     def render(self, context):
         model = get_model(*self.model.split('.'))
         if model is None:
             raise TemplateSyntaxError(_('supertags_for_model tag was given an invalid model: %s') % self.model)
+        
+        if 'filters' in self.kwargs and isinstance(self.kwargs['filters'], dict):
+            for k,v in self.kwargs['filters'].items():
+                try:
+                    v = Variable(v).resolve(context)
+                    self.kwargs['filters'][k] = v
+                except:
+                    continue
         context[self.context_var] = SuperTag.objects.usage_for_model(model, counts=self.counts)
         return ''
 
@@ -32,6 +41,14 @@ class TagCloudForModelNode(Node):
         model = get_model(*self.model.split('.'))
         if model is None:
             raise TemplateSyntaxError(_('supertag_cloud_for_model tag was given an invalid model: %s') % self.model)
+        
+        if 'filters' in self.kwargs and isinstance(self.kwargs['filters'], dict):
+            for k,v in self.kwargs['filters'].items():
+                try:
+                    v = Variable(v).resolve(context)
+                    self.kwargs['filters'][k] = v
+                except:
+                    continue
         context[self.context_var] = \
             SuperTag.objects.cloud_for_model(model, **self.kwargs)
         return ''
@@ -99,15 +116,39 @@ def do_tags_for_model(parser, token):
 
        {% supertags_for_model products.Widget as widget_tags %}
        {% supertags_for_model products.Widget as widget_tags with counts %}
+       
+       {% supertags_for_model products.Widget as widget_tags with counts product__category__pk=1 %}
+       {% supertags_for_model products.Widget as widget_tags with counts product__category__pk=category.pk %}
 
     """
     bits = token.contents.split()
     len_bits = len(bits)
-    if len_bits not in (4, 6):
-        raise TemplateSyntaxError(_('%s tag requires either three or five arguments') % bits[0])
+    if not len_bits > 3:
+        raise TemplateSyntaxError(_('%s tag requires more than two arguments') % bits[0])
     if bits[2] != 'as':
         raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
-    if len_bits == 6:
+    if len_bits > 6:
+        for i in range(5, len_bits):
+            try:
+                name, value = bits[i].split('=')
+                if name == 'counts':
+                    try:
+                        kwargs[str(name)] = int(value)
+                    except ValueError:
+                        raise TemplateSyntaxError(_("%(tag)s tag's '%(option)s' option was not a valid integer: '%(value)s'") % {
+                            'tag': bits[0],
+                            'option': name,
+                            'value': value,
+                        })
+                else:
+                    # The remaining bits should be consider extra query params
+                    kwargs['filters'][name] = value
+                    
+            except ValueError:
+                raise TemplateSyntaxError(_("%(tag)s tag was given a badly formatted option: '%(option)s'") % {
+                    'tag': bits[0],
+                    'option': bits[i],
+                })
         if bits[4] != 'with':
             raise TemplateSyntaxError(_("if given, fourth argument to %s tag must be 'with'") % bits[0])
         if bits[5] != 'counts':
@@ -146,20 +187,25 @@ def do_tag_cloud_for_model(parser, token):
        ``distribution``
           One of ``linear`` or ``log``. Defines the font-size
           distribution algorithm to use when generating the tag cloud.
+          
+        If anything else is speficied in the options, it will be consider 
+        extra filter params
 
     Examples::
 
        {% supertag_cloud_for_model products.Widget as widget_tags %}
        {% supertag_cloud_for_model products.Widget as widget_tags with steps=9 min_count=3 distribution=log %}
-
+       
+       {% supertag_cloud_for_model products.Widget as widget_tags with steps=9 min_count=3 distrubution=log product__category__pk=1 %}
+       {% supertag_cloud_for_model products.Widget as widget_tags with steps=9 min_count=3 distrubution=log product__category__pk=category.pk %}
     """
     bits = token.contents.split()
     len_bits = len(bits)
-    if len_bits != 4 and len_bits not in range(6, 9):
-        raise TemplateSyntaxError(_('%s tag requires either three or between five and seven arguments') % bits[0])
+    if not len_bits > 3:
+        raise TemplateSyntaxError(_('%s tag requires more than two arguments') % bits[0])
     if bits[2] != 'as':
         raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
-    kwargs = {}
+    kwargs = {'filters': {}}
     if len_bits > 5:
         if bits[4] != 'with':
             raise TemplateSyntaxError(_("if given, fourth argument to %s tag must be 'with'") % bits[0])
@@ -185,10 +231,9 @@ def do_tag_cloud_for_model(parser, token):
                             'value': value,
                         })
                 else:
-                    raise TemplateSyntaxError(_("%(tag)s tag was given an invalid option: '%(option)s'") % {
-                        'tag': bits[0],
-                        'option': name,
-                    })
+                    # The remaining bits should be consider extra query params
+                    kwargs['filters'][name] = value
+                    
             except ValueError:
                 raise TemplateSyntaxError(_("%(tag)s tag was given a badly formatted option: '%(option)s'") % {
                     'tag': bits[0],
