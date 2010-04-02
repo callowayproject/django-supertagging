@@ -23,7 +23,10 @@ def add_to_queue(instance):
     
 def remove_from_queue(instance):
     cont_type = ContentType.objects.get_for_model(instance)
-    SuperTagProcessQueue.objects.get(content_type=cont_type, object_id=instance.pk).delete()
+    try:
+        SuperTagProcessQueue.objects.get(content_type=cont_type, object_id=instance.pk).delete()
+    except SuperTagProcessQueue.DoesNotExist:
+        pass
 
 def process(obj, tags=[]):
     """
