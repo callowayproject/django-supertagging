@@ -47,7 +47,7 @@ for dirpath, dirnames, filenames in os.walk(tagging_dir):
 
 setup(
     name = 'supertagging',
-    version="0.3",
+    version="0.3.1",
     description = 'An interface to the Open Calais service for semantic markup.',
     author = 'Jose Soares',
     author_email = 'jsoares@washingtontimes.com',
