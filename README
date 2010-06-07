@@ -7,7 +7,5 @@ about the tag).
 
 Prerequisites
 	- simplejson ( http://pypi.python.org/pypi/simplejson )
-	- python-calais from this branch ( https://code.launchpad.net/~yml/python-calais/with_setup )
-	This branch fix a unicode issue in the original version ( http://code.google.com/p/python-calais )
 	
 
