@@ -26,8 +26,9 @@ def setup():
         for k,v in settings.MODULES.items():
             app_label, model_name = k.split('.')
             model = models.get_model(app_label, model_name)
-            # Setup post save and post delete handlers
-            post_save.connect(save_handler, sender=model)
-            post_delete.connect(delete_handler, sender=model)
+            # Setup post save and post delete handlers if model exists
+            if model:
+                post_save.connect(save_handler, sender=model)
+                post_delete.connect(delete_handler, sender=model)
     except Exception, e:
         if settings.ST_DEBUG: raise Exception(e)
