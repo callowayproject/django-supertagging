@@ -1,0 +1,2 @@
+simplejson==2.0.9
+freebase==1.0.6
