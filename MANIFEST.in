@@ -1,0 +1,7 @@
+include AUTHORS
+include LICENSE
+include NOTICE
+include README
+
+recursive-include supertagging/sql/ *.sql
+recursive-include supertagging/templates/supertagging/ *.html

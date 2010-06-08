@@ -7,12 +7,8 @@ from django.template.defaultfilters import slugify
 from django.utils.encoding import force_unicode
 from django.db.models.loading import get_model
 
-try:
-    from calais import Calais
-except ImportError:
-    Calais = None
-
 from supertagging import settings
+from supertagging.calais import Calais
 from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
@@ -35,11 +31,6 @@ def process(obj, tags=[]):
     # In the case when we want to turn off ALL processing of data, while
     # preserving AUTO_PROCESS 
     if not settings.ENABLED:
-        return
-        
-    if not Calais:
-        if settings.ST_DEBUG:
-            raise ImportError("python-calais module was not found.")
         return
 
     if not settings.API_KEY:
@@ -190,7 +181,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
             except SuperTag.MultipleObjectsReturned:
                 tag = SuperTag.objects.filter(name__iexact=name)[0]
                 
-            tag = tag.subsitute or tag
+            tag = tag.substitute or tag
             
             # If this tag was added to exlcude list, move onto the next item.
             if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
@@ -284,7 +275,7 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
             
             try:
                 entity = SuperTag.objects.get(pk=entity_value)
-                entity = entity.subsitute or entity
+                entity = entity.substitute or entity
             except SuperTag.DoesNotExist:
                 continue
                 
@@ -344,7 +335,7 @@ def _processTopics(field, data, obj, ctype, tags):
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
-        tag = tag.subsitute or tag
+        tag = tag.substitute or tag
         
         if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
             continue

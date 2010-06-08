@@ -48,8 +48,8 @@ class SuperTagManager(models.Manager):
         """
         # Retrieve the object with the given arguments
         obj = super(SuperTagManager, self).get(**kwargs)
-        # If object has a subsitute speficied, use that tag enstead
-        obj = obj.subsitute or obj
+        # If object has a substitute speficied, use that tag enstead
+        obj = obj.substitute or obj
         
         # Return object if freebase is not used
         if not (st_settings.USE_FREEBASE and freebase):
@@ -60,8 +60,8 @@ class SuperTagManager(models.Manager):
         try:
             # Try to retrieve the existing name given by freebase in our database
             new_tag = self.get(name__iexact=fb_name)
-            # Return the new tag or the new tags subsitute
-            return new_tag.subsitute or new_tag
+            # Return the new tag or the new tags substitute
+            return new_tag.substitute or new_tag
         except:
             print 'Failed'
             # Simply return the obj if something went wrong
@@ -84,7 +84,7 @@ class SuperTagManager(models.Manager):
         fb_name = _retrieve_name_from_freebase(name, stype)
         try:
             new_tag = self.get(name__iexact=fb_name)
-            return new_tag.subsitute or new_tag
+            return new_tag.substitute or new_tag
         except:
             kwargs["name"] = fb_name.lower()
             kwargs["slug"] = slugify(fb_name)
@@ -482,7 +482,7 @@ class SuperTagExcludeManager(models.Manager):
 ###################
 class SuperTag(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
-    subsitute = models.ForeignKey("self", null=True, blank=True, related_name="subsitute_tag")
+    substitute = models.ForeignKey("self", null=True, blank=True, related_name="substitute_tagsubstitute")
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150)
     stype = models.CharField("Type", max_length=100)
