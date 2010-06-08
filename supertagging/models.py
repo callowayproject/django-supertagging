@@ -482,7 +482,7 @@ class SuperTagExcludeManager(models.Manager):
 ###################
 class SuperTag(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
-    subsitute = models.ForeignKey("self", null=True, blank=True, related_name="subsitute_tag")
+    substitute = models.ForeignKey("self", null=True, blank=True, related_name="subsitute_tag")
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150)
     stype = models.CharField("Type", max_length=100)
