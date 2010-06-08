@@ -18,14 +18,14 @@ def delete_handler(sender, **kwargs):
         else:
             clean_up(kwargs['instance'])
 
-def setup():
+def setup_handlers():
     if not AUTO_PROCESS:
         return
-
+    
     try:
         for k,v in MODULES.items():
             app_label, model_name = k.split('.')
-            model = models.get_model(app_label, model_name)
+            model = get_model(app_label, model_name)
             # Setup post save and post delete handlers if model exists
             if model:
                 post_save.connect(save_handler, sender=model)

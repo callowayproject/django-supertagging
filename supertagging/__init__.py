@@ -16,11 +16,3 @@ def get_version():
     return ''.join(vers)
 
 __version__ = get_version()
-
-
-try:
-    from supertagging.modules import handlers
-    
-    handlers.setup()
-except ImportError:
-    pass

@@ -13,12 +13,12 @@ unlock_items.short_description = "Unlock selected Queue Items"
 
 
 class SuperTagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'subsitute', 'stype', 'properties' )
+    list_display = ('name', 'slug', 'substitute', 'stype', 'properties' )
     ordering = ('name', )
     search_fields = ('stype', 'name', )
     list_filter = ('stype', )
     
-    raw_id_fields = ('subsitute',)
+    raw_id_fields = ('substitute',)
     
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):

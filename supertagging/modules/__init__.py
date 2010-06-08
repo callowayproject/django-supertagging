@@ -181,7 +181,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
             except SuperTag.MultipleObjectsReturned:
                 tag = SuperTag.objects.filter(name__iexact=name)[0]
                 
-            tag = tag.subsitute or tag
+            tag = tag.substitute or tag
             
             # If this tag was added to exlcude list, move onto the next item.
             if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
@@ -275,7 +275,7 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
             
             try:
                 entity = SuperTag.objects.get(pk=entity_value)
-                entity = entity.subsitute or entity
+                entity = entity.substitute or entity
             except SuperTag.DoesNotExist:
                 continue
                 
@@ -335,7 +335,7 @@ def _processTopics(field, data, obj, ctype, tags):
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
-        tag = tag.subsitute or tag
+        tag = tag.substitute or tag
         
         if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
             continue
