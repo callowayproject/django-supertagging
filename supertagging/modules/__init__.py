@@ -7,12 +7,8 @@ from django.template.defaultfilters import slugify
 from django.utils.encoding import force_unicode
 from django.db.models.loading import get_model
 
-try:
-    from calais import Calais
-except ImportError:
-    Calais = None
-
 from supertagging import settings
+from supertagging.calais import Calais
 from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
@@ -35,11 +31,6 @@ def process(obj, tags=[]):
     # In the case when we want to turn off ALL processing of data, while
     # preserving AUTO_PROCESS 
     if not settings.ENABLED:
-        return
-        
-    if not Calais:
-        if settings.ST_DEBUG:
-            raise ImportError("python-calais module was not found.")
         return
 
     if not settings.API_KEY:
