@@ -494,7 +494,6 @@ class SuperTag(models.Model):
         return self.name
 
 
-
 class SuperTagRelation(models.Model):
     tag = models.ForeignKey(SuperTag)
     stype = models.CharField("Type", max_length=100)
@@ -534,6 +533,8 @@ class SuperTaggedRelationItem(models.Model):
     process_type = models.CharField(max_length=20, null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
 
+    item_date = models.DateTimeField(null=True, blank=True)
+    
     objects = SuperTaggedRelationItemManager()
 
     def __unicode__(self):
