@@ -26,9 +26,13 @@ class SuperTaggedItemAdmin(admin.ModelAdmin):
     list_filter = ('process_type',)
     search_fields = ('tag__name',)
     
+    raw_id_fields = ('tag',)
+    
 class SuperTaggedRelationItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'relation', 'field', 'process_type','instances')  
     list_filter = ('process_type',)
+    
+    raw_id_fields = ('relation',)
     
     
 class SuperTagRelationAdmin(admin.ModelAdmin):
@@ -36,6 +40,8 @@ class SuperTagRelationAdmin(admin.ModelAdmin):
     ordering = ('tag', )
     search_fields = ('stype', 'name', 'tag')
     list_filter = ('stype', 'name', )
+    
+    raw_id_fields = ('tag',)
     
     
 class SuperTagProcessQueueAdmin(admin.ModelAdmin):
