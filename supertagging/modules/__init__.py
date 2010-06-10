@@ -72,6 +72,24 @@ def process(obj, tags=[]):
     c.processing_directives.update(settings.PROCESSING_DIR)
     c.processing_directives['contentType'] = process_type
 
+    # Get the object's date.
+    # First look for get_latest_by in the meta class, if nothing is
+    # found check the ordering attribute in the meta class.
+    date = None
+    date_fields = []
+    if obj._meta.get_latest_by:
+        date_fields.append(obj._meta.get_latest_by)
+    else:
+        date_fields = obj._meta.ordering
+    
+    for f in date_fields:
+        f=f.lstrip('-')
+        date = getattr(obj, f, None)
+        if isinstance(date, datetime.datetime) or isinstance(date, datetime.date):
+            break
+        date = None
+        continue
+        
     processed_tags = []
     for item in params['fields']:
         try:
@@ -102,15 +120,15 @@ def process(obj, tags=[]):
             # Process entities, relations and topics
             if hasattr(result, 'entities'):
                 entities = _processEntities(field, result.entities, 
-                    obj, ctype, proc_type, tags)
+                    obj, ctype, proc_type, tags, date)
 
             if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
                 relations = _processRelations(field, result.relations, obj, 
-                    ctype, proc_type, tags)                
+                    ctype, proc_type, tags, date)                
 
             if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
                 topics =  _processTopics(field, result.topics, obj, 
-                    ctype, tags)
+                    ctype, tags, date)
                 
             processed_tags.extend(entities)
             processed_tags.extend(topics)
@@ -135,7 +153,7 @@ def clean_up(obj):
     # TODO, clean up tags that have no related items?
     # Same for relations?
 
-def _processEntities(field, data, obj, ctype, process_type, tags):
+def _processEntities(field, data, obj, ctype, process_type, tags, date):
     """
     Process Entities.
     """
@@ -189,24 +207,6 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
                 
             tag.properties = entity
             tag.save()
-            
-            # Get the object's date.
-            # First look for get_latest_by in the meta class, if nothing is
-            # found check the ordering attribute in the meta class.
-            date = None
-            date_fields = []
-            if obj._meta.get_latest_by:
-                date_fields.append(obj._meta.get_latest_by)
-            else:
-                date_fields = obj._meta.ordering
-            
-            for f in date_fields:
-                f=f.lstrip('-')
-                date = getattr(obj, f, None)
-                if not isinstance(date, datetime.datetime):
-                    date = None
-                    continue
-                break
                 
             # Check to make sure that the entity is not already attached
             # to the content object, if it is, just append the instances. This
@@ -231,7 +231,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
             processed_tags.append(tag)
     return processed_tags
 
-def _processRelations(field, data, obj, ctype, process_type, tags):
+def _processRelations(field, data, obj, ctype, process_type, tags, date):
     """
     Process Relations
     """
@@ -287,9 +287,9 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
 
             SuperTaggedRelationItem.objects.create(relation=rel_item, 
                 content_type=ctype, object_id=obj.pk, field=field, 
-                process_type=process_type, instances=inst)
+                process_type=process_type, instances=inst, item_date=date)
 
-def _processTopics(field, data, obj, ctype, tags):
+def _processTopics(field, data, obj, ctype, tags, date):
     """
     Process Topics, this opertaion is similar to _processEntities, the only
     difference is that there are no instances
@@ -303,24 +303,6 @@ def _processTopics(field, data, obj, ctype, tags):
         name = di.pop('categoryName', '').lower()
         if tags and name not in tags:
             continue
-
-        # Get the object's date.
-        # First look for get_latest_by in the meta class, if nothing is
-        # found check the ordering attribute in the meta class.
-        date = None
-        date_fields = []
-        if obj._meta.get_latest_by:
-            date_fields.append(obj._meta.get_latest_by)
-        else:
-            date_fields = obj._meta.ordering
-        
-        for f in date_fields:
-            f=f.lstrip('-')
-            date = getattr(obj, f, None)
-            if not isinstance(date, datetime.datetime):
-                date = None
-                continue
-            break
 
         slug = slugify(name)
         tag = None
