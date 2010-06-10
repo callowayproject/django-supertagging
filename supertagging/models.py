@@ -5,7 +5,7 @@ from django.template.defaultfilters import slugify
 
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
-from supertagging.utils import LOGARITHMIC, markup_content, fix_name_for_freebase
+from supertagging.utils import LOGARITHMIC, markup_content, fix_name_for_freebase, render_item
 from supertagging import settings as st_settings
 
 qn = connection.ops.quote_name
@@ -523,6 +523,10 @@ class SuperTaggedItem(models.Model):
     def __unicode__(self):
         return 'SuperTag: %s of %s, Relevance: %s' % (self.tag, self.content_object, self.relevance)
 
+    def render(self, template=None, suffix=None):
+        return render_item(self, self.tag.stype, template, suffix,
+            template_path="supertagging/render/items")
+        
 
 class SuperTaggedRelationItem(models.Model):
     relation = models.ForeignKey(SuperTagRelation)
@@ -539,7 +543,11 @@ class SuperTaggedRelationItem(models.Model):
 
     def __unicode__(self):
         return unicode(self.relation)
-
+        
+    def render(self, template=None, suffix=None):
+        return render_item(self, self.relation.stype, template, suffix,
+            template_path="supertagging/render/relations")
+        
 
 class SuperTagExclude(models.Model):
     tag = models.ForeignKey(SuperTag, unique=True)
