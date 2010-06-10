@@ -281,11 +281,6 @@ class SuperTagRelationManager(models.Manager):
 
 
 class SuperTaggedItemManager(models.Manager):
-    def embed_supertags(self, obj, field, rel=0):
-        ctype = ContentType.objects.get_for_model(obj)
-        items = self.filter(object_id=obj.pk, content_type__pk=ctype.pk, field=field, relevance__gte=rel)
-        return markup_content(items, obj, field)
-    
     def get_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified

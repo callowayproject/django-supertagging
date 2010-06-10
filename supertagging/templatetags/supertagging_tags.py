@@ -409,18 +409,6 @@ class RelationsForTagInObjectNode(Node):
             SuperTaggedRelationItem.objects.get_for_tag_in_object(
                 tag=self.tag.resolve(context), obj=self.obj.resolve(context))
         return ''
-        
-
-class EmbedSuperTagsNode(Node):
-    def __init__(self, obj, field, rel):
-        self.field = field.strip("'")
-        self.rel = int(rel)
-        self.obj = Variable(obj)
-        
-    def render(self, context):
-        obj = self.obj.resolve(context)
-        value = SuperTaggedItem.objects.embed_supertags(obj, self.field, self.rel)
-        return value
 
 
 def do_relations_for_tag(parser, token):
@@ -487,35 +475,9 @@ def do_relations_for_tag_in_object(parser, token):
         raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
     return RelationsForTagInObjectNode(bits[1], bits[3], bits[5])
  
-def do_embed_supertags(parser, token):
-    """
-    Markup content, adds links to matched tags
 
-    Usage::
-
-        {% embed_supertags [object] for [field] [relavance] %}
-        
-    relavance (optional) should be between 0 and 1000, it will retreive 
-        items with greater or equal relvance.
-        
-    Example::
-
-        {% embed_supertags story for content 500 %}
-
-    """
-    bits = token.contents.split()
-    if len(bits) < 4:
-        raise template.TemplateSyntaxError(_('%s tag requires a minium of 4 arguments') % bits[0])
-    if bits[2] != 'for':
-        raise template.TemplateSyntaxError(_("second argument to %s tag must be 'for'") % bits[0])
-    
-    if len(bits) == 4:
-        return EmbedSuperTagsNode(bits[1], bits[3])
-    elif len(bits) == 5:
-        return EmbedSuperTagsNode(bits[1], bits[3], bits[4])
     
     
 register.tag('relations_for_supertag', do_relations_for_tag)
 register.tag('relations_for_object', do_relations_for_object)
 register.tag('relations_for', do_relations_for_tag_in_object)
-register.tag('embed_supertags', do_embed_supertags)
