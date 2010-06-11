@@ -481,3 +481,59 @@ def do_relations_for_tag_in_object(parser, token):
 register.tag('relations_for_supertag', do_relations_for_tag)
 register.tag('relations_for_object', do_relations_for_object)
 register.tag('relations_for', do_relations_for_tag_in_object)
+
+
+class RenderItemNode(Node):
+    def __init__(self, obj, template=None, suffix=None):
+        self.obj = obj
+        self.template = template
+        self.suffix = suffix
+        
+    def render(self, context):
+        suffix, template = self.suffix, self.template
+        try:
+            obj = Variable(self.obj).resolve(context)
+            isinst = False
+            for c in [SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem]:
+                if isinstance(obj, c):
+                    isinst = True
+                    break
+                    
+            if not isinst:
+                return None
+        except:
+            return None
+            
+        return obj.render(template=template, suffix=suffix)
+        
+        
+def do_render_item(parser, token):
+    """
+    {% st_render [SuperTag or SuperTaggedItem or SuperTagRelation or SuperTaggedRelationItem] [with] [suffix=S] [template=T] %}
+    {% st_render tag %}
+    {% st_render tagged_item with suffix=custom %}
+    {% st_render rel_item with template=mycustomtemplates/supertags/custom.html %}
+    
+    Only suffix OR template can be specified, but not both.
+    """
+    argv = token.contents.split()
+    argc = len(argv)
+    
+    if argc < 2 or argc > 4:
+        raise TemplateSyntaxError, "Tag %s takes either two or four arguments." % argv[0]
+        
+    if argc == 2:
+        return RenderItemNode(argv[1])
+    else:
+        if argv[2] != 'with':
+            raise TemplateSyntaxError, 'Second argument must be "with" for tag %s.' % argv[0]
+        extra = argv[3].split('=')
+        if len(extra) != 2:
+            raise TemplateSyntaxError, "Last argument must be formated correctly for tag %s." % argv[0]
+        if not extra[0] in ['suffix', 'template']:
+            raise TemplateSyntaxError, "Last argment must of either suffix or template for tag %s." % argv[0]
+            
+        kwargs = {str(extra[0]): extra[1],}
+        return RenderItemNode(argv[1], **kwargs)
+        
+register.tag('st_render', do_render_item)

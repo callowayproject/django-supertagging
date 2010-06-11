@@ -285,15 +285,15 @@ def fix_name_for_freebase(value):
     return "_".join(words)
     
     
-def render_item(item, stype, template, suffix, template_path='supertagging/render'):
+def render_item(item, stype, template, suffix, template_path='supertagging/render', context={}):
     """
-    Use to render the "items" (SuperTaggedItem and SuperTaggedRelationItem)
-    by thier content type
+    Use to render tags, relations, tagged items and tagger relations.
     """
     t, model, app, = None, "", ""
-
-    model = item.content_type.model.lower()
-    app = item.content_type.app_label.lower()
+    
+    if item:
+        model = item.content_type.model.lower()
+        app = item.content_type.app_label.lower()
     
     tp = "%s/%s" % (template_path, (stype or ""))
     
@@ -334,9 +334,6 @@ def render_item(item, stype, template, suffix, template_path='supertagging/rende
                         pass
     
     if not t: return None
-    
-    # The conext that will be passed to the rendered template.
-    context = {'obj': item.content_object, 'content': item}
     
     # Render the template
     ret = render_to_string(t.name, context)

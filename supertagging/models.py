@@ -487,6 +487,11 @@ class SuperTag(models.Model):
 
     def __unicode__(self):
         return self.name
+        
+    def render(self, template=None, suffix=None):
+        return render_item(None, self.stype, template, suffix,
+            template_path="supertagging/render/tags",
+            context={'obj': self})
 
 
 class SuperTagRelation(models.Model):
@@ -498,7 +503,12 @@ class SuperTagRelation(models.Model):
     objects = SuperTagRelationManager()
 
     def __unicode__(self):
-        return self.stype
+        return "%s - %s - %s" % (self.tag.name, self.stype, self.name)
+        
+    def render(self, template=None, suffix=None):
+        return render_item(None, self.stype, template, suffix,
+            template_path="supertagging/render/relations",
+            context={'obj': self})
 
 
 class SuperTaggedItem(models.Model):
@@ -520,7 +530,8 @@ class SuperTaggedItem(models.Model):
 
     def render(self, template=None, suffix=None):
         return render_item(self, self.tag.stype, template, suffix,
-            template_path="supertagging/render/items")
+            template_path="supertagging/render/tagged_items", 
+            context={'obj': self.content_object, 'content': self})
         
 
 class SuperTaggedRelationItem(models.Model):
@@ -537,11 +548,12 @@ class SuperTaggedRelationItem(models.Model):
     objects = SuperTaggedRelationItemManager()
 
     def __unicode__(self):
-        return unicode(self.relation)
+        return self.relation
         
     def render(self, template=None, suffix=None):
         return render_item(self, self.relation.stype, template, suffix,
-            template_path="supertagging/render/relations")
+            template_path="supertagging/render/tagged_relations",
+            context={'obj': self.content_object, 'content': self})
         
 
 class SuperTagExclude(models.Model):
