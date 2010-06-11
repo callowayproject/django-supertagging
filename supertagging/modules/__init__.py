@@ -14,10 +14,22 @@ from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, Sup
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
 def add_to_queue(instance):
+    """
+    Add object to the queue.
+    """
     cont_type = ContentType.objects.get_for_model(instance)
-    SuperTagProcessQueue.objects.get_or_create(content_type=cont_type, object_id=instance.pk)
+    # If ONLY_NON_TAGGED_OBJECTS is True and 'instance' has been 
+    # tagged, DO NOT add to queue
+    if settings.ONLY_NON_TAGGED_OBJECTS and SuperTaggedItem.objects.filter(
+        content_type__pk=cont_type.pk, object_id=str(instance.pk)).count() > 0:
+        return
+    SuperTagProcessQueue.objects.get_or_create(
+        content_type=cont_type, object_id=instance.pk)
     
 def remove_from_queue(instance):
+    """
+    Remove object from the queue.
+    """
     cont_type = ContentType.objects.get_for_model(instance)
     try:
         SuperTagProcessQueue.objects.get(content_type=cont_type, object_id=instance.pk).delete()
@@ -181,54 +193,57 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         pk = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
         stype = entity.pop('_type', '')
 
-        if stype.lower() not in settings.EXCLUSIONS:
-            name = entity.pop('name', '').lower()
-            if tags and name not in tags:
-                continue
-
-            slug = slugify(name)
-            tag = None
-            try:
-                tag = SuperTag.objects.get_by_name(name__iexact=name)
-            except SuperTag.DoesNotExist:
-                try:
-                    tag = SuperTag.objects.get(pk=pk)
-                except SuperTag.DoesNotExist:
-                    tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
-                        stype=stype, name=name)
-            except SuperTag.MultipleObjectsReturned:
-                tag = SuperTag.objects.filter(name__iexact=name)[0]
-                
-            tag = tag.substitute or tag
+        # if type is in EXLCUSIONS, continue to next item.
+        if stype.lower() in map(lambda s: s.lower(), settings.EXCLUSIONS):
+            continue
             
-            # If this tag was added to exlcude list, move onto the next item.
-            if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
-                continue
-                
-            tag.properties = entity
-            tag.save()
-                
-            # Check to make sure that the entity is not already attached
-            # to the content object, if it is, just append the instances. This
-            # should elimiate entities returned with different names such as
-            # 'Washington' and 'Washington DC' but same id
-            try:
-                it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, 
-                    object_id=obj.pk, field=field)
-                it.instances.append(inst)
-                it.item_date = date
-                # Take the higher relevance
-                if rel > it.relevance:
-                    it.relevance = rel
-                it.save()
-            except SuperTaggedItem.DoesNotExist:
-                # Create the record that will associate content to tags
-                it = SuperTaggedItem.objects.create(tag=tag, 
-                    content_type=ctype, object_id=obj.pk, field=field, 
-                    process_type=process_type, relevance=rel, instances=inst, 
-                    item_date=date)
+        name = entity.pop('name', '').lower()
+        if tags and name not in tags:
+            continue
 
-            processed_tags.append(tag)
+        slug = slugify(name)
+        tag = None
+        try:
+            tag = SuperTag.objects.get_by_name(name__iexact=name)
+        except SuperTag.DoesNotExist:
+            try:
+                tag = SuperTag.objects.get(pk=pk)
+            except SuperTag.DoesNotExist:
+                tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
+                    stype=stype, name=name)
+        except SuperTag.MultipleObjectsReturned:
+            tag = SuperTag.objects.filter(name__iexact=name)[0]
+            
+        tag = tag.substitute or tag
+        
+        # If this tag was added to exlcude list, move onto the next item.
+        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+            continue
+            
+        tag.properties = entity
+        tag.save()
+            
+        # Check to make sure that the entity is not already attached
+        # to the content object, if it is, just append the instances. This
+        # should elimiate entities returned with different names such as
+        # 'Washington' and 'Washington DC' but same id
+        try:
+            it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, 
+                object_id=obj.pk, field=field)
+            it.instances.append(inst)
+            it.item_date = date
+            # Take the higher relevance
+            if rel > it.relevance:
+                it.relevance = rel
+            it.save()
+        except SuperTaggedItem.DoesNotExist:
+            # Create the record that will associate content to tags
+            it = SuperTaggedItem.objects.create(tag=tag, 
+                content_type=ctype, object_id=obj.pk, field=field, 
+                process_type=process_type, relevance=rel, instances=inst, 
+                item_date=date)
+
+        processed_tags.append(tag)
     return processed_tags
 
 def _processRelations(field, data, obj, ctype, process_type, tags, date):
@@ -241,6 +256,10 @@ def _processRelations(field, data, obj, ctype, process_type, tags, date):
         inst = di.pop('instances', {})
         rel_type = di.pop('_type', '')
 
+        # If type is in REL_EXLCUSIONS, continue to next item.
+        if rel_type.lower() in map(lambda s: s.lower(), settings.REL_EXLCUSIONS):
+            continue
+            
         props = {}
         entities = {}
         # Loop all the items in search of entities (SuperTags).
