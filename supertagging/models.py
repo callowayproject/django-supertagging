@@ -476,7 +476,7 @@ class SuperTagExcludeManager(models.Manager):
 ##    MODELS     ##
 ###################
 class SuperTag(models.Model):
-    id = models.CharField(max_length=255, primary_key=True)
+    calais_id = models.CharField(max_length=255, unique=True)
     substitute = models.ForeignKey("self", null=True, blank=True, related_name="substitute_tagsubstitute")
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150)
@@ -486,12 +486,15 @@ class SuperTag(models.Model):
     objects = SuperTagManager()
 
     def __unicode__(self):
-        return self.name
+        return "%s - %s" % (self.name, self.stype)
         
     def render(self, template=None, suffix=None):
         return render_item(None, self.stype, template, suffix,
             template_path="supertagging/render/tags",
             context={'obj': self})
+            
+    class Meta:
+        ordering = ('name',)
 
 
 class SuperTagRelation(models.Model):
@@ -503,7 +506,7 @@ class SuperTagRelation(models.Model):
     objects = SuperTagRelationManager()
 
     def __unicode__(self):
-        return "%s - %s - %s" % (self.tag.name, self.stype, self.name)
+        return "%s - %s - %s" % (self.stype, self.tag.name, self.name)
         
     def render(self, template=None, suffix=None):
         return render_item(None, self.stype, template, suffix,
@@ -575,5 +578,9 @@ class SuperTagProcessQueue(models.Model):
         return 'Queue Item: <%s> %s' % (
             self.content_type, 
             unicode(str(self.content_object), 'utf-8'))
+            
+    class Meta:
+        verbose_name = "Process Queue"
+        verbose_name_plural = "Process Queue"
         
         

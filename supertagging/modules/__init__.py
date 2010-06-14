@@ -189,7 +189,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
                     inst[i][k] = v
 
 
-        pk = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
+        calais_id = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
         stype = entity.pop('_type', '')
 
         # if type is in EXLCUSIONS, continue to next item.
@@ -206,9 +206,9 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
             tag = SuperTag.objects.get_by_name(name__iexact=name)
         except SuperTag.DoesNotExist:
             try:
-                tag = SuperTag.objects.get(pk=pk)
+                tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
+                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
                     stype=stype, name=name)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
@@ -292,7 +292,7 @@ def _processRelations(field, data, obj, ctype, process_type, tags, date):
                 continue
             
             try:
-                entity = SuperTag.objects.get(pk=entity_value)
+                entity = SuperTag.objects.get(calais_id=entity_value)
                 entity = entity.substitute or entity
             except SuperTag.DoesNotExist:
                 continue
@@ -316,7 +316,7 @@ def _processTopics(field, data, obj, ctype, tags, date):
     for di in data:
         di.pop('__reference')
 
-        pk = re.match(REF_REGEX, str(di.pop('category'))).group('key')
+        calais_id = re.match(REF_REGEX, str(di.pop('category'))).group('key')
         stype = 'Topic'
         name = di.pop('categoryName', '').lower()
         if tags and name not in tags:
@@ -328,9 +328,9 @@ def _processTopics(field, data, obj, ctype, tags, date):
             tag = SuperTag.objects.get_by_name(name__iexact=name)
         except SuperTag.DoesNotExist:
             try:
-                tag = SuperTag.objects.get(pk=pk)
+                tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
+                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
                     stype=stype, name=name)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
@@ -355,9 +355,8 @@ def _getEntityText(key):
     """
     if settings.RESOLVE_KEYS:
         try:
-            r = SuperTag.objects.get(pk=key)
+            r = SuperTag.objects.get(calais_id=key)
             return r.name
-        except SuperTag.DoesNotExist:
+        except SuperTag.DoesNotExist, SuperTag.MultipleObjectsReturned:
             return key
-
     return key
