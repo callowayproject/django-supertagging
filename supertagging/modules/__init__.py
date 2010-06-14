@@ -109,7 +109,6 @@ def process(obj, tags=[]):
             
             field = d.pop('name')
             proc_type = d.pop('process_type', process_type)
-            markup = d.pop('markup', False)
 
             data = getattr(obj, field)
 
