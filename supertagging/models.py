@@ -276,8 +276,8 @@ class SuperTagManager(models.Manager):
 
 
 class SuperTagRelationManager(models.Manager):
-    def get_for_tag(self, tag):
-        return self.filter(tag__pk=tag.id)
+    def get_for_tag(self, tag, **kwargs):
+        return self.filter(tag__pk=tag.id, **kwargs)
 
 
 class SuperTaggedItemManager(models.Manager):
@@ -457,9 +457,9 @@ class SuperTaggedItemManager(models.Manager):
 
 
 class SuperTaggedRelationItemManager(models.Manager):
-    def get_for_object(self, obj):
+    def get_for_object(self, obj, **kwargs):
         ctype = ContentType.objects.get_for_model(obj)
-        return self.filter(content_type__pk=ctype.pk, object_id=obj.pk)
+        return self.filter(content_type__pk=ctype.pk, object_id=obj.pk, **kwargs)
         
     def get_for_tag_in_object(self, tag, obj):
         ctype = ContentType.objects.get_for_model(obj)
@@ -532,7 +532,7 @@ class SuperTaggedItem(models.Model):
         return 'SuperTag: %s of %s, Relevance: %s' % (self.tag, self.content_object, self.relevance)
 
     def render(self, template=None, suffix=None):
-        return render_item(self, self.tag.stype, template, suffix,
+        return render_item(self, None, template, suffix,
             template_path="supertagging/render/tagged_items", 
             context={'obj': self.content_object, 'content': self})
         
@@ -554,7 +554,7 @@ class SuperTaggedRelationItem(models.Model):
         return self.relation
         
     def render(self, template=None, suffix=None):
-        return render_item(self, self.relation.stype, template, suffix,
+        return render_item(self, None, template, suffix,
             template_path="supertagging/render/tagged_relations",
             context={'obj': self.content_object, 'content': self})
         

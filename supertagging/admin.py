@@ -37,7 +37,7 @@ class SuperTaggedRelationItemAdmin(admin.ModelAdmin):
 class SuperTagRelationAdmin(admin.ModelAdmin):
     list_display = ('tag', 'name', 'stype',)
     ordering = ('tag', )
-    search_fields = ('stype', 'name', 'tag')
+    search_fields = ('stype', 'name', 'tag__name')
     list_filter = ('stype', 'name', )
     
     raw_id_fields = ('tag',)

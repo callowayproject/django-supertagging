@@ -377,24 +377,34 @@ register.tag('related_objects_for_object', do_related_objects_for_object)
 
 
 class RelationsForTagNode(Node):
-    def __init__(self, obj, context_var):
+    def __init__(self, obj, context_var, stype=None):
         self.obj = Variable(obj)
+        self.stype = stype
         self.context_var = context_var
 
     def render(self, context):
+        kwargs = {}
+        if self.stype:
+            kwargs['stype__iexact'] = self.stype
         context[self.context_var] = \
-            SuperTagRelation.objects.get_for_tag(self.obj.resolve(context))
+            SuperTagRelation.objects.get_for_tag(
+                self.obj.resolve(context), **kwargs)
         return ''
         
         
 class RelationsForObjectNode(Node):
-    def __init__(self, obj, context_var):
+    def __init__(self, obj, context_var, stype=None):
         self.obj = Variable(obj)
+        self.stype = stype
         self.context_var = context_var
 
     def render(self, context):
+        kwargs = {}
+        if self.stype:
+            kwargs['stype__iexact'] = self.stype
         context[self.context_var] = \
-            SuperTaggedRelationItem.objects.get_for_object(self.obj.resolve(context))
+            SuperTaggedRelationItem.objects.get_for_object(
+                self.obj.resolve(context), **kwargs)
         return ''
         
         
@@ -417,21 +427,33 @@ def do_relations_for_tag(parser, token):
 
     Usage::
 
-        {% relations_for_tag [tag] as [varname] %}
+        {% relations_for_supertag [tag] as [varname] %}
+        {% relations_for_supertag [tag] as [varname] with type=[TYPE] %}
 
     The tag must of an instance of a ``Tag``, not the name of a tag.
 
     Example::
 
-        {% relations_for_tag state_tag as relations %}
+        {% relations_for_supertag state_tag as relations %}
+        {% relations_for_supertag state_tag as relations with type=Quotation %}
 
     """
     bits = token.contents.split()
-    if len(bits) != 4:
-        raise TemplateSyntaxError(_('%s tag requires exactly three arguments') % bits[0])
+    if len(bits) < 4 or len(bits) > 6:
+        raise TemplateSyntaxError(_('%s tag requires at least three arguments and at most six arguments') % bits[0])
     if bits[2] != 'as':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument for %s tag must be 'as'") % bits[0])
+        
+    if len(bits) > 4:
+        if bits[4] != "with":
+            raise TemplateSyntacError(_("Fouth argument for %s tag must be 'with'") % bits[0])
+        
+        if len(bits[5].split("=")) == 2 and bits[5].split("=")[0] == 'type':
+             return RelationsForTagNode(bits[1], bits[3], bits[5].split("=")[1])
+        else:
+            raise TemplateSyntacError(_("Last argument for %s tag must be in the format type=[TYPE]") % bits[0])
     return RelationsForTagNode(bits[1], bits[3])
+  
 
 def do_relations_for_object(parser, token):
     """
@@ -440,17 +462,28 @@ def do_relations_for_object(parser, token):
     Useage::
         
         {% relations_for_object [object] as [varname] %}
+        {% relations_for_object [object] as [varname] with [type=TYPE]}
         
     Example::
     
         {% relations_for_object story as story_relations %}
+        {% relations_for_object story as story_relations with type=Quotation %}
         
     """
     bits = token.contents.split()
-    if len(bits) != 4:
-        raise TemplateSyntaxError(_('%s tag requires exactly three arguments') % bits[0])
+    if len(bits) < 4 or len(bits) > 6:
+        raise TemplateSyntaxError(_('%s tag requires at least three arguments and at most six arguments') % bits[0])
     if bits[2] != 'as':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument for %s tag must be 'as'") % bits[0])
+        
+    if len(bits) > 4:
+        if bits[4] != "with":
+            raise TemplateSyntacError(_("Fouth argument for %s tag must be 'with'") % bits[0])
+        
+        if len(bits[5].split("=")) == 2 and bits[5].split("=")[0] == 'type':
+             return RelationsForObjectNode(bits[1], bits[3], bits[5].split("=")[1])
+        else:
+            raise TemplateSyntacError(_("Last argument for %s tag must be in the format type=[TYPE]") % bits[0])
     return RelationsForObjectNode(bits[1], bits[3])
     
 def do_relations_for_tag_in_object(parser, token):
@@ -470,9 +503,9 @@ def do_relations_for_tag_in_object(parser, token):
     if len(bits) != 6:
         raise TemplateSyntaxError(_('%s tag requires exactly five arguments') % bits[0])
     if bits[2] != 'in':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'in'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument to %s tag must be 'in'") % bits[0])
     if bits[4] != 'as':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument to %s tag must be 'as'") % bits[0])
     return RelationsForTagInObjectNode(bits[1], bits[3], bits[5])
  
 
