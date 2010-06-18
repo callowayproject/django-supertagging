@@ -377,24 +377,34 @@ register.tag('related_objects_for_object', do_related_objects_for_object)
 
 
 class RelationsForTagNode(Node):
-    def __init__(self, obj, context_var):
+    def __init__(self, obj, context_var, stype=None):
         self.obj = Variable(obj)
+        self.stype = stype
         self.context_var = context_var
 
     def render(self, context):
+        kwargs = {}
+        if self.stype:
+            kwargs['stype__iexact'] = self.stype
         context[self.context_var] = \
-            SuperTagRelation.objects.get_for_tag(self.obj.resolve(context))
+            SuperTagRelation.objects.get_for_tag(
+                self.obj.resolve(context), **kwargs)
         return ''
         
         
 class RelationsForObjectNode(Node):
-    def __init__(self, obj, context_var):
+    def __init__(self, obj, context_var, stype=None):
         self.obj = Variable(obj)
+        self.stype = stype
         self.context_var = context_var
 
     def render(self, context):
+        kwargs = {}
+        if self.stype:
+            kwargs['stype__iexact'] = self.stype
         context[self.context_var] = \
-            SuperTaggedRelationItem.objects.get_for_object(self.obj.resolve(context))
+            SuperTaggedRelationItem.objects.get_for_object(
+                self.obj.resolve(context), **kwargs)
         return ''
         
         
@@ -409,18 +419,6 @@ class RelationsForTagInObjectNode(Node):
             SuperTaggedRelationItem.objects.get_for_tag_in_object(
                 tag=self.tag.resolve(context), obj=self.obj.resolve(context))
         return ''
-        
-
-class EmbedSuperTagsNode(Node):
-    def __init__(self, obj, field, rel):
-        self.field = field.strip("'")
-        self.rel = int(rel)
-        self.obj = Variable(obj)
-        
-    def render(self, context):
-        obj = self.obj.resolve(context)
-        value = SuperTaggedItem.objects.embed_supertags(obj, self.field, self.rel)
-        return value
 
 
 def do_relations_for_tag(parser, token):
@@ -429,21 +427,33 @@ def do_relations_for_tag(parser, token):
 
     Usage::
 
-        {% relations_for_tag [tag] as [varname] %}
+        {% relations_for_supertag [tag] as [varname] %}
+        {% relations_for_supertag [tag] as [varname] with type=[TYPE] %}
 
     The tag must of an instance of a ``Tag``, not the name of a tag.
 
     Example::
 
-        {% relations_for_tag state_tag as relations %}
+        {% relations_for_supertag state_tag as relations %}
+        {% relations_for_supertag state_tag as relations with type=Quotation %}
 
     """
     bits = token.contents.split()
-    if len(bits) != 4:
-        raise TemplateSyntaxError(_('%s tag requires exactly three arguments') % bits[0])
+    if len(bits) < 4 or len(bits) > 6:
+        raise TemplateSyntaxError(_('%s tag requires at least three arguments and at most six arguments') % bits[0])
     if bits[2] != 'as':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument for %s tag must be 'as'") % bits[0])
+        
+    if len(bits) > 4:
+        if bits[4] != "with":
+            raise TemplateSyntacError(_("Fouth argument for %s tag must be 'with'") % bits[0])
+        
+        if len(bits[5].split("=")) == 2 and bits[5].split("=")[0] == 'type':
+             return RelationsForTagNode(bits[1], bits[3], bits[5].split("=")[1])
+        else:
+            raise TemplateSyntacError(_("Last argument for %s tag must be in the format type=[TYPE]") % bits[0])
     return RelationsForTagNode(bits[1], bits[3])
+  
 
 def do_relations_for_object(parser, token):
     """
@@ -452,17 +462,28 @@ def do_relations_for_object(parser, token):
     Useage::
         
         {% relations_for_object [object] as [varname] %}
+        {% relations_for_object [object] as [varname] with [type=TYPE]}
         
     Example::
     
         {% relations_for_object story as story_relations %}
+        {% relations_for_object story as story_relations with type=Quotation %}
         
     """
     bits = token.contents.split()
-    if len(bits) != 4:
-        raise TemplateSyntaxError(_('%s tag requires exactly three arguments') % bits[0])
+    if len(bits) < 4 or len(bits) > 6:
+        raise TemplateSyntaxError(_('%s tag requires at least three arguments and at most six arguments') % bits[0])
     if bits[2] != 'as':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument for %s tag must be 'as'") % bits[0])
+        
+    if len(bits) > 4:
+        if bits[4] != "with":
+            raise TemplateSyntacError(_("Fouth argument for %s tag must be 'with'") % bits[0])
+        
+        if len(bits[5].split("=")) == 2 and bits[5].split("=")[0] == 'type':
+             return RelationsForObjectNode(bits[1], bits[3], bits[5].split("=")[1])
+        else:
+            raise TemplateSyntacError(_("Last argument for %s tag must be in the format type=[TYPE]") % bits[0])
     return RelationsForObjectNode(bits[1], bits[3])
     
 def do_relations_for_tag_in_object(parser, token):
@@ -482,40 +503,70 @@ def do_relations_for_tag_in_object(parser, token):
     if len(bits) != 6:
         raise TemplateSyntaxError(_('%s tag requires exactly five arguments') % bits[0])
     if bits[2] != 'in':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'in'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument to %s tag must be 'in'") % bits[0])
     if bits[4] != 'as':
-        raise TemplateSyntaxError(_("second argument to %s tag must be 'as'") % bits[0])
+        raise TemplateSyntaxError(_("Second argument to %s tag must be 'as'") % bits[0])
     return RelationsForTagInObjectNode(bits[1], bits[3], bits[5])
  
-def do_embed_supertags(parser, token):
-    """
-    Markup content, adds links to matched tags
 
-    Usage::
-
-        {% embed_supertags [object] for [field] [relavance] %}
-        
-    relavance (optional) should be between 0 and 1000, it will retreive 
-        items with greater or equal relvance.
-        
-    Example::
-
-        {% embed_supertags story for content 500 %}
-
-    """
-    bits = token.contents.split()
-    if len(bits) < 4:
-        raise template.TemplateSyntaxError(_('%s tag requires a minium of 4 arguments') % bits[0])
-    if bits[2] != 'for':
-        raise template.TemplateSyntaxError(_("second argument to %s tag must be 'for'") % bits[0])
-    
-    if len(bits) == 4:
-        return EmbedSuperTagsNode(bits[1], bits[3])
-    elif len(bits) == 5:
-        return EmbedSuperTagsNode(bits[1], bits[3], bits[4])
     
     
 register.tag('relations_for_supertag', do_relations_for_tag)
 register.tag('relations_for_object', do_relations_for_object)
 register.tag('relations_for', do_relations_for_tag_in_object)
-register.tag('embed_supertags', do_embed_supertags)
+
+
+class RenderItemNode(Node):
+    def __init__(self, obj, template=None, suffix=None):
+        self.obj = obj
+        self.template = template
+        self.suffix = suffix
+        
+    def render(self, context):
+        suffix, template = self.suffix, self.template
+        try:
+            obj = Variable(self.obj).resolve(context)
+            isinst = False
+            for c in [SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem]:
+                if isinstance(obj, c):
+                    isinst = True
+                    break
+                    
+            if not isinst:
+                return None
+        except:
+            return None
+            
+        return obj.render(template=template, suffix=suffix)
+        
+        
+def do_render_item(parser, token):
+    """
+    {% st_render [SuperTag or SuperTaggedItem or SuperTagRelation or SuperTaggedRelationItem] [with] [suffix=S] [template=T] %}
+    {% st_render tag %}
+    {% st_render tagged_item with suffix=custom %}
+    {% st_render rel_item with template=mycustomtemplates/supertags/custom.html %}
+    
+    Only suffix OR template can be specified, but not both.
+    """
+    argv = token.contents.split()
+    argc = len(argv)
+    
+    if argc < 2 or argc > 4:
+        raise TemplateSyntaxError, "Tag %s takes either two or four arguments." % argv[0]
+        
+    if argc == 2:
+        return RenderItemNode(argv[1])
+    else:
+        if argv[2] != 'with':
+            raise TemplateSyntaxError, 'Second argument must be "with" for tag %s.' % argv[0]
+        extra = argv[3].split('=')
+        if len(extra) != 2:
+            raise TemplateSyntaxError, "Last argument must be formated correctly for tag %s." % argv[0]
+        if not extra[0] in ['suffix', 'template']:
+            raise TemplateSyntaxError, "Last argment must of either suffix or template for tag %s." % argv[0]
+            
+        kwargs = {str(extra[0]): extra[1],}
+        return RenderItemNode(argv[1], **kwargs)
+        
+register.tag('st_render', do_render_item)

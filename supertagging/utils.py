@@ -8,7 +8,7 @@ from django.db.models.query import QuerySet
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
 from django.template.defaultfilters import slugify
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from supertagging import settings
 # Python 2.3 compatibility
 try:
@@ -284,3 +284,58 @@ def fix_name_for_freebase(value):
         words.append(word.title())
     return "_".join(words)
     
+    
+def render_item(item, stype, template, suffix, template_path='supertagging/render', context={}):
+    """
+    Use to render tags, relations, tagged items and tagger relations.
+    """
+    t, model, app, = None, "", ""
+    
+    if item:
+        model = item.content_type.model.lower()
+        app = item.content_type.app_label.lower()
+    
+    tp = "%s/%s" % (template_path, (stype or ""))
+    
+    try:
+        # Retreive the template passed in
+        t = get_template(template)
+    except:
+        if suffix:
+            try:
+                # Retrieve the template based off of type and the content object with a suffix
+                t = get_template('%s/%s__%s__%s.html' % (
+                    tp, app, model, suffix.lower()))
+            except:
+                pass
+        else:
+            try:
+                # Retrieve the template based off of type and the content object
+                t = get_template('%s/%s__%s.html' % (
+                    tp, app, model))
+            except:
+                pass
+        if not t:
+            if suffix:
+                try:
+                    # Retrieve the template without the app/model with suffix
+                    t = get_template('%s/default__%s.html' % (tp, suffix))
+                except:
+                    pass
+            else:
+                try:
+                    # Retrieve the template without the app/model
+                    t = get_template('%s/default.html' % tp)
+                except:
+                    try:
+                        # Retreive the default template using just the starting template path
+                        t = get_template('%s/default.html' % template_path)
+                    except:
+                        pass
+    
+    if not t: return None
+    
+    # Render the template
+    ret = render_to_string(t.name, context)
+
+    return ret

@@ -1,0 +1,1 @@
+ALTER TABLE supertagging_supertaggedrelationitem ADD COLUMN item_date timestamp with time zone;

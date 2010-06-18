@@ -14,10 +14,22 @@ from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, Sup
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
 def add_to_queue(instance):
+    """
+    Add object to the queue.
+    """
     cont_type = ContentType.objects.get_for_model(instance)
-    SuperTagProcessQueue.objects.get_or_create(content_type=cont_type, object_id=instance.pk)
+    # If ONLY_NON_TAGGED_OBJECTS is True and 'instance' has been 
+    # tagged, DO NOT add to queue
+    if settings.ONLY_NON_TAGGED_OBJECTS and SuperTaggedItem.objects.filter(
+        content_type__pk=cont_type.pk, object_id=str(instance.pk)).count() > 0:
+        return
+    SuperTagProcessQueue.objects.get_or_create(
+        content_type=cont_type, object_id=instance.pk)
     
 def remove_from_queue(instance):
+    """
+    Remove object from the queue.
+    """
     cont_type = ContentType.objects.get_for_model(instance)
     try:
         SuperTagProcessQueue.objects.get(content_type=cont_type, object_id=instance.pk).delete()
@@ -72,6 +84,24 @@ def process(obj, tags=[]):
     c.processing_directives.update(settings.PROCESSING_DIR)
     c.processing_directives['contentType'] = process_type
 
+    # Get the object's date.
+    # First look for get_latest_by in the meta class, if nothing is
+    # found check the ordering attribute in the meta class.
+    date = None
+    date_fields = []
+    if obj._meta.get_latest_by:
+        date_fields.append(obj._meta.get_latest_by)
+    else:
+        date_fields = obj._meta.ordering
+    
+    for f in date_fields:
+        f=f.lstrip('-')
+        date = getattr(obj, f, None)
+        if isinstance(date, datetime.datetime) or isinstance(date, datetime.date):
+            break
+        date = None
+        continue
+        
     processed_tags = []
     for item in params['fields']:
         try:
@@ -79,7 +109,6 @@ def process(obj, tags=[]):
             
             field = d.pop('name')
             proc_type = d.pop('process_type', process_type)
-            markup = d.pop('markup', False)
 
             data = getattr(obj, field)
 
@@ -102,15 +131,15 @@ def process(obj, tags=[]):
             # Process entities, relations and topics
             if hasattr(result, 'entities'):
                 entities = _processEntities(field, result.entities, 
-                    obj, ctype, proc_type, tags)
+                    obj, ctype, proc_type, tags, date)
 
             if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
                 relations = _processRelations(field, result.relations, obj, 
-                    ctype, proc_type, tags)                
+                    ctype, proc_type, tags, date)                
 
             if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
                 topics =  _processTopics(field, result.topics, obj, 
-                    ctype, tags)
+                    ctype, tags, date)
                 
             processed_tags.extend(entities)
             processed_tags.extend(topics)
@@ -135,7 +164,7 @@ def clean_up(obj):
     # TODO, clean up tags that have no related items?
     # Same for relations?
 
-def _processEntities(field, data, obj, ctype, process_type, tags):
+def _processEntities(field, data, obj, ctype, process_type, tags, date):
     """
     Process Entities.
     """
@@ -160,78 +189,63 @@ def _processEntities(field, data, obj, ctype, process_type, tags):
                     inst[i][k] = v
 
 
-        pk = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
+        calais_id = re.match(REF_REGEX, str(entity.pop('__reference'))).group('key')
         stype = entity.pop('_type', '')
 
-        if stype.lower() not in settings.EXCLUSIONS:
-            name = entity.pop('name', '').lower()
-            if tags and name not in tags:
-                continue
+        # if type is in EXLCUSIONS, continue to next item.
+        if stype.lower() in map(lambda s: s.lower(), settings.EXCLUSIONS):
+            continue
+            
+        name = entity.pop('name', '').lower()
+        if tags and name not in tags:
+            continue
 
-            slug = slugify(name)
-            tag = None
+        slug = slugify(name)
+        tag = None
+        try:
+            tag = SuperTag.objects.get_by_name(name__iexact=name)
+        except SuperTag.DoesNotExist:
             try:
-                tag = SuperTag.objects.get_by_name(name__iexact=name)
+                tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                try:
-                    tag = SuperTag.objects.get(pk=pk)
-                except SuperTag.DoesNotExist:
-                    tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
-                        stype=stype, name=name)
-            except SuperTag.MultipleObjectsReturned:
-                tag = SuperTag.objects.filter(name__iexact=name)[0]
-                
-            tag = tag.substitute or tag
+                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
+                    stype=stype, name=name)
+        except SuperTag.MultipleObjectsReturned:
+            tag = SuperTag.objects.filter(name__iexact=name)[0]
             
-            # If this tag was added to exlcude list, move onto the next item.
-            if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
-                continue
-                
-            tag.properties = entity
-            tag.save()
+        tag = tag.substitute or tag
+        
+        # If this tag was added to exlcude list, move onto the next item.
+        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+            continue
             
-            # Get the object's date.
-            # First look for get_latest_by in the meta class, if nothing is
-            # found check the ordering attribute in the meta class.
-            date = None
-            date_fields = []
-            if obj._meta.get_latest_by:
-                date_fields.append(obj._meta.get_latest_by)
-            else:
-                date_fields = obj._meta.ordering
+        tag.properties = entity
+        tag.save()
             
-            for f in date_fields:
-                f=f.lstrip('-')
-                date = getattr(obj, f, None)
-                if not isinstance(date, datetime.datetime):
-                    date = None
-                    continue
-                break
-                
-            # Check to make sure that the entity is not already attached
-            # to the content object, if it is, just append the instances. This
-            # should elimiate entities returned with different names such as
-            # 'Washington' and 'Washington DC' but same id
-            try:
-                it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, 
-                    object_id=obj.pk, field=field)
-                it.instances.append(inst)
-                it.item_date = date
-                # Take the higher relevance
-                if rel > it.relevance:
-                    it.relevance = rel
-                it.save()
-            except SuperTaggedItem.DoesNotExist:
-                # Create the record that will associate content to tags
-                it = SuperTaggedItem.objects.create(tag=tag, 
-                    content_type=ctype, object_id=obj.pk, field=field, 
-                    process_type=process_type, relevance=rel, instances=inst, 
-                    item_date=date)
+        # Check to make sure that the entity is not already attached
+        # to the content object, if it is, just append the instances. This
+        # should elimiate entities returned with different names such as
+        # 'Washington' and 'Washington DC' but same id
+        try:
+            it = SuperTaggedItem.objects.get(tag=tag, content_type=ctype, 
+                object_id=obj.pk, field=field)
+            it.instances.append(inst)
+            it.item_date = date
+            # Take the higher relevance
+            if rel > it.relevance:
+                it.relevance = rel
+            it.save()
+        except SuperTaggedItem.DoesNotExist:
+            # Create the record that will associate content to tags
+            it = SuperTaggedItem.objects.create(tag=tag, 
+                content_type=ctype, object_id=obj.pk, field=field, 
+                process_type=process_type, relevance=rel, instances=inst, 
+                item_date=date)
 
-            processed_tags.append(tag)
+        processed_tags.append(tag)
     return processed_tags
 
-def _processRelations(field, data, obj, ctype, process_type, tags):
+def _processRelations(field, data, obj, ctype, process_type, tags, date):
     """
     Process Relations
     """
@@ -241,6 +255,10 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
         inst = di.pop('instances', {})
         rel_type = di.pop('_type', '')
 
+        # If type is in REL_EXLCUSIONS, continue to next item.
+        if rel_type.lower() in map(lambda s: s.lower(), settings.REL_EXLCUSIONS):
+            continue
+            
         props = {}
         entities = {}
         # Loop all the items in search of entities (SuperTags).
@@ -274,7 +292,7 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
                 continue
             
             try:
-                entity = SuperTag.objects.get(pk=entity_value)
+                entity = SuperTag.objects.get(calais_id=entity_value)
                 entity = entity.substitute or entity
             except SuperTag.DoesNotExist:
                 continue
@@ -287,9 +305,9 @@ def _processRelations(field, data, obj, ctype, process_type, tags):
 
             SuperTaggedRelationItem.objects.create(relation=rel_item, 
                 content_type=ctype, object_id=obj.pk, field=field, 
-                process_type=process_type, instances=inst)
+                process_type=process_type, instances=inst, item_date=date)
 
-def _processTopics(field, data, obj, ctype, tags):
+def _processTopics(field, data, obj, ctype, tags, date):
     """
     Process Topics, this opertaion is similar to _processEntities, the only
     difference is that there are no instances
@@ -298,29 +316,11 @@ def _processTopics(field, data, obj, ctype, tags):
     for di in data:
         di.pop('__reference')
 
-        pk = re.match(REF_REGEX, str(di.pop('category'))).group('key')
+        calais_id = re.match(REF_REGEX, str(di.pop('category'))).group('key')
         stype = 'Topic'
         name = di.pop('categoryName', '').lower()
         if tags and name not in tags:
             continue
-
-        # Get the object's date.
-        # First look for get_latest_by in the meta class, if nothing is
-        # found check the ordering attribute in the meta class.
-        date = None
-        date_fields = []
-        if obj._meta.get_latest_by:
-            date_fields.append(obj._meta.get_latest_by)
-        else:
-            date_fields = obj._meta.ordering
-        
-        for f in date_fields:
-            f=f.lstrip('-')
-            date = getattr(obj, f, None)
-            if not isinstance(date, datetime.datetime):
-                date = None
-                continue
-            break
 
         slug = slugify(name)
         tag = None
@@ -328,9 +328,9 @@ def _processTopics(field, data, obj, ctype, tags):
             tag = SuperTag.objects.get_by_name(name__iexact=name)
         except SuperTag.DoesNotExist:
             try:
-                tag = SuperTag.objects.get(pk=pk)
+                tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(id=pk, slug=slug, 
+                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
                     stype=stype, name=name)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
@@ -355,9 +355,8 @@ def _getEntityText(key):
     """
     if settings.RESOLVE_KEYS:
         try:
-            r = SuperTag.objects.get(pk=key)
+            r = SuperTag.objects.get(calais_id=key)
             return r.name
-        except SuperTag.DoesNotExist:
+        except SuperTag.DoesNotExist, SuperTag.MultipleObjectsReturned:
             return key
-
     return key

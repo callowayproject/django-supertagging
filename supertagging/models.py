@@ -5,7 +5,7 @@ from django.template.defaultfilters import slugify
 
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
-from supertagging.utils import LOGARITHMIC, markup_content, fix_name_for_freebase
+from supertagging.utils import LOGARITHMIC, markup_content, fix_name_for_freebase, render_item
 from supertagging import settings as st_settings
 
 qn = connection.ops.quote_name
@@ -276,16 +276,11 @@ class SuperTagManager(models.Manager):
 
 
 class SuperTagRelationManager(models.Manager):
-    def get_for_tag(self, tag):
-        return self.filter(tag__pk=tag.id)
+    def get_for_tag(self, tag, **kwargs):
+        return self.filter(tag__pk=tag.id, **kwargs)
 
 
 class SuperTaggedItemManager(models.Manager):
-    def embed_supertags(self, obj, field, rel=0):
-        ctype = ContentType.objects.get_for_model(obj)
-        items = self.filter(object_id=obj.pk, content_type__pk=ctype.pk, field=field, relevance__gte=rel)
-        return markup_content(items, obj, field)
-    
     def get_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified
@@ -462,9 +457,9 @@ class SuperTaggedItemManager(models.Manager):
 
 
 class SuperTaggedRelationItemManager(models.Manager):
-    def get_for_object(self, obj):
+    def get_for_object(self, obj, **kwargs):
         ctype = ContentType.objects.get_for_model(obj)
-        return self.filter(content_type__pk=ctype.pk, object_id=obj.pk)
+        return self.filter(content_type__pk=ctype.pk, object_id=obj.pk, **kwargs)
         
     def get_for_tag_in_object(self, tag, obj):
         ctype = ContentType.objects.get_for_model(obj)
@@ -481,7 +476,7 @@ class SuperTagExcludeManager(models.Manager):
 ##    MODELS     ##
 ###################
 class SuperTag(models.Model):
-    id = models.CharField(max_length=255, primary_key=True)
+    calais_id = models.CharField(max_length=255, unique=True)
     substitute = models.ForeignKey("self", null=True, blank=True, related_name="substitute_tagsubstitute")
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150)
@@ -491,8 +486,15 @@ class SuperTag(models.Model):
     objects = SuperTagManager()
 
     def __unicode__(self):
-        return self.name
-
+        return "%s - %s" % (self.name, self.stype)
+        
+    def render(self, template=None, suffix=None):
+        return render_item(None, self.stype, template, suffix,
+            template_path="supertagging/render/tags",
+            context={'obj': self})
+            
+    class Meta:
+        ordering = ('name',)
 
 
 class SuperTagRelation(models.Model):
@@ -504,7 +506,12 @@ class SuperTagRelation(models.Model):
     objects = SuperTagRelationManager()
 
     def __unicode__(self):
-        return self.stype
+        return "%s - %s - %s" % (self.stype, self.tag.name, self.name)
+        
+    def render(self, template=None, suffix=None):
+        return render_item(None, self.stype, template, suffix,
+            template_path="supertagging/render/relations",
+            context={'obj': self})
 
 
 class SuperTaggedItem(models.Model):
@@ -524,6 +531,11 @@ class SuperTaggedItem(models.Model):
     def __unicode__(self):
         return 'SuperTag: %s of %s, Relevance: %s' % (self.tag, self.content_object, self.relevance)
 
+    def render(self, template=None, suffix=None):
+        return render_item(self, None, template, suffix,
+            template_path="supertagging/render/tagged_items", 
+            context={'obj': self.content_object, 'content': self})
+        
 
 class SuperTaggedRelationItem(models.Model):
     relation = models.ForeignKey(SuperTagRelation)
@@ -534,11 +546,18 @@ class SuperTaggedRelationItem(models.Model):
     process_type = models.CharField(max_length=20, null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
 
+    item_date = models.DateTimeField(null=True, blank=True)
+    
     objects = SuperTaggedRelationItemManager()
 
     def __unicode__(self):
-        return unicode(self.relation)
-
+        return self.relation
+        
+    def render(self, template=None, suffix=None):
+        return render_item(self, None, template, suffix,
+            template_path="supertagging/render/tagged_relations",
+            context={'obj': self.content_object, 'content': self})
+        
 
 class SuperTagExclude(models.Model):
     tag = models.ForeignKey(SuperTag, unique=True)
@@ -559,5 +578,9 @@ class SuperTagProcessQueue(models.Model):
         return 'Queue Item: <%s> %s' % (
             self.content_type, 
             unicode(str(self.content_object), 'utf-8'))
+            
+    class Meta:
+        verbose_name = "Process Queue"
+        verbose_name_plural = "Process Queue"
         
         
