@@ -2,6 +2,7 @@ from django.db import models, connection
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.template.defaultfilters import slugify
+from django.db.models.signals import pre_delete
 
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
@@ -529,7 +530,7 @@ class SuperTaggedItem(models.Model):
     objects = SuperTaggedItemManager()
 
     def __unicode__(self):
-        return 'SuperTag: %s of %s, Relevance: %s' % (self.tag, self.content_object, self.relevance)
+        return '%s of %s' % (self.tag, str(self.content_object))
 
     def render(self, template=None, suffix=None):
         return render_item(self, None, template, suffix,
@@ -551,7 +552,7 @@ class SuperTaggedRelationItem(models.Model):
     objects = SuperTaggedRelationItemManager()
 
     def __unicode__(self):
-        return self.relation
+        return "%s of %s" % (self.relation.name, str(self.content_object))
         
     def render(self, template=None, suffix=None):
         return render_item(self, None, template, suffix,
@@ -584,3 +585,20 @@ class SuperTagProcessQueue(models.Model):
         verbose_name_plural = "Process Queue"
         
         
+def _clean_tagged_relation_items(sender, **kwargs):
+    obj = kwargs.get('instance', None)
+    
+    if not obj:
+        return
+        
+    items = SuperTaggedRelationItem.objects.filter(
+        relation__tag__pk=obj.tag.pk,
+        content_type__pk=obj.content_type.pk,
+        object_id=obj.object_id)
+    
+    if items:
+        items.delete()
+    
+# When a tagged item is removed, clean up the related tagged items as well.
+pre_delete.connect(_clean_tagged_relation_items, sender=SuperTaggedItem) 
+   
