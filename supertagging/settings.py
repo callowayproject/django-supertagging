@@ -56,3 +56,12 @@ FREEBASE_TYPE_MAPPINGS = getattr(settings, 'SUPERTAGGING_FREEBASE_TYPE_MAPPINGS'
 # of processing the item on the save. Should be used with the management
 # command.
 USE_QUEUE = getattr(settings, 'SUPERTAGGING_USE_QUEUE', False)
+
+# To allow the registration of the models that are also tagged.
+MARKUP = getattr(settings, 'SUPERTAGGING_MARKUP', False)
+
+# The suffix of the field created when using markup.
+MARKUP_FIELD_SUFFIX = getattr(settings, 'SUPERTAGGING_MARKUP_FIELD_SUFFIX', "tagged")
+
+# List of strings that will be excluded from being marked up, ex: his, her, him etc.
+MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])

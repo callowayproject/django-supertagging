@@ -1,8 +1,9 @@
 from django.db.models import get_model
 from django.db.models.signals import post_save, post_delete
 
-from supertagging.settings import USE_QUEUE, MODULES, AUTO_PROCESS, ST_DEBUG
+from supertagging.settings import USE_QUEUE, MODULES, AUTO_PROCESS, ST_DEBUG, MARKUP
 from supertagging.modules import process, clean_up, add_to_queue, remove_from_queue
+from supertagging.markup import register_for_markup
 
 def save_handler(sender, **kwargs):
     if 'instance' in kwargs:
@@ -30,5 +31,8 @@ def setup_handlers():
             if model:
                 post_save.connect(save_handler, sender=model)
                 post_delete.connect(delete_handler, sender=model)
+            
+        if MARKUP:  
+            register_for_markup()
     except Exception, e:
         if ST_DEBUG: raise Exception(e)
