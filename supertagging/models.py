@@ -64,7 +64,6 @@ class SuperTagManager(models.Manager):
             # Return the new tag or the new tags substitute
             return new_tag.substitute or new_tag
         except:
-            print 'Failed'
             # Simply return the obj if something went wrong
             return obj
             
