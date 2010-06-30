@@ -26,7 +26,7 @@ class MarkupHandler(object):
         try:
             data = self.handle(instance)
         except Exception, e:
-            data = getattr(instance, field)
+            data = getattr(instance, self.field)
             if settings.ST_DEBUG: raise Exception(e)
         
         cache.set(self._get_cache_key(instance), data, settings.MARKUP_CONTENT_CACHE_TIMEOUT)
