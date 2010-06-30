@@ -65,3 +65,6 @@ MARKUP_FIELD_SUFFIX = getattr(settings, 'SUPERTAGGING_MARKUP_FIELD_SUFFIX', "tag
 
 # List of strings that will be excluded from being marked up, ex: his, her, him etc.
 MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
+
+# Integer for the cache timeout for the markup content.
+MARKUP_CONTENT_CACHE_TIMEOUT = getattr(settings, 'SUPERTAGGING_MARKUP_CONTENT_CACHE_TIMEOUT', 3600)

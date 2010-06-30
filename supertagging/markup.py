@@ -19,55 +19,45 @@ class MarkupHandler(object):
         if not instance:
             return
             
-        _cache_key = "ST_HANDLER.%s.%s" % (self.content_type.pk, instance.pk)
-        val = cache.get(_cache_key)
-        
-        # Check to make sure the original cached field data is the 
-        # same as the current field data, if it is not the same
-        # re-cache the new values, this may result in the data being
-        # out of sync with calais
-        if val and isinstance(val, dict):
-            if val["original"] == getattr(instance, self.field):
-                return val["markup"]
-                
-        # Retreive the current field data and the marked up version
-        o_data = getattr(instance, self.field)
+        data = self._get_cached_value(instance)
+        if data:
+            return data
+            
         try:
-            # If the handle method breaks, use the original content,
-            # raise error if debug is True
-            m_data = self.handle(instance)
+            data = self.handle(instance)
         except Exception, e:
+            data = getattr(instance, field)
             if settings.ST_DEBUG: raise Exception(e)
-            m_data = o_data
         
-        val = {'original': o_data, 'markup': m_data}
-        cache.set(_cache_key, val, 3600)
+        cache.set(self._get_cache_key(instance), data, settings.MARKUP_CONTENT_CACHE_TIMEOUT)
+        return data
         
-        return m_data
-        
-    # TODO:
-    # Should the handle method be a place were users can call there own markup?
-    # Should it be a place where users can view original and marked up content?
+    def _get_cache_key(self, instance=None):
+        if instance:
+            return "ST_HANDLER.%s.%s.%s" % (self.content_type.pk, instance.pk, self.field)
+        return None
+    
+    def _get_cached_value(self, instance=None):
+        if instance and self._get_cache_key(instance):
+            key = self._get_cache_key(instance)
+            return cache.get(key)
+        return None
         
     def handle(self, instance=None):
         if instance:
             return markup_content(instance, self.field)
         return ""
+       
+       
+def invalidate_markup_cache(obj, field):
+    if not obj:
+        return
         
-
-def register_for_markup():
-    for k,v in settings.MODULES.items():
-        app_label, model_name = k.split('.')
-        model = get_model(app_label, model_name)
-        for f in v.get('fields', []):
-            field = f.get('name', None)
-            markup = f.get('markup', True)
-            if markup and settings.MARKUP and field:
-                handler = _get_handler_module(f.get('markup_handler', None))
-                nfield = "%s__%s" % (field, settings.MARKUP_FIELD_SUFFIX)
-                setattr(model, nfield, handler(model, field))
+    ctype = ContentType.objects.get_for_model(obj)
+    key = "ST_HANDLER.%s.%s.%s" % (ctype.pk, obj.pk, field)
+    cache.delete(key)
     
-def _get_handler_module(module):
+def get_handler_module(module):
     if not module:
         return MarkupHandler
         

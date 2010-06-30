@@ -10,6 +10,7 @@ from django.db.models.loading import get_model
 from supertagging import settings
 from supertagging.calais import Calais
 from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
+from supertagging.markup import invalidate_markup_cache
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
@@ -94,6 +95,9 @@ def process(obj, tags=[]):
     else:
         date_fields = obj._meta.ordering
     
+    # Retrieve the Django content type for the obj
+    ctype = ContentType.objects.get_for_model(obj)
+    
     for f in date_fields:
         f=f.lstrip('-')
         date = getattr(obj, f, None)
@@ -117,8 +121,6 @@ def process(obj, tags=[]):
             # Analyze the text (data)
             result = c.analyze(data)
 
-            # Retrieve the Django content type for the obj
-            ctype = ContentType.objects.get_for_model(obj)
             # Remove existing items, this ensures tagged items 
             # are updated correctly
             SuperTaggedItem.objects.filter(content_type=ctype, 
@@ -143,9 +145,14 @@ def process(obj, tags=[]):
                 
             processed_tags.extend(entities)
             processed_tags.extend(topics)
+            
+            if settings.MARKUP:
+                invalidate_markup_cache(obj, field)
+                
         except Exception, e:
             if settings.ST_DEBUG: raise Exception(e)
             continue
+
     return processed_tags
 
 def clean_up(obj):
