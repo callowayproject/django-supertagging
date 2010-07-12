@@ -9,7 +9,7 @@ from django.db.models.loading import get_model
 
 from supertagging import settings
 from supertagging.calais import Calais
-from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
+from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue
 from supertagging.markup import invalidate_markup_cache
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
@@ -223,7 +223,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         tag = tag.substitute or tag
         
         # If this tag was added to exlcude list, move onto the next item.
-        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+        if not tag.enabled:
             continue
             
         tag.properties = entity
@@ -304,7 +304,7 @@ def _processRelations(field, data, obj, ctype, process_type, tags, date):
             except SuperTag.DoesNotExist:
                 continue
                 
-            if len(SuperTagExclude.objects.filter(tag__pk=entity.pk)) == 1:
+            if not entity.enabled:
                 continue
                 
             rel_item, rel_created = SuperTagRelation.objects.get_or_create(
@@ -344,7 +344,7 @@ def _processTopics(field, data, obj, ctype, tags, date):
             
         tag = tag.substitute or tag
         
-        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+        if not tag.enabled:
             continue
 
         tag.properties = di

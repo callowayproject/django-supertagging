@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.db.models import get_model
 
 from supertagging import settings
-from supertagging.models import SuperTag, SuperTaggedItem
+from supertagging.models import SuperTaggedItem
 
 class MarkupHandler(object):
     """
