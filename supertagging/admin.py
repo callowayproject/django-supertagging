@@ -17,30 +17,30 @@ class SuperTagAdmin(admin.ModelAdmin):
     search_fields = ('stype', 'name', )
     list_filter = ('stype', )
     
-    actions = ['exclude_tag', 'include_tag']
+    actions = ['disable_tag', 'enable_tag']
     
     raw_id_fields = ('substitute',)
     
-    def exclude_tag(self, request, queryset):
+    def disable_tag(self, request, queryset):
         message_bit = ""
         for tag in queryset:
             message_bit = "%s %s," % (message_bit, tag.name)
             tag.enabled=False
             tag.save()
     
-        self.message_user(request, "Tag(s): %s were Excluded." % message_bit)
-    exclude_tag.short_description = "Exclude selected tags"
+        self.message_user(request, "Tag(s): %s were Disabled." % message_bit)
+    disable_tag.short_description = "Disable selected tags"
     
     
-    def include_tag(self, request, queryset):
+    def enable_tag(self, request, queryset):
         message_bit = ""
         for tag in queryset:
             message_bit = "%s %s," % (message_bit, tag.name)
             tag.enabled=True
             tag.save()
     
-        self.message_user(request, "Tag(s): %s were Included." % message_bit)
-    include_tag.short_description = "Include selected tags"
+        self.message_user(request, "Tag(s): %s were Enabled." % message_bit)
+    enable_tag.short_description = "Enable selected tags"
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'tag', 'field', 'process_type', 'relevance', 'item_date')
