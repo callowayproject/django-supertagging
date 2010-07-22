@@ -46,11 +46,21 @@ ENABLED = getattr(settings, 'SUPERTAGGING_ENABLED', True)
 # Minimum relevance score needed when adding tags
 MIN_RELEVANCE = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE', 0)
 
+# Minimun relevance score needed when marking up the content
+MIN_RELEVANCE_MARKUP = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE_MARKUP', MIN_RELEVANCE)
+
 # Optional, use freebase to disambiguate tags
 USE_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
 
 # Only used if USE_FREEBASE is True, maps calais types to freebase types
 FREEBASE_TYPE_MAPPINGS = getattr(settings, 'SUPERTAGGING_FREEBASE_TYPE_MAPPINGS', {})
+
+# If True and INCLUDE_DISPLAY_FIELDS is True, will try to retreive
+# a description for the tag via Freebase and save it to the description field
+FREEBASE_RETRIEVE_DESCRIPTIONS = getattr(settings, 'SUPERTAGGING_FREEBASE_RETRIEVE_DESCRIPTIONS', False)
+
+# The first part of the url to retreive descriptions from freebase
+FREEBASE_DESCRIPTION_URL = getattr(settings, 'SUPERTAGGING_FREEBASE_DESCRIPTION_URL', "http://www.freebase.com/api/trans/raw")
 
 # If set true and auto process is on, will add objects to a queue enstead 
 # of processing the item on the save. Should be used with the management
@@ -68,3 +78,20 @@ MARKUP_EXCLUDES = getattr(settings, 'SUPERTAGGING_MARKUP_EXCLUDES', [])
 
 # Integer for the cache timeout for the markup content.
 MARKUP_CONTENT_CACHE_TIMEOUT = getattr(settings, 'SUPERTAGGING_MARKUP_CONTENT_CACHE_TIMEOUT', 3600)
+
+# Weather or not to include fields, description, icon, related
+INCLUDE_DISPLAY_FIELDS = getattr(settings, 'SUPERTAGGING_INCLUDE_DISPLAY_FIELDS', True)
+
+# Default image storage, for the tag icon
+DEFAULT_STORAGE = getattr(settings, 'SUPERTAGGING_DEFAULT_STORAGE', settings.DEFAULT_FILE_STORAGE)
+
+# Names used enstead of integers when displaying the content. 
+# EX: {'stories': 322, 'photos': 129, 'entries': 102, 'polls': 754}
+# Where the value is the actual content type id and the key is the name
+# used in the url. 
+#   supertagging/tags/barack_obama/stories/
+#   supertagging/tags/world_cup/photos/
+CONTENTTYPE_NAME_MAPPING = getattr(settings, "SUPERTAGGING_CONTENTTYPE_NAME_MAPPING", {})
+
+# Cache timeout in seconds for the views
+VIEW_CACHE_TIMEOUT = getattr(settings, 'SUPERTAGGING_VIEW_CACHE_TIMEOUT', 300)
