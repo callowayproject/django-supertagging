@@ -3,6 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.template.defaultfilters import slugify
 from django.db.models.signals import pre_delete
+from django.utils.translation import ugettext as _
+from django.db.models import permalink
 
 from supertagging.handlers import setup_handlers
 from supertagging.fields import PickledObjectField
@@ -18,6 +20,9 @@ try:
     import freebase
 except ImportError:
     freebase = None
+    
+# The key from freebase that will have the topic description
+FREEBASE_DESC_KEY = "/common/topic/article"
     
 def _retrieve_name_from_freebase(name, stype):
     search_key = fix_name_for_freebase(name)
@@ -41,6 +46,39 @@ def _retrieve_name_from_freebase(name, stype):
     if value:
         return value["name"]
     return name
+    
+def _retreive_desc_from_freebase(name, stype):
+    fb_type = st_settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
+    value, data = None, ""
+    try:
+        value = freebase.mqlread(
+            {"name": name, "type": fb_type or [],
+             FREEBASE_DESC_KEY: [{"id": None}]})
+    except:
+        try:
+            values = freebase.mqlreaditer(
+                {"name": name, "type": fb_type or [],
+                 FREEBASE_DESC_KEY: [{"id": None}]})
+            value = values.next()
+        except Exception, e:
+            pass
+            
+    if value and FREEBASE_DESC_KEY in value and value[FREEBASE_DESC_KEY]:
+        guid = value[FREEBASE_DESC_KEY][0].get("id", None)
+        print guid
+        if not guid:
+            return data
+        try:
+            import urllib
+            desc_url = "%s%s" % (st_settings.FREEBASE_DESCRIPTION_URL, guid)
+            print desc_url
+            sock = urllib.urlopen(desc_url)
+            data = sock.read()                            
+            sock.close()
+        except Exception, e:
+            if st_settings.ST_DEBUG: raise Exception("Error getting description from freebase for tag \"%s\" - %s" % (name, e))
+        
+    return data
 
 
 ###################
@@ -249,8 +287,20 @@ class SuperTagManager(models.Manager):
        Passing a value for ``min_count`` implies ``counts=True``.
        """
 
-       extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
-       where, params = queryset.query.where.as_sql()
+       if getattr(queryset.query, 'get_compiler', None):
+           # Django 1.2 and up compatible (multiple databases)
+           compiler = queryset.query.get_compiler(using='default')
+           extra_joins = ' '.join(compiler.get_from_clause()[0][1:])
+           where, params = queryset.query.where.as_sql(compiler.quote_name_unless_alias, compiler.connection)
+       else:
+           # Django 1.1 and down compatible (single database)
+           extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
+           where, params = queryset.query.where.as_sql()
+
+
+       # extra_joins = ' '.join(
+       #  queryset.query.get_compiler(using='default').get_from_clause()[0][1:])
+       # where, params = queryset.query.where.as_sql()
        if where:
            extra_criteria = 'AND %s' % where
        else:
@@ -485,18 +535,47 @@ class SuperTaggedRelationItemManager(models.Manager):
 ##    MODELS     ##
 ###################
 class SuperTag(models.Model):
-    calais_id = models.CharField(max_length=255, unique=True)
-    substitute = models.ForeignKey("self", null=True, blank=True, related_name="substitute_tagsubstitute")
-    name = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150)
-    stype = models.CharField("Type", max_length=100)
-    properties = PickledObjectField(null=True, blank=True)
-    enabled = models.BooleanField(default=True)
+    calais_id = models.CharField(_("Calais ID"), max_length=255, unique=True)
+    substitute = models.ForeignKey("self", null=True, blank=True, 
+        related_name="substitute_tagsubstitute",
+        verbose_name=_("Substitute"))
+    name = models.CharField(_("Name"), max_length=150)
+    slug = models.SlugField(_("Slug"), max_length=150)
+    stype = models.CharField(_("Type"), max_length=100)
+    properties = PickledObjectField(_("Properties"), null=True, blank=True)
+    enabled = models.BooleanField(_("Enabled"), default=True, 
+        help_text=_("""If False, will cause the tag to be disabled 
+            and all assoicated items and relations will be removed."""))
+    
+    if st_settings.INCLUDE_DISPLAY_FIELDS:
+        # Extra fields that optionally can be used for display.
+        from django.core.files.storage import get_storage_class
+        IMAGE_STORAGE = get_storage_class(st_settings.DEFAULT_STORAGE)
+        # Create the display fields
+        description = models.TextField(_("Description"), blank=True, 
+            null=True, help_text=_('Tag Description.'))
+        icon = models.ImageField(_("Icon"), upload_to="supertagging/icons/", 
+            blank=True, null=True, storage=IMAGE_STORAGE(), 
+            help_text=_('Tag Icon.'))
+        related = models.ManyToManyField("self", blank=True, null=True,
+            verbose_name=_("Related Tags"), 
+            help_text=_("Assign related tags."))
 
     objects = SuperTagManager()
 
     def __unicode__(self):
         return "%s - %s" % (self.name, self.stype)
+        
+    def get_absolute_url(self):
+        return ('supertag_detail', None, {
+                'type': self.stype.lower(),
+                'slug': self.slug })
+    get_absolute_url = permalink(get_absolute_url) 
+        
+    def has_display_fields(self):
+        if st_settings.INCLUDE_DISPLAY_FIELDS:
+            return True
+        return False
         
     def render(self, template=None, suffix=None):
         return render_item(None, self.stype, template, suffix,
@@ -506,9 +585,12 @@ class SuperTag(models.Model):
     class Meta:
         ordering = ('name',)
         
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):        
         super(SuperTag, self).save(*args, **kwargs)
-        
+        # If display fields are available and FREEBASE_RETRIEVE_DESCRIPTIONS is True
+        # and the description field is empty, try to get a description from Freebase
+        if self.has_display_fields() and st_settings.FREEBASE_RETRIEVE_DESCRIPTIONS and not self.description:
+            self.description = _retreive_desc_from_freebase(self.name, self.stype)
         # If tag is set to be disabled, remove all Tagged Items and
         # Tagged Relation Items
         if not self.enabled:
@@ -517,10 +599,10 @@ class SuperTag(models.Model):
 
 
 class SuperTagRelation(models.Model):
-    tag = models.ForeignKey(SuperTag)
-    stype = models.CharField("Type", max_length=100)
-    name = models.CharField(max_length=150)
-    properties = PickledObjectField(null=True, blank=True)
+    tag = models.ForeignKey(SuperTag, verbose_name=_("SuperTag"))
+    stype = models.CharField(_("Type"), max_length=100)
+    name = models.CharField(_("Name"), max_length=150)
+    properties = PickledObjectField(_("Properties"), null=True, blank=True)
 
     objects = SuperTagRelationManager()
 
