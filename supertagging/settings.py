@@ -49,6 +49,10 @@ MIN_RELEVANCE = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE', 0)
 # Minimun relevance score needed when marking up the content
 MIN_RELEVANCE_MARKUP = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE_MARKUP', MIN_RELEVANCE)
 
+# If True, will register your model(s), this will add a attribute to your 
+# model(s) to retrieve the tags.
+REGISTER_MODELS = getattr(settings, 'SUPERTAGGING_REGISTER_MODELS', False)
+
 # Optional, use freebase to disambiguate tags
 USE_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
 
@@ -92,6 +96,3 @@ DEFAULT_STORAGE = getattr(settings, 'SUPERTAGGING_DEFAULT_STORAGE', settings.DEF
 #   supertagging/tags/barack_obama/stories/
 #   supertagging/tags/world_cup/photos/
 CONTENTTYPE_NAME_MAPPING = getattr(settings, "SUPERTAGGING_CONTENTTYPE_NAME_MAPPING", {})
-
-# Cache timeout in seconds for the views
-VIEW_CACHE_TIMEOUT = getattr(settings, 'SUPERTAGGING_VIEW_CACHE_TIMEOUT', 300)
