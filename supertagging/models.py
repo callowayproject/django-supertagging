@@ -8,8 +8,7 @@ from django.db.models import permalink
 
 from supertagging.handlers import setup_handlers
 from supertagging.fields import PickledObjectField
-from supertagging.utils import calculate_cloud, get_tag_list, \
-    get_queryset_and_model, parse_tag_input
+from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model
 from supertagging.utils import LOGARITHMIC, markup_content, \
     fix_name_for_freebase, render_item
 from supertagging import settings as st_settings
@@ -136,34 +135,34 @@ class SuperTagManager(models.Manager):
             
         return super(SuperTagManager, self).create(**kwargs)
     
-    def update_tags(self, obj, tag_names):
-        """
-        Update tags associated with an object.
-        """
-        ctype = ContentType.objects.get_for_model(obj)
-        current_tags = list(self.filter(
-                                supertaggeditem__content_type__pk=ctype.pk,
-                                supertaggeditem__object_id=obj.pk))
-
-        updated_tag_names = parse_tag_input(tag_names)
-        # Always lower case tags
-        updated_tag_names = [t.lower() for t in updated_tag_names]
-
-        from supertagging.modules import process
-        # Process the tags with Calais
-        processed_tags = process(obj, updated_tag_names)
-
-        for t in updated_tag_names:
-            if t not in [p.name for p in processed_tags]:
-                try:
-                    tags = self.filter(name__iexact=t)
-                    tag = tags[0] # Take the first found tag with the same name.
-                except:
-                    tag = self.create(id=t, name=t, 
-                                      slug=slugify(t), stype='Custom')
-
-                SuperTaggedItem._default_manager.create(tag=tag,
-                    content_object=obj, field='None')
+    # def update_tags(self, obj, tag_names):
+    #     """
+    #     Update tags associated with an object.
+    #     """
+    #     ctype = ContentType.objects.get_for_model(obj)
+    #     current_tags = list(self.filter(
+    #                             supertaggeditem__content_type__pk=ctype.pk,
+    #                             supertaggeditem__object_id=obj.pk))
+    # 
+    #     updated_tag_names = parse_tag_input(tag_names)
+    #     # Always lower case tags
+    #     updated_tag_names = [t.lower() for t in updated_tag_names]
+    # 
+    #     from supertagging.modules import process
+    #     # Process the tags with Calais
+    #     processed_tags = process(obj, updated_tag_names)
+    # 
+    #     for t in updated_tag_names:
+    #         if t not in [p.name for p in processed_tags]:
+    #             try:
+    #                 tags = self.filter(name__iexact=t)
+    #                 tag = tags[0] # Take the first found tag with the same name.
+    #             except:
+    #                 tag = self.create(id=t, name=t, 
+    #                                   slug=slugify(t), stype='Custom')
+    # 
+    #             SuperTaggedItem._default_manager.create(tag=tag,
+    #                 content_object=obj, field='None')
 
 
     def get_for_object(self, obj, **kwargs):
@@ -552,6 +551,8 @@ class SuperTag(models.Model):
         from django.core.files.storage import get_storage_class
         IMAGE_STORAGE = get_storage_class(st_settings.DEFAULT_STORAGE)
         # Create the display fields
+        display_name = models.CharField(_("Display Name"), max_length=150, 
+            null=True, blank=True)
         description = models.TextField(_("Description"), blank=True, 
             null=True, help_text=_('Tag Description.'))
         icon = models.ImageField(_("Icon"), upload_to="supertagging/icons/", 
@@ -559,18 +560,17 @@ class SuperTag(models.Model):
             help_text=_('Tag Icon.'))
         related = models.ManyToManyField("self", blank=True, null=True,
             verbose_name=_("Related Tags"), 
-            help_text=_("Assign related tags."))
+            help_text=_("Assign related tags manually."))
 
     objects = SuperTagManager()
 
     def __unicode__(self):
         return "%s - %s" % (self.name, self.stype)
         
-    def get_absolute_url(self):
-        return ('supertag_detail', None, {
-                'type': self.stype.lower(),
-                'slug': self.slug })
-    get_absolute_url = permalink(get_absolute_url) 
+    def get_name(self):
+        if self.has_display_fields():
+            return self.display_name or self.name
+        return self.name
         
     def has_display_fields(self):
         if st_settings.INCLUDE_DISPLAY_FIELDS:
