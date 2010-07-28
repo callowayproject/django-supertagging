@@ -4,8 +4,7 @@ application.
 """
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-
-from supertagging.models import Tag, TaggedItem
+from supertagging.models import SuperTag, SuperTaggedItem
 
 class ModelTagManager(models.Manager):
     """
