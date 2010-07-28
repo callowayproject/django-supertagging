@@ -1,7 +1,8 @@
 from django.db.models import get_model
 from django.db.models.signals import post_save, post_delete
 
-from supertagging.settings import USE_QUEUE, MODULES, AUTO_PROCESS, ST_DEBUG, MARKUP, MARKUP_FIELD_SUFFIX
+from supertagging.settings import USE_QUEUE, MODULES, AUTO_PROCESS, ST_DEBUG, MARKUP, MARKUP_FIELD_SUFFIX, REGISTER_MODELS
+from supertagging import register
 
 def save_handler(sender, **kwargs):
     if 'instance' in kwargs:
@@ -20,15 +21,17 @@ def delete_handler(sender, **kwargs):
             clean_up(kwargs['instance'])
 
 def setup_handlers():
-    if not AUTO_PROCESS:
-        return
-    
     try:
         for k,v in MODULES.items():
             app_label, model_name = k.split('.')
             model = get_model(app_label, model_name)
+            
+            # Add a tag attribute to the instance.
+            if REGISTER_MODELS:
+                register(model)
+            
             # Setup post save and post delete handlers if model exists
-            if model:
+            if model and AUTO_PROCESS:
                 post_save.connect(save_handler, sender=model)
                 post_delete.connect(delete_handler, sender=model)
             
