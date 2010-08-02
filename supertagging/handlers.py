@@ -4,21 +4,21 @@ from django.db.models.signals import post_save, post_delete
 from supertagging.settings import USE_QUEUE, MODULES, AUTO_PROCESS, ST_DEBUG, MARKUP, MARKUP_FIELD_SUFFIX, REGISTER_MODELS
 from supertagging import register
 
-def save_handler(sender, **kwargs):
-    if 'instance' in kwargs:
+def save_handler(sender, instance, **kwargs):
+    if instance:
         from supertagging.modules import process, add_to_queue 
         if USE_QUEUE:
-            add_to_queue(kwargs['instance'])
+            add_to_queue(instance)
         else:
-            process(kwargs['instance'])
+            process(instance)
 
-def delete_handler(sender, **kwargs):
-    if 'instance' in kwargs:
+def delete_handler(sender, instance, **kwargs):
+    if instance:
         from supertagging.modules import clean_up, remove_from_queue
         if USE_QUEUE:
-            remove_from_queue(kwargs['instance'])
+            remove_from_queue(instance)
         else:
-            clean_up(kwargs['instance'])
+            clean_up(instance)
 
 def setup_handlers():
     try:

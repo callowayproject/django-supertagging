@@ -675,19 +675,14 @@ class SuperTagProcessQueue(models.Model):
         verbose_name_plural = "Process Queue"
         
         
-def _clean_tagged_relation_items(sender, **kwargs):
-    obj = kwargs.get('instance', None)
-    
-    if not obj:
+def _clean_tagged_relation_items(sender, instance, **kwargs):
+    if not instance:
         return
         
     items = SuperTaggedRelationItem.objects.filter(
-        relation__tag__pk=obj.tag.pk,
-        content_type__pk=obj.content_type.pk,
-        object_id=obj.object_id)
-    
-    if items:
-        items.delete()
+        relation__tag__pk=instance.tag.pk,
+        content_type__pk=instance.content_type.pk,
+        object_id=instance.object_id).delete()
     
 # When a tagged item is removed, clean up the related tagged items as well.
 pre_delete.connect(_clean_tagged_relation_items, sender=SuperTaggedItem)
