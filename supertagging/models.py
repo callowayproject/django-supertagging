@@ -9,8 +9,7 @@ from django.db.models import permalink
 from supertagging.handlers import setup_handlers
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model
-from supertagging.utils import LOGARITHMIC, markup_content, \
-    fix_name_for_freebase, render_item
+from supertagging.utils import LOGARITHMIC, fix_name_for_freebase, render_item
 from supertagging import settings as st_settings
 
 qn = connection.ops.quote_name
