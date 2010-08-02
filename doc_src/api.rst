@@ -43,7 +43,7 @@ Optional Fields
 If :ref:`setting_include_display_fields` is True, these fields will be 
 included with the model.
 
-* **display_name** - Name used for display purposes. Since all SuperTag name are lowered when returned from calais, we can use this field to set the case correctly
+* **display_name** - Name used for display purposes. Since all SuperTag name are lowered when returned from calais, we can use this field to set the case correctly for example
     * CharField
     * Length: 150
     * null=True, blank=True
@@ -193,7 +193,8 @@ Renders the instance, view :ref:`render` for more information.
 SuperTagProcessQueue
 ********************
 
-Holds a generic relation to an object to be processed at a later time
+Holds a generic relation to an object to be processed at a later time, this 
+model is only used when :ref:`setting_use_queue` is set to `True`
 
 Fields
 ------
@@ -240,9 +241,13 @@ paths that will be checked first
     * supertagging/render/tags/<stype>/<app>__<model>__<suffix>.html
     * supertagging/render/tags/people/stories__story__custom.html
 3. template_path + `stype` + `app` + `model` - Same as above but without the suffix
+    * supertagging/render/tags/people/stories__story.html
 4. template_path + `stype` + default + `suffix` - Same as #2 except not `app` and `model`
-5. template_path + `style` + default - Same as #4 except without the suffix
+    * supertagging/render/tags/people/default__custom.html
+5. template_path + `stype` + default - Same as #4 except without the suffix
+    * supertagging/render/tags/people/default.html
 6. template_path + default - the last possible path to look for the template
+    * supertagging/render/tags/default.html
 
 .. note::
 

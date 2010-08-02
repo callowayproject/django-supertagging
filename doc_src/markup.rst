@@ -67,8 +67,8 @@ Markup handler
     
 Each field will be assigned a `MarkupHandler` object, which can be found
 in `supertagging/markup.py` file. This module does all the markup processing
-for you on the fly. If an error occurs on the other hand, since the original
-content is never touched, the original content is returned.
+for you on the fly. If an error occurs, since the original content is never 
+touched, the original content is returned.
 
 You can create your own custom handler as well.
 
