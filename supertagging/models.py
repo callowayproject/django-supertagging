@@ -9,75 +9,11 @@ from django.db.models import permalink
 from supertagging.handlers import setup_handlers
 from supertagging.fields import PickledObjectField
 from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model
-from supertagging.utils import LOGARITHMIC, fix_name_for_freebase, render_item
+from supertagging.utils import LOGARITHMIC, fix_name_for_freebase, render_item, \
+    retrieve_freebase_name, retrieve_freebase_desc
 from supertagging import settings as st_settings
 
 qn = connection.ops.quote_name
-
-try:
-    import freebase
-except ImportError:
-    freebase = None
-    
-# The key from freebase that will have the topic description
-FREEBASE_DESC_KEY = "/common/topic/article"
-    
-def _retrieve_name_from_freebase(name, stype):
-    search_key = fix_name_for_freebase(name)
-    fb_type = st_settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
-    value = None
-    try:
-        # Try to get the exact match
-        value = freebase.mqlread(
-            {"name": None, "type":fb_type or [], 
-             "key": {"value": search_key}})
-    except:
-        try:
-            # Try to get a results has a generator and return its top result
-            values = freebase.mqlreaditer(
-                {"name": None, "type":fb_type or [], 
-                 "key": {"value": search_key}})
-            value = values.next()
-        except:
-            pass
-            
-    if value:
-        return value["name"]
-    return name
-    
-def _retreive_desc_from_freebase(name, stype):
-    fb_type = st_settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
-    value, data = None, ""
-    try:
-        value = freebase.mqlread(
-            {"name": name, "type": fb_type or [],
-             FREEBASE_DESC_KEY: [{"id": None}]})
-    except:
-        try:
-            values = freebase.mqlreaditer(
-                {"name": name, "type": fb_type or [],
-                 FREEBASE_DESC_KEY: [{"id": None}]})
-            value = values.next()
-        except Exception, e:
-            pass
-            
-    if value and FREEBASE_DESC_KEY in value and value[FREEBASE_DESC_KEY]:
-        guid = value[FREEBASE_DESC_KEY][0].get("id", None)
-        print guid
-        if not guid:
-            return data
-        try:
-            import urllib
-            desc_url = "%s%s" % (st_settings.FREEBASE_DESCRIPTION_URL, guid)
-            print desc_url
-            sock = urllib.urlopen(desc_url)
-            data = sock.read()                            
-            sock.close()
-        except Exception, e:
-            if st_settings.ST_DEBUG: raise Exception("Error getting description from freebase for tag \"%s\" - %s" % (name, e))
-        
-    return data
-
 
 ###################
 ##   MANAGERS    ##
@@ -95,11 +31,11 @@ class SuperTagManager(models.Manager):
         obj = obj.substitute or obj
         
         # Return object if freebase is not used
-        if not (st_settings.USE_FREEBASE and freebase):
+        if not st_settings.USE_FREEBASE:
             return obj
             
         # Try to find the name using freebase
-        fb_name = _retrieve_name_from_freebase(obj.name, obj.stype)
+        fb_name = retrieve_freebase_name(obj.name, obj.stype)
         try:
             # Try to retrieve the existing name given by freebase 
             # in our database
@@ -121,10 +57,10 @@ class SuperTagManager(models.Manager):
         slug = kwargs.get("slug", None)
         
         # Create and return the new tag if freebase is not used.
-        if not (st_settings.USE_FREEBASE and freebase and name):
+        if not (st_settings.USE_FREEBASE and name):
             return super(SuperTagManager, self).create(**kwargs)
             
-        fb_name = _retrieve_name_from_freebase(name, stype)
+        fb_name = retrieve_freebase_name(name, stype)
         try:
             new_tag = self.get(name__iexact=fb_name)
             return new_tag.substitute or new_tag
@@ -133,36 +69,6 @@ class SuperTagManager(models.Manager):
             kwargs["slug"] = slugify(fb_name)
             
         return super(SuperTagManager, self).create(**kwargs)
-    
-    # def update_tags(self, obj, tag_names):
-    #     """
-    #     Update tags associated with an object.
-    #     """
-    #     ctype = ContentType.objects.get_for_model(obj)
-    #     current_tags = list(self.filter(
-    #                             supertaggeditem__content_type__pk=ctype.pk,
-    #                             supertaggeditem__object_id=obj.pk))
-    # 
-    #     updated_tag_names = parse_tag_input(tag_names)
-    #     # Always lower case tags
-    #     updated_tag_names = [t.lower() for t in updated_tag_names]
-    # 
-    #     from supertagging.modules import process
-    #     # Process the tags with Calais
-    #     processed_tags = process(obj, updated_tag_names)
-    # 
-    #     for t in updated_tag_names:
-    #         if t not in [p.name for p in processed_tags]:
-    #             try:
-    #                 tags = self.filter(name__iexact=t)
-    #                 tag = tags[0] # Take the first found tag with the same name.
-    #             except:
-    #                 tag = self.create(id=t, name=t, 
-    #                                   slug=slugify(t), stype='Custom')
-    # 
-    #             SuperTaggedItem._default_manager.create(tag=tag,
-    #                 content_object=obj, field='None')
-
 
     def get_for_object(self, obj, **kwargs):
         """
@@ -589,12 +495,20 @@ class SuperTag(models.Model):
         # If display fields are available and FREEBASE_RETRIEVE_DESCRIPTIONS is True
         # and the description field is empty, try to get a description from Freebase
         if self.has_display_fields() and st_settings.FREEBASE_RETRIEVE_DESCRIPTIONS and not self.description:
-            self.description = _retreive_desc_from_freebase(self.name, self.stype)
+            self.description = retrieve_freebase_desc(self.name, self.stype)
         # If tag is set to be disabled, remove all Tagged Items and
         # Tagged Relation Items
         if not self.enabled:
             SuperTaggedItem.objects.filter(tag__pk=self.pk).delete()
             SuperTaggedRelationItem.objects.filter(relation__tag__pk=self.pk).delete()
+            
+        # If a substitute is supplied, change all SuperTaggedItem's and 
+        # SuperTagRelation's to have this new tag
+        if self.substitute:
+            items = self.supertaggeditem_set.all()
+            relations = self.supertagrelation_set.all()  
+            items.update(tag=self.substitute)
+            relations.update(tag=self.substitute)
 
 
 class SuperTagRelation(models.Model):

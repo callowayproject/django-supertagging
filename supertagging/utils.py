@@ -159,17 +159,98 @@ def calculate_cloud(tags, steps=4, distribution=LOGARITHMIC):
                     tag.font_size = i + 1
                     font_set = True
     return tags
+    
+###########################
+# Freebase Util Functions #
+###########################
+
+try:
+    import freebase
+except ImportError:
+    freebase = None
+
+# The key from freebase that will have the topic description
+FREEBASE_DESC_KEY = "/common/topic/article"
 
 def fix_name_for_freebase(value):
     """
-    Takes a name and replaces spaces with underscores and capitalized each word
+    Takes a name and replaces spaces with underscores, removes periods
+    and capitalizes each word
     """
     words = []
     for word in value.split():
+        word = word.replace(".", "")
         words.append(word.title())
     return "_".join(words)
     
+def retrieve_freebase_name(name, stype):
+    if not freebase:
+        return name
     
+    search_key = fix_name_for_freebase(name)
+    fb_type = settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
+    value = None
+    try:
+        # Try to get the exact match
+        value = freebase.mqlread(
+            {"name": None, "type":fb_type or [], 
+             "key": {"value": search_key}})
+    except:
+        try:
+            # Try to get a results has a generator and return its top result
+            values = freebase.mqlreaditer(
+                {"name": None, "type":fb_type or [], 
+                 "key": {"value": search_key}})
+            value = values.next()
+        except Exception, e:
+            # Only print error as freebase is only optional
+            if settings.ST_DEBUG: print "Error using `freebase`: %s" % e
+            
+    if value:
+        return value["name"]
+    return name
+    
+def retrieve_freebase_desc(name, stype):
+    if not freebase:
+        return ""
+        
+    print "Retrieving the description for %s" % name
+    
+    fb_type = settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
+    value, data = None, ""
+    try:
+        value = freebase.mqlread(
+            {"name": name, "type": fb_type or [],
+             FREEBASE_DESC_KEY: [{"id": None}]})
+    except:
+        try:
+            values = freebase.mqlreaditer(
+                {"name": name, "type": fb_type or [],
+                 FREEBASE_DESC_KEY: [{"id": None}]})
+            value = values.next()
+        except Exception, e:
+            # Only print error as freebase is only optional
+            if settings.ST_DEBUG: print "Error using `freebase`: %s" % e
+            
+    if value and FREEBASE_DESC_KEY in value and value[FREEBASE_DESC_KEY]:
+        guid = value[FREEBASE_DESC_KEY][0].get("id", None)
+        if not guid:
+            return data
+        try:
+            import urllib
+            desc_url = "%s%s" % (settings.FREEBASE_DESCRIPTION_URL, guid)
+            sock = urllib.urlopen(desc_url)
+            data = sock.read()                            
+            sock.close()
+        except Exception, e:
+            if settings.ST_DEBUG: print "Error getting description from freebase for tag \"%s\" - %s" % (name, e)
+        
+    return data
+    
+################
+# Render Utils #
+################
+
 def render_item(item, stype, template, suffix, template_path='supertagging/render', context={}):
     """
     Use to render tags, relations, tagged items and tagger relations.
