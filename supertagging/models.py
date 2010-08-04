@@ -442,14 +442,16 @@ class SuperTag(models.Model):
     calais_id = models.CharField(_("Calais ID"), max_length=255, unique=True)
     substitute = models.ForeignKey("self", null=True, blank=True, 
         related_name="substitute_tagsubstitute",
-        verbose_name=_("Substitute"))
+        verbose_name=_("Substitute"),
+        help_text=_("""Tag to use instead of this one. This will also update
+            all items and relation items from this tag to the substitute tag."""))
     name = models.CharField(_("Name"), max_length=150)
     slug = models.SlugField(_("Slug"), max_length=150)
     stype = models.CharField(_("Type"), max_length=100)
     properties = PickledObjectField(_("Properties"), null=True, blank=True)
     enabled = models.BooleanField(_("Enabled"), default=True, 
         help_text=_("""If False, will cause the tag to be disabled 
-            and all assoicated items and relations will be removed."""))
+            and all assoicated items and relation items will be removed."""))
     
     if st_settings.INCLUDE_DISPLAY_FIELDS:
         # Extra fields that optionally can be used for display.
