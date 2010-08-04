@@ -1,6 +1,6 @@
 from django.conf import settings
 
-DEFAULT_PROCESS_TYPE = 'TEXT/RAW'
+DEFAULT_PROCESS_TYPE = getattr(settings, 'SUPERTAGGING_DEFAULT_PROCESS_TYPE', 'TEXT/RAW')
 
 # The models/fields to process
 MODULES = getattr(settings, 'SUPERTAGGING_MODULES', {})
