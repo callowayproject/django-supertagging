@@ -506,7 +506,7 @@ class SuperTag(models.Model):
             
         # If a substitute is supplied, change all SuperTaggedItem's and 
         # SuperTagRelation's to have this new tag
-        if self.substitute:
+        if self.substitute and st_settings.SUBSTITUTE_TAG_UPDATE:
             items = self.supertaggeditem_set.all()
             relations = self.supertagrelation_set.all()  
             items.update(tag=self.substitute)
