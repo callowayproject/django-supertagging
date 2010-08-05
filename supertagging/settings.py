@@ -53,6 +53,12 @@ MIN_RELEVANCE_MARKUP = getattr(settings, 'SUPERTAGGING_MIN_RELEVANCE_MARKUP', MI
 # model(s) to retrieve the tags.
 REGISTER_MODELS = getattr(settings, 'SUPERTAGGING_REGISTER_MODELS', False)
 
+# If True, when a substitute is supplied all the Tagged Items and Relation 
+# Tagged Items will be set with the substitute tag. If False, the Tagged Items
+# and the Relation Tagged Items will still have the original tag. This is a
+# way to preserve the old tag data.
+SUBSTITUTE_TAG_UPDATE = getattr(settings, 'SUPERTAGGING_SUBSTITUTE_TAG_UPDATE', False)
+
 # Optional, use freebase to disambiguate tags
 USE_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
 
