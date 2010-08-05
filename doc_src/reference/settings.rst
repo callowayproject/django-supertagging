@@ -8,6 +8,20 @@ Settings
 
 Here is a list of all the SuperTagging settings and there uses.
 
+.. _settings_default_process_type:
+
+SUPERTAGGING_DEFAULT_PROCESS_TYPE
+*********************************
+
+Tells the default process type for OpenCalais to process the data. 
+
+There are 4 options that can be supplied. Default is `TEXT/RAW`
+
+    * TEXT/RAW
+    * TEXT/HTML
+    * TEXT/HTMLRAW
+    * TEXT/XML
+
 .. _setting_enabled:
 
 SUPERTAGGING_ENABLED
@@ -147,10 +161,14 @@ These next two settings are options for open calais.
 SUPERTAGGING_CALAIS_USER_DIRECTIVES
 ***********************************
 
+View `Input Parameters <http://www.opencalais.com/documentation/calais-web-service-api/forming-api-calls/input-parameters>`_ on OpenCalais.com for more information.
+
 .. _setting_calais_processing_directives:
 
 SUPERTAGGING_CALAIS_PROCESSING_DIRECTIVES
 *****************************************
+
+View `Input Parameters <http://www.opencalais.com/documentation/calais-web-service-api/forming-api-calls/input-parameters>`_ on OpenCalais.com for more information.
 
 .. _setting_process_relations:
 
@@ -204,6 +222,14 @@ as "Events and Facts"
 `OpenCalais Entities, Events and Facts <http://www.opencalais.com/documentation/calais-web-service-api/api-metadata/entity-index-and-definitions>`_
 
 .. _setting_resolve_property_keys:
+
+
+SUPERTAGGING_SUBSTITUTE_TAG_UPDATE
+**********************************
+
+When True, and then a substitute is specified in :ref:`api_supertag` all 
+associated :ref:`api_supertaggeditem` and :ref:`api_supertagrelation` will be 
+updated with the new tag.
 
 SUPERTAGGING_RESOLVE_PROPERTY_KEYS
 **********************************
