@@ -1,0 +1,639 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API Reference &mdash; Django SuperTagging v0.4.5 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Django SuperTagging v0.4.5 documentation" href="index.html" />
+    <link rel="next" title="Markup" href="markup.html" />
+    <link rel="prev" title="Real World Example" href="real_world_example.html" /> 
+  </head>
+  <body>
+<div id="docstitle">
+	<p>Django SuperTagging v0.4.5 documentation</p>
+</div>
+<div id="header">
+	<div id="title"><h1>API Reference</h1></div>
+	<ul id="headerButtons">
+		<li id="toc_button"><div class="headerButton"><a href="#">Table of Contents</a></div></li>
+		<li id="page_buttons">
+			<div class="headerButton"><a href="genindex.html" title="General Index" accesskey="I">index</a></div>
+			<div class="headerButton"><a href="markup.html" title="Markup" accesskey="N">next</a></div>
+			<div class="headerButton"><a href="real_world_example.html" title="Real World Example" accesskey="P">previous</a></div>
+		</li>
+	</ul>
+</div>
+
+<div id="sphinxsidebar">
+  <div class="sphinxsidebarwrapper">
+	<ul><li class="toctree-l1"><a href="index.html">Main Page</a></li></ul>
+	<ul class="current">
+<li class="toctree-l1"><a class="reference external" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference external" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference external" href="real_world_example.html">Real World Example</a></li>
+<li class="toctree-l1 current"><a class="current reference external" href="">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference external" href="#supertag">SuperTag</a></li>
+<li class="toctree-l2"><a class="reference external" href="#supertagrelation">SuperTagRelation</a></li>
+<li class="toctree-l2"><a class="reference external" href="#supertaggeditem">SuperTaggedItem</a></li>
+<li class="toctree-l2"><a class="reference external" href="#supertaggedrelationitem">SuperTaggedRelationItem</a></li>
+<li class="toctree-l2"><a class="reference external" href="#supertagprocessqueue">SuperTagProcessQueue</a></li>
+<li class="toctree-l2"><a class="reference external" href="#rendering-items">Rendering Items</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="markup.html">Markup</a></li>
+<li class="toctree-l1"><a class="reference external" href="reference/index.html">Reference</a></li>
+</ul>
+
+    <div id="searchbox" style="display: none">
+      
+        <form class="search" action="search.html" method="get">
+			<div class="search-wrapper">
+			<span class="search-left"></span>
+			<input class="prettysearch" type="text" name="q" size="18" />
+			<span class="search-right">&nbsp;</span>
+			</div>
+          <input type="submit" value="Search" class="searchbutton" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+        <p class="searchtip" style="font-size: 90%">
+        Enter search terms or a module, class or function name.
+        </p>
+    </div>
+    <script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+</div>
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="api-reference">
+<span id="api"></span><h1><a class="toc-backref" href="#id15">API Reference</a><a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#api-reference" id="id15">API Reference</a><ul>
+<li><a class="reference internal" href="#supertag" id="id16">SuperTag</a><ul>
+<li><a class="reference internal" href="#fields" id="id17">Fields</a></li>
+<li><a class="reference internal" href="#optional-fields" id="id18">Optional Fields</a></li>
+<li><a class="reference internal" href="#methods" id="id19">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supertagrelation" id="id20">SuperTagRelation</a><ul>
+<li><a class="reference internal" href="#id1" id="id21">Fields</a></li>
+<li><a class="reference internal" href="#id3" id="id22">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supertaggeditem" id="id23">SuperTaggedItem</a><ul>
+<li><a class="reference internal" href="#id5" id="id24">Fields</a></li>
+<li><a class="reference internal" href="#id7" id="id25">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supertaggedrelationitem" id="id26">SuperTaggedRelationItem</a><ul>
+<li><a class="reference internal" href="#id9" id="id27">Fields</a></li>
+<li><a class="reference internal" href="#id11" id="id28">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supertagprocessqueue" id="id29">SuperTagProcessQueue</a><ul>
+<li><a class="reference internal" href="#id13" id="id30">Fields</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rendering-items" id="id31">Rendering Items</a><ul>
+<li><a class="reference internal" href="#template-locations" id="id32">Template Locations</a></li>
+<li><a class="reference internal" href="#template-context" id="id33">Template Context</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="supertag">
+<span id="api-supertag"></span><h2><a class="toc-backref" href="#id16">SuperTag</a><a class="headerlink" href="#supertag" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fields">
+<h3><a class="toc-backref" href="#id17">Fields</a><a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>calais_id</strong> - Contains the OpenCalais entity ID</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 255</li>
+<li>Unique</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>substitute</strong> - Substitute tags in order to have better disambiguation.</dt>
+<dd><ul class="first last simple">
+<li>ForeignKey to self</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>name</strong> - The tag name.</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 150</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>slug</strong> - Slugified name</dt>
+<dd><ul class="first last simple">
+<li>SlugField</li>
+<li>Length: 150</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>stype</strong> - Tag type as returned by OpenCalais</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 100</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>properties</strong> - Tag properties as returned by OpenCalais</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://djangosnippets.org/snippets/513/">PickledObjectField</a></li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>enabled</strong> - Weather or not this tag is used.</dt>
+<dd><ul class="first last simple">
+<li>BooleanField</li>
+<li>Default: True</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="optional-fields">
+<h3><a class="toc-backref" href="#id18">Optional Fields</a><a class="headerlink" href="#optional-fields" title="Permalink to this headline">¶</a></h3>
+<p>If <a class="reference external" href="reference/settings.html#setting-include-display-fields"><em>SUPERTAGGING_INCLUDE_DISPLAY_FIELDS</em></a> is True, these fields will be
+included with the model.</p>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>display_name</strong> - Name used for display purposes. Since all SuperTag name are lowered when returned from calais, we can use this field to set the case correctly for example</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 150</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>description</strong> - Description of the tag</dt>
+<dd><ul class="first last simple">
+<li>TextField</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>icon</strong> - Image field for the tag</dt>
+<dd><ul class="first last simple">
+<li>ImageField</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>related</strong> - Manually relating tags</dt>
+<dd><ul class="first last simple">
+<li>ManyToManyField to self</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="methods">
+<h3><a class="toc-backref" href="#id19">Methods</a><a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="get-name">
+<h4>get_name<a class="headerlink" href="#get-name" title="Permalink to this headline">¶</a></h4>
+<p>Gets the name of the tag, this will try to retrieve the display name first
+if the display fields are available, if the display fields are not available
+the normal name will be returned.</p>
+</div>
+<div class="section" id="has-display-fields">
+<h4>has_display_fields<a class="headerlink" href="#has-display-fields" title="Permalink to this headline">¶</a></h4>
+<p>Returns True or False, if the display fields are available.</p>
+</div>
+<div class="section" id="render">
+<h4>render<a class="headerlink" href="#render" title="Permalink to this headline">¶</a></h4>
+<p>Renders the instance, view <a class="reference internal" href="#id14"><em>Rendering Items</em></a> for more information.</p>
+</div>
+</div>
+</div>
+<div class="section" id="supertagrelation">
+<span id="api-supertagrelation"></span><h2><a class="toc-backref" href="#id20">SuperTagRelation</a><a class="headerlink" href="#supertagrelation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3><a class="toc-backref" href="#id21">Fields</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>tag</strong> - The associated tag</dt>
+<dd><ul class="first last simple">
+<li>ForeignKey to <a class="reference internal" href="#api-supertag"><em>SuperTag</em></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>stype</strong> - The type of relation</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 100</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>name</strong> - Name of the relation</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 150</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>properties</strong> - Relation properties returned by OpenCalais</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://djangosnippets.org/snippets/513/">PickledObjectField</a></li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h3><a class="toc-backref" href="#id22">Methods</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h4>render<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<p>Renders the instance, view <a class="reference internal" href="#id14"><em>Rendering Items</em></a> for more information.</p>
+</div>
+</div>
+</div>
+<div class="section" id="supertaggeditem">
+<span id="api-supertaggeditem"></span><h2><a class="toc-backref" href="#id23">SuperTaggedItem</a><a class="headerlink" href="#supertaggeditem" title="Permalink to this headline">¶</a></h2>
+<p>Generic relation to a <a class="reference internal" href="#api-supertag"><em>SuperTag</em></a></p>
+<div class="section" id="id5">
+<h3><a class="toc-backref" href="#id24">Fields</a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>tag</strong> - The associated tag</dt>
+<dd><ul class="first last simple">
+<li>ForeignKey to <a class="reference internal" href="#api-supertag"><em>SuperTag</em></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>content_type</strong> - Content type of an object</dt>
+<dd><ul class="first last simple">
+<li>ForeignKey to <cite>django.contrib.contenttypes.models.ContentType</cite></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>object_id</strong> - Instance primary key</dt>
+<dd><ul class="first last simple">
+<li>PositiveIntegerField</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>content_object</strong> - Gernric relation</dt>
+<dd><ul class="first last simple">
+<li>GenericForeignKey to content_type and object_id</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>field</strong> - The name of the field this instance refers to</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 100</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>process_type</strong> - The type used to process the data, &#8220;TEXT/HTML&#8221;, &#8220;TEXT/RAW&#8221; or &#8220;TEXT/XML&#8221;</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 10</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>relevance</strong> - The relevance score</dt>
+<dd><ul class="first last simple">
+<li>IntegerField</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>instances</strong> - Contains a list of all the tags found in the content.</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://djangosnippets.org/snippets/513/">PickledObjectField</a></li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>item_date</strong> - Date of the object</dt>
+<dd><ul class="first last simple">
+<li>DateTimeField</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h3><a class="toc-backref" href="#id25">Methods</a><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h4>render<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h4>
+<p>Renders the instance, view <a class="reference internal" href="#id14"><em>Rendering Items</em></a> for more information.</p>
+</div>
+</div>
+</div>
+<div class="section" id="supertaggedrelationitem">
+<span id="api-supertaggedrelationitem"></span><h2><a class="toc-backref" href="#id26">SuperTaggedRelationItem</a><a class="headerlink" href="#supertaggedrelationitem" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h3><a class="toc-backref" href="#id27">Fields</a><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>relation</strong> - Associated relation</dt>
+<dd><ul class="first last simple">
+<li>ForignKey to <a class="reference internal" href="#api-supertagrelation"><em>SuperTagRelation</em></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>content_type</strong> - Content type of an object</dt>
+<dd><ul class="first last simple">
+<li>ForeignKey to <cite>django.contrib.contenttypes.models.ContentType</cite></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>object_id</strong> - Instance primary key</dt>
+<dd><ul class="first last simple">
+<li>PositiveIntegerField</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>content_object</strong> - Gernric relation</dt>
+<dd><ul class="first last simple">
+<li>GenericForeignKey to content_type and object_id</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>field</strong> - The name of the field this instance refers to</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 100</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>process_type</strong> - The type used to process the data, &#8220;TEXT/HTML&#8221;, &#8220;TEXT/RAW&#8221; or &#8220;TEXT/XML&#8221;</dt>
+<dd><ul class="first last simple">
+<li>CharField</li>
+<li>Length: 10</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>instances</strong> - Contains a list of all the tags found in the content.</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://djangosnippets.org/snippets/513/">PickledObjectField</a></li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>item_date</strong> - Date of the object</dt>
+<dd><ul class="first last simple">
+<li>DateTimeField</li>
+<li>null=True, blank=True</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id11">
+<h3><a class="toc-backref" href="#id28">Methods</a><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h4>render<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
+<p>Renders the instance, view <a class="reference internal" href="#id14"><em>Rendering Items</em></a> for more information.</p>
+</div>
+</div>
+</div>
+<div class="section" id="supertagprocessqueue">
+<span id="api-supertagprocessqueue"></span><h2><a class="toc-backref" href="#id29">SuperTagProcessQueue</a><a class="headerlink" href="#supertagprocessqueue" title="Permalink to this headline">¶</a></h2>
+<p>Holds a generic relation to an object to be processed at a later time, this
+model is only used when <a class="reference external" href="reference/settings.html#setting-use-queue"><em>SUPERTAGGING_USE_QUEUE</em></a> is set to <cite>True</cite></p>
+<div class="section" id="id13">
+<h3><a class="toc-backref" href="#id30">Fields</a><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>content_type</strong> - Content type of an object</dt>
+<dd><ul class="first last simple">
+<li>ForeignKey to <cite>django.contrib.contenttypes.models.ContentType</cite></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>object_id</strong> - Instance primary key</dt>
+<dd><ul class="first last simple">
+<li>PositiveIntegerField</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>content_object</strong> - Gernric relation</dt>
+<dd><ul class="first last simple">
+<li>GenericForeignKey to content_type and object_id</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>locked</strong> - Weather the object is being processed</dt>
+<dd><ul class="first last simple">
+<li>BooleanField</li>
+<li>Default: False</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="rendering-items">
+<span id="id14"></span><h2><a class="toc-backref" href="#id31">Rendering Items</a><a class="headerlink" href="#rendering-items" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#api-supertag"><em>SuperTag</em></a>, <a class="reference internal" href="#api-supertaggeditem"><em>SuperTaggedItem</em></a>, <a class="reference internal" href="#api-supertagrelation"><em>SuperTagRelation</em></a>
+and <a class="reference internal" href="#api-supertaggedrelationitem"><em>SuperTaggedRelationItem</em></a> have a <cite>render</cite> method in order to
+correctly display its contents.</p>
+<div class="section" id="template-locations">
+<h3><a class="toc-backref" href="#id32">Template Locations</a><a class="headerlink" href="#template-locations" title="Permalink to this headline">¶</a></h3>
+<p>Default location for these templates are in <cite>supertagging/templates/render</cite>.
+For each model there is an additional folder:</p>
+<ul class="simple">
+<li>SuperTag: &#8220;tags/&#8221;</li>
+<li>SuperTaggedItem: &#8220;tagged_items/&#8221;</li>
+<li>SuperTagRelation: &#8220;relations/&#8221;</li>
+<li>SuperTaggedRelationItem: &#8220;tagged_relations/&#8221;</li>
+</ul>
+<p>For example the default template for a SuperTaggedItem would be
+&#8220;supertagging/templates/render/tagged_items/default.html&#8221;</p>
+<p>This default template is the last resort, below is a detail list of template
+paths that will be checked first</p>
+<ol class="arabic">
+<li><p class="first">template argument - this is a full path starting in your templates dir</p>
+</li>
+<li><dl class="first docutils">
+<dt>template_path + <cite>stype</cite> + <cite>app</cite> + <cite>model</cite> + <cite>suffix</cite> - for <a class="reference internal" href="#api-supertag"><em>SuperTag</em></a> and <a class="reference internal" href="#api-supertagrelation"><em>SuperTagRelation</em></a> a type, model, app and suffix will be added.</dt>
+<dd><ul class="first last simple">
+<li>supertagging/render/tags/&lt;stype&gt;/&lt;app&gt;__&lt;model&gt;__&lt;suffix&gt;.html</li>
+<li>supertagging/render/tags/people/stories__story__custom.html</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>template_path + <cite>stype</cite> + <cite>app</cite> + <cite>model</cite> - Same as above but without the suffix</dt>
+<dd><ul class="first last simple">
+<li>supertagging/render/tags/people/stories__story.html</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>template_path + <cite>stype</cite> + default + <cite>suffix</cite> - Same as #2 except not <cite>app</cite> and <cite>model</cite></dt>
+<dd><ul class="first last simple">
+<li>supertagging/render/tags/people/default__custom.html</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>template_path + <cite>stype</cite> + default - Same as #4 except without the suffix</dt>
+<dd><ul class="first last simple">
+<li>supertagging/render/tags/people/default.html</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>template_path + default - the last possible path to look for the template</dt>
+<dd><ul class="first last simple">
+<li>supertagging/render/tags/default.html</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">As stated in #2 of the list above, <cite>stype</cite> only applies to <a class="reference internal" href="#api-supertag"><em>SuperTag</em></a> and <a class="reference internal" href="#api-supertagrelation"><em>SuperTagRelation</em></a>
+since <a class="reference internal" href="#api-supertaggeditem"><em>SuperTaggedItem</em></a> and <a class="reference internal" href="#api-supertaggedrelationitem"><em>SuperTaggedRelationItem</em></a>
+doesn&#8217;t contain the <cite>stype</cite> field. It will simply not be part of the path.</p>
+</div>
+</div>
+<div class="section" id="template-context">
+<h3><a class="toc-backref" href="#id33">Template Context</a><a class="headerlink" href="#template-context" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#api-supertag"><em>SuperTag</em></a> and <a class="reference internal" href="#api-supertagrelation"><em>SuperTagRelation</em></a> has only it self returned
+in the context</p>
+<ul class="simple">
+<li><strong>obj</strong> - self</li>
+</ul>
+<p><a class="reference internal" href="#api-supertaggeditem"><em>SuperTaggedItem</em></a> and <a class="reference internal" href="#api-supertaggedrelationitem"><em>SuperTaggedRelationItem</em></a> has 2 conext
+variables</p>
+<ul class="simple">
+<li><strong>obj</strong> - the generic related item</li>
+<li><strong>content</strong> - self</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div> 
+        </div>
+      </div>
+    <div class="footer">
+    <p>
+      &copy; Copyright 2010, The Washington Times.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+	</p>
+    </div>
+      <div class="clearer"></div>
+    </div>
+	<div id="breadcrumbs">
+		API Reference
+		</ul>
+	</div>
+	<script type="text/javascript" charset="utf-8" src="_static/toc.js"></script>
+  </body>
+</html>
