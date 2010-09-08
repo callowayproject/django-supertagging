@@ -62,7 +62,7 @@ class TagDescriptor(object):
 
     def __set__(self, instance, value):
         # Cannot update tags 
-        raise NotImplemented
+        raise NotImplementedError
 
     def __delete__(self, instance):
-        raise NotImplemented
+        raise NotImplementedError
