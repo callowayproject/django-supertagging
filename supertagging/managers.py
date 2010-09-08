@@ -65,4 +65,4 @@ class TagDescriptor(object):
         raise NotImplemented
 
     def __delete__(self, instance):
-        SuperTaggedItem.objects.delete()
+        raise NotImplemented
