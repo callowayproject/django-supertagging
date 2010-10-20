@@ -101,7 +101,7 @@ def markup_content(obj, field, markup_template='supertagging/markup.html'):
     ctype = ContentType.objects.get_for_model(obj)
     items = SuperTaggedItem.objects.filter(
         content_type__pk=ctype.pk, object_id=obj.pk, 
-        relevance=settings.MIN_RELEVANCE_MARKUP)
+        relevance__gte=settings.MIN_RELEVANCE_MARKUP)
     
     value = getattr(obj, field, '')
     full = []
