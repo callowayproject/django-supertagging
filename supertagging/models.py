@@ -88,7 +88,7 @@ class SuperTagManager(models.Manager):
             return new_tag.substitute or new_tag
         except:
             kwargs["name"] = fb_name.lower()
-            kwargs["slug"] = slugify(fb_name)
+            kwargs["slug"] = slugify(fb_name)[:50]
             
         return super(SuperTagManager, self).create(**kwargs)
     
