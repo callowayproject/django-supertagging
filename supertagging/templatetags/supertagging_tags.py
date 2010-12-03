@@ -542,10 +542,10 @@ class RenderItemNode(Node):
         
 def do_render_item(parser, token):
     """
-    {% st_render [SuperTag or SuperTaggedItem or SuperTagRelation or SuperTaggedRelationItem] [with] [suffix=S] [template=T] %}
-    {% st_render tag %}
-    {% st_render tagged_item with suffix=custom %}
-    {% st_render rel_item with template=mycustomtemplates/supertags/custom.html %}
+    {% supertag_render [SuperTag or SuperTaggedItem or SuperTagRelation or SuperTaggedRelationItem] [with] [suffix=S] [template=T] %}
+    {% supertag_render tag %}
+    {% supertag_render tagged_item with suffix=custom %}
+    {% supertag_render rel_item with template=mycustomtemplates/supertags/custom.html %}
     
     Only suffix OR template can be specified, but not both.
     """
@@ -569,4 +569,4 @@ def do_render_item(parser, token):
         kwargs = {str(extra[0]): extra[1],}
         return RenderItemNode(argv[1], **kwargs)
         
-register.tag('st_render', do_render_item)
+register.tag('supertag_render', do_render_item)

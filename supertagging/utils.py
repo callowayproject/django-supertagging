@@ -23,121 +23,6 @@ def tag_instance_cmp(x, y):
         return cmp(x['offset'],y['offset'])
     return cmp(1, 1)
 
-def markup_content(items, obj, field, markup_template='supertagging/markup.html'):
-    raise DeprecationWarning("This method is no longer used.")
-
-
-def parse_tag_input(input):
-    """
-    Parses tag input, with multiple word input being activated and
-    delineated by commas and double quotes. Quotes take precedence, so
-    they may contain commas.
-
-    Returns a sorted list of unique tag names.
-    """
-    if not input:
-        return []
-
-    input = force_unicode(input)
-
-    # Special case - if there are no commas or double quotes in the
-    # input, we don't *do* a recall... I mean, we know we only need to
-    # split on spaces.
-    #if u',' not in input and u'"' not in input:
-    #    words = list(set(split_strip(input, u' ')))
-    #    words.sort()
-    #    return words
-
-    words = []
-    buffer = []
-    # Defer splitting of non-quoted sections until we know if there are
-    # any unquoted commas.
-    to_be_split = []
-    saw_loose_comma = False
-    open_quote = False
-    i = iter(input)
-    try:
-        while 1:
-            c = i.next()
-            if c == u'"':
-                if buffer:
-                    to_be_split.append(u''.join(buffer))
-                    buffer = []
-                # Find the matching quote
-                open_quote = True
-                c = i.next()
-                while c != u'"':
-                    buffer.append(c)
-                    c = i.next()
-                if buffer:
-                    word = u''.join(buffer).strip()
-                    if word:
-                        words.append(word)
-                    buffer = []
-                open_quote = False
-            else:
-                if not saw_loose_comma and c == u',':
-                    saw_loose_comma = True
-                buffer.append(c)
-    except StopIteration:
-        # If we were parsing an open quote which was never closed treat
-        # the buffer as unquoted.
-        if buffer:
-            if open_quote and u',' in buffer:
-                saw_loose_comma = True
-            to_be_split.append(u''.join(buffer))
-    if to_be_split:
-        if saw_loose_comma:
-            delimiter = u','
-        else:
-            delimiter = u' '
-        for chunk in to_be_split:
-            words.extend(split_strip(chunk, delimiter))
-    words = list(set(words))
-    words.sort()
-    return words
-
-def split_strip(input, delimiter=u','):
-    """
-    Splits ``input`` on ``delimiter``, stripping each resulting string
-    and returning a list of non-empty strings.
-    """
-    if not input:
-        return []
-
-    words = [w.strip() for w in input.split(delimiter)]
-    return [w for w in words if w]
-
-def edit_string_for_tags(tags):
-    """
-    Given list of ``Tag`` instances, creates a string representation of
-    the list suitable for editing by the user, such that submitting the
-    given string representation back without changing it will give the
-    same list of tags.
-
-    Tag names which contain commas will be double quoted.
-
-    If any tag name which isn't being quoted contains whitespace, the
-    resulting string of tag names will be comma-delimited, otherwise
-    it will be space-delimited.
-    """
-    names = []
-    use_commas = False
-    for tag in tags:
-        name = tag.name
-        if u',' in name:
-            names.append('"%s"' % name)
-            continue
-        elif u' ' in name:
-            if not use_commas:
-                use_commas = True
-        names.append(name)
-    if use_commas:
-        glue = u', '
-    else:
-        glue = u' '
-    return glue.join(names)
-
 def get_queryset_and_model(queryset_or_model):
     """
     Given a ``QuerySet`` or a ``Model``, returns a two-tuple of
@@ -274,17 +159,98 @@ def calculate_cloud(tags, steps=4, distribution=LOGARITHMIC):
                     tag.font_size = i + 1
                     font_set = True
     return tags
+    
+###########################
+# Freebase Util Functions #
+###########################
+
+try:
+    import freebase
+except ImportError:
+    freebase = None
+
+# The key from freebase that will have the topic description
+FREEBASE_DESC_KEY = "/common/topic/article"
 
 def fix_name_for_freebase(value):
     """
-    Takes a name and replaces spaces with underscores and capitalized each word
+    Takes a name and replaces spaces with underscores, removes periods
+    and capitalizes each word
     """
     words = []
     for word in value.split():
+        word = word.replace(".", "")
         words.append(word.title())
     return "_".join(words)
     
+def retrieve_freebase_name(name, stype):
+    if not freebase:
+        return name
     
+    search_key = fix_name_for_freebase(name)
+    fb_type = settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
+    value = None
+    try:
+        # Try to get the exact match
+        value = freebase.mqlread(
+            {"name": None, "type":fb_type or [], 
+             "key": {"value": search_key}})
+    except:
+        try:
+            # Try to get a results has a generator and return its top result
+            values = freebase.mqlreaditer(
+                {"name": None, "type":fb_type or [], 
+                 "key": {"value": search_key}})
+            value = values.next()
+        except Exception, e:
+            # Only print error as freebase is only optional
+            if settings.ST_DEBUG: print "Error using `freebase`: %s" % e
+            
+    if value:
+        return value["name"]
+    return name
+    
+def retrieve_freebase_desc(name, stype):
+    if not freebase:
+        return ""
+        
+    print "Retrieving the description for %s" % name
+    
+    fb_type = settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
+    value, data = None, ""
+    try:
+        value = freebase.mqlread(
+            {"name": name, "type": fb_type or [],
+             FREEBASE_DESC_KEY: [{"id": None}]})
+    except:
+        try:
+            values = freebase.mqlreaditer(
+                {"name": name, "type": fb_type or [],
+                 FREEBASE_DESC_KEY: [{"id": None}]})
+            value = values.next()
+        except Exception, e:
+            # Only print error as freebase is only optional
+            if settings.ST_DEBUG: print "Error using `freebase`: %s" % e
+            
+    if value and FREEBASE_DESC_KEY in value and value[FREEBASE_DESC_KEY]:
+        guid = value[FREEBASE_DESC_KEY][0].get("id", None)
+        if not guid:
+            return data
+        try:
+            import urllib
+            desc_url = "%s%s" % (settings.FREEBASE_DESCRIPTION_URL, guid)
+            sock = urllib.urlopen(desc_url)
+            data = sock.read()                            
+            sock.close()
+        except Exception, e:
+            if settings.ST_DEBUG: print "Error getting description from freebase for tag \"%s\" - %s" % (name, e)
+        
+    return data
+    
+################
+# Render Utils #
+################
+
 def render_item(item, stype, template, suffix, template_path='supertagging/render', context={}):
     """
     Use to render tags, relations, tagged items and tagger relations.

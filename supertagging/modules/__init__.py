@@ -9,7 +9,8 @@ from django.db.models.loading import get_model
 
 from supertagging import settings
 from supertagging.calais import Calais
-from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue, SuperTagExclude
+from supertagging.models import SuperTag, SuperTagRelation, SuperTaggedItem, SuperTaggedRelationItem, SuperTagProcessQueue
+from supertagging.markup import invalidate_markup_cache
 
 REF_REGEX = "^http://d.opencalais.com/(?P<key>.*)$"
 
@@ -59,6 +60,13 @@ def process(obj, tags=[]):
             raise KeyError(e)
         return
         
+    # If not fields are found, nothing can be processed.
+    if not params.has_key('fields'):
+        if settings.ST_DEBUG:
+            raise Exception('No "fields" found.')
+        else:
+            return
+        
     if params.has_key('match_kwargs'):
         try:
             # Make sure this obj matches the match kwargs
@@ -66,15 +74,17 @@ def process(obj, tags=[]):
         except model.DoesNotExist:
             return
         
+    # Retrieve the default process type
     process_type = settings.DEFAULT_PROCESS_TYPE
+    
+    # If the contentType key is specified in the PROCESSING_DIR set the 
+    # process type
     if 'contentType' in settings.PROCESSING_DIR:
-        d_proc_type = proc_dir['contentType']
-
-    if 'fields' not in params:
-        if settings.ST_DEBUG:
-            raise Exception('No "fields" found.')
-        else:
-            return
+        process_type = settings.PROCESSING_DIR['contentType']
+    
+    # If the MODULES setting specifies a process type set the process type.
+    if params.has_key('process_type'):
+        process_type = params['process_type']
 
     # Create the instance of Calais and setup the parameters,
     # see open-calais.com for more information about user directives,
@@ -85,14 +95,20 @@ def process(obj, tags=[]):
     c.processing_directives['contentType'] = process_type
 
     # Get the object's date.
-    # First look for get_latest_by in the meta class, if nothing is
-    # found check the ordering attribute in the meta class.
+    # First look for the key 'date_field' in the MODULES setting, then 
+    # get_latest_by in the meta class, then check the ordering attribute 
+    # in the meta class.
     date = None
     date_fields = []
-    if obj._meta.get_latest_by:
+    if params.has_key('date_field'):
+        date_fields.append(params['date_field'])
+    elif obj._meta.get_latest_by:
         date_fields.append(obj._meta.get_latest_by)
     else:
         date_fields = obj._meta.ordering
+    
+    # Retrieve the Django content type for the obj
+    ctype = ContentType.objects.get_for_model(obj)
     
     for f in date_fields:
         f=f.lstrip('-')
@@ -117,8 +133,6 @@ def process(obj, tags=[]):
             # Analyze the text (data)
             result = c.analyze(data)
 
-            # Retrieve the Django content type for the obj
-            ctype = ContentType.objects.get_for_model(obj)
             # Remove existing items, this ensures tagged items 
             # are updated correctly
             SuperTaggedItem.objects.filter(content_type=ctype, 
@@ -143,9 +157,14 @@ def process(obj, tags=[]):
                 
             processed_tags.extend(entities)
             processed_tags.extend(topics)
+            
+            if settings.MARKUP:
+                invalidate_markup_cache(obj, field)
+                
         except Exception, e:
             if settings.ST_DEBUG: raise Exception(e)
             continue
+
     return processed_tags
 
 def clean_up(obj):
@@ -216,7 +235,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         tag = tag.substitute or tag
         
         # If this tag was added to exlcude list, move onto the next item.
-        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+        if not tag.enabled:
             continue
             
         tag.properties = entity
@@ -297,7 +316,7 @@ def _processRelations(field, data, obj, ctype, process_type, tags, date):
             except SuperTag.DoesNotExist:
                 continue
                 
-            if len(SuperTagExclude.objects.filter(tag__pk=entity.pk)) == 1:
+            if not entity.enabled:
                 continue
                 
             rel_item, rel_created = SuperTagRelation.objects.get_or_create(
@@ -337,7 +356,7 @@ def _processTopics(field, data, obj, ctype, tags, date):
             
         tag = tag.substitute or tag
         
-        if len(SuperTagExclude.objects.filter(tag__pk=tag.pk)) == 1:
+        if not tag.enabled:
             continue
 
         tag.properties = di

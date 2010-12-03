@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Markup &mdash; Django SuperTagging v0.4.5 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Django SuperTagging v0.4.5 documentation" href="index.html" />
+    <link rel="next" title="Reference" href="reference/index.html" />
+    <link rel="prev" title="API Reference" href="api.html" /> 
+  </head>
+  <body>
+<div id="docstitle">
+	<p>Django SuperTagging v0.4.5 documentation</p>
+</div>
+<div id="header">
+	<div id="title"><h1>Markup</h1></div>
+	<ul id="headerButtons">
+		<li id="toc_button"><div class="headerButton"><a href="#">Table of Contents</a></div></li>
+		<li id="page_buttons">
+			<div class="headerButton"><a href="genindex.html" title="General Index" accesskey="I">index</a></div>
+			<div class="headerButton"><a href="reference/index.html" title="Reference" accesskey="N">next</a></div>
+			<div class="headerButton"><a href="api.html" title="API Reference" accesskey="P">previous</a></div>
+		</li>
+	</ul>
+</div>
+
+<div id="sphinxsidebar">
+  <div class="sphinxsidebarwrapper">
+	<ul><li class="toctree-l1"><a href="index.html">Main Page</a></li></ul>
+	<ul class="current">
+<li class="toctree-l1"><a class="reference external" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference external" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference external" href="real_world_example.html">Real World Example</a></li>
+<li class="toctree-l1"><a class="reference external" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference external" href="">Markup</a><ul>
+<li class="toctree-l2"><a class="reference external" href="#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference external" href="#how-it-works">How It Works</a></li>
+<li class="toctree-l2"><a class="reference external" href="#markup-handler">Markup handler</a></li>
+<li class="toctree-l2"><a class="reference external" href="#markup-template">Markup Template</a></li>
+<li class="toctree-l2"><a class="reference external" href="#caching">Caching</a></li>
+<li class="toctree-l2"><a class="reference external" href="#gotchas">Gotchas</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="reference/index.html">Reference</a></li>
+</ul>
+
+    <div id="searchbox" style="display: none">
+      
+        <form class="search" action="search.html" method="get">
+			<div class="search-wrapper">
+			<span class="search-left"></span>
+			<input class="prettysearch" type="text" name="q" size="18" />
+			<span class="search-right">&nbsp;</span>
+			</div>
+          <input type="submit" value="Search" class="searchbutton" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+        <p class="searchtip" style="font-size: 90%">
+        Enter search terms or a module, class or function name.
+        </p>
+    </div>
+    <script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+</div>
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="markup">
+<span id="id1"></span><h1>Markup<a class="headerlink" href="#markup" title="Permalink to this headline">¶</a></h1>
+<p>This is a way to populate your content with extra content in relation to the
+tags. The most common way would be to replace where the tags are located with
+links to another section of your site with more information.</p>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>In the settings you will need to have</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
+<p>When SuperTagging loads up and markup is enabled, it will add an additional
+attribute for every field specified in <a class="reference external" href="reference/settings.html#setting-modules"><em>SUPERTAGGING_MODULES</em></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">MARKUP_FIELD_SUFFIX</span> <span class="o">=</span> <span class="s">&quot;tagged&quot;</span>
+<span class="n">SUPERTAGGING_MODULES</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">,</span>
+             <span class="s">&#39;markup_handler&#39;</span><span class="p">:</span> <span class="s">&#39;MyCustomHandler&#39;</span><span class="p">}]},</span>
+    <span class="s">&#39;media.image&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;caption&#39;</span><span class="p">}]},</span>
+    <span class="s">&#39;blog.entry&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;content&#39;</span><span class="p">},</span>
+            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;tease&#39;</span><span class="p">,</span>
+             <span class="s">&#39;markup&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Lets take the code sample above as an example. We notice that markup is
+enabled and the prefix for the markup fields is <cite>tagged</cite>. The first module
+is a <strong>story</strong> model, and the field named <strong>body</strong> is marked to be tagged.
+It also specifies a custom markup handler, which we&#8217;ll get to a bit later.
+The next model is a <strong>image</strong> model and the <strong>caption</strong> field is marked for
+tagging. The last model is an <strong>entry</strong> model and it has 2 fields marked for
+tagging, <strong>content</strong> and <strong>tease</strong>, but tease is not to be marked up.</p>
+<p>After <cite>SuperTagging</cite> is done loading you will end up with three additional
+attributes for the three different models.</p>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>story model</strong></dt>
+<dd><ul class="first last simple">
+<li>tagged_body</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>image model</strong></dt>
+<dd><ul class="first last simple">
+<li>tagged_caption</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>entry</strong></dt>
+<dd><ul class="first last simple">
+<li>tagged_content</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Notice that the a &#8216;tagged_tease&#8217; does not exist for the <strong>entry</strong> model.</p>
+</div>
+<div class="section" id="markup-handler">
+<h2>Markup handler<a class="headerlink" href="#markup-handler" title="Permalink to this headline">¶</a></h2>
+<p>Each field will be assigned a <cite>MarkupHandler</cite> object, which can be found
+in <cite>supertagging/markup.py</cite> file. This module does all the markup processing
+for you on the fly. If an error occurs, since the original content is never
+touched, the original content is returned.</p>
+<p>You can create your own custom handler as well.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">supertagging.markup</span> <span class="kn">import</span> <span class="n">MarkupHandler</span>
+
+<span class="k">class</span> <span class="nc">MyCustomHandler</span><span class="p">(</span><span class="n">MarkupHandler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="c"># DO YOUR CUSTOM MARKUP HERE</span>
+        <span class="k">return</span> <span class="s">&quot;MARKED UP CONTENT&quot;</span>
+</pre></div>
+</div>
+<p>The <cite>handle</cite> method needs to return a string of the marked up content.</p>
+<p>If you want a create a custom handler but use the default markup method, your code
+might look something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">supertagging.markup</span> <span class="kn">import</span> <span class="n">MarkupHandler</span><span class="p">,</span> <span class="n">markup_content</span>
+
+<span class="k">class</span> <span class="nc">MyCustomHandler</span><span class="p">(</span><span class="n">MarkupHandler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="c"># DO SOMETHING HERE</span>
+        <span class="k">return</span> <span class="n">markup_content</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="markup-template">
+<h2>Markup Template<a class="headerlink" href="#markup-template" title="Permalink to this headline">¶</a></h2>
+<p><cite>markup.html</cite></p>
+<p>This template is used to render the tags in a marked up state. Below is the
+default html rendered.</p>
+<div class="highlight-django"><div class="highlight"><pre><span class="x">&lt;a href=&quot;#&quot;&gt;</span><span class="cp">{{</span> <span class="nv">actual_value</span> <span class="cp">}}</span><span class="x">&lt;/a&gt;</span>
+</pre></div>
+</div>
+<p><strong>Context</strong></p>
+<blockquote>
+<ul class="simple">
+<li>actual_value - the value of the tag, this might be the same as the tag name or a reference to the tag, IE: &#8216;his&#8217;, &#8216;her&#8217; etc.</li>
+<li>tag - a <cite>SuperTag</cite> instance</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="caching">
+<h2>Caching<a class="headerlink" href="#caching" title="Permalink to this headline">¶</a></h2>
+<p>There is a build-in cache for the markup, since every time we call this new
+attribute, a couple database calls need to happen to retrieve all the tags
+and its meta data for an instance.</p>
+<p>You can change the default timeout for this cache by changing the following setting</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP_CONTENT_CACHE_TIMEOUT</span> <span class="o">=</span> <span class="mi">3600</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gotchas">
+<h2>Gotchas<a class="headerlink" href="#gotchas" title="Permalink to this headline">¶</a></h2>
+<p>In some cases, after enabling markup and successfully tagging an instance the markup
+does not show up. Two things might cause this, 1 is the cache has not expired and 2
+the markup did not validate.</p>
+<p>Markup validation happens when the markup field is called and the data retrieved does
+not match what the instance has stored. This usually means that the instance was edited
+and the field that gets tagged was changed and it has not been re-processed by
+OpenCalais.</p>
+</div>
+</div>
+
+
+          </div> 
+        </div>
+      </div>
+    <div class="footer">
+    <p>
+      &copy; Copyright 2010, The Washington Times.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+	</p>
+    </div>
+      <div class="clearer"></div>
+    </div>
+	<div id="breadcrumbs">
+		Markup
+		</ul>
+	</div>
+	<script type="text/javascript" charset="utf-8" src="_static/toc.js"></script>
+  </body>
+</html>

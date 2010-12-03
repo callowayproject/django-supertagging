@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting Started &mdash; Django SuperTagging v0.4.5 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Django SuperTagging v0.4.5 documentation" href="index.html" />
+    <link rel="next" title="Real World Example" href="real_world_example.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+  </head>
+  <body>
+<div id="docstitle">
+	<p>Django SuperTagging v0.4.5 documentation</p>
+</div>
+<div id="header">
+	<div id="title"><h1>Getting Started</h1></div>
+	<ul id="headerButtons">
+		<li id="toc_button"><div class="headerButton"><a href="#">Table of Contents</a></div></li>
+		<li id="page_buttons">
+			<div class="headerButton"><a href="genindex.html" title="General Index" accesskey="I">index</a></div>
+			<div class="headerButton"><a href="real_world_example.html" title="Real World Example" accesskey="N">next</a></div>
+			<div class="headerButton"><a href="installation.html" title="Installation" accesskey="P">previous</a></div>
+		</li>
+	</ul>
+</div>
+
+<div id="sphinxsidebar">
+  <div class="sphinxsidebarwrapper">
+	<ul><li class="toctree-l1"><a href="index.html">Main Page</a></li></ul>
+	<ul class="current">
+<li class="toctree-l1"><a class="reference external" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference external" href="">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference external" href="#setting-up-opencalais-api">Setting up OpenCalais API</a></li>
+<li class="toctree-l2"><a class="reference external" href="#setting-up-models-to-be-tagged">Setting up models to be tagged</a></li>
+<li class="toctree-l2"><a class="reference external" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="real_world_example.html">Real World Example</a></li>
+<li class="toctree-l1"><a class="reference external" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="markup.html">Markup</a></li>
+<li class="toctree-l1"><a class="reference external" href="reference/index.html">Reference</a></li>
+</ul>
+
+    <div id="searchbox" style="display: none">
+      
+        <form class="search" action="search.html" method="get">
+			<div class="search-wrapper">
+			<span class="search-left"></span>
+			<input class="prettysearch" type="text" name="q" size="18" />
+			<span class="search-right">&nbsp;</span>
+			</div>
+          <input type="submit" value="Search" class="searchbutton" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+        <p class="searchtip" style="font-size: 90%">
+        Enter search terms or a module, class or function name.
+        </p>
+    </div>
+    <script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+</div>
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="getting-started">
+<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>If you have not installed SuperTagging yet, go to the <a class="reference external" href="installation.html#installation"><em>Installation</em></a> page.</p>
+<div class="section" id="setting-up-opencalais-api">
+<h2>Setting up OpenCalais API<a class="headerlink" href="#setting-up-opencalais-api" title="Permalink to this headline">¶</a></h2>
+<p>Go to <a class="reference external" href="http://www.opencalais.com/">OpenCalais</a>&#8216;s website and register for
+an api key, and in your settings.py file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_CALAIS_API_KEY</span> <span class="o">=</span> <span class="s">&quot;YOUR API KEY&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-up-models-to-be-tagged">
+<h2>Setting up models to be tagged<a class="headerlink" href="#setting-up-models-to-be-tagged" title="Permalink to this headline">¶</a></h2>
+<p>You will need to decide which models and which fields in those models you
+will want SuperTagging to mark for tagging.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MODULES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">},</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>The code above tells SuperTagging to tag the <strong>body</strong> field of model
+<strong>stories.story</strong>. We can specify any number of fields and models as well.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MODULES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;tease&#39;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;kicker&#39;</span><span class="p">},</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+    <span class="s">&#39;media.image&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;caption&#39;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;description&#39;</span><span class="p">},</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>View <a class="reference external" href="reference/settings.html#setting-modules"><em>SUPERTAGGING_MODULES</em></a> for more information.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_AUTO_PROCESS</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>Post save and post delete signals will be connected to the models
+specified in <cite>SUPERTAGGING_MODULES</cite>. Visit <a class="reference external" href="reference/settings.html#reference-settings"><em>Settings</em></a> to
+view more details about the SuperTagging settings</p>
+<p>View the complete list of <a class="reference external" href="reference/settings.html#reference-settings"><em>Settings</em></a></p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>That is all that is needed to get SuperTagging to start tagging your data.
+Upon saving a instance of one of the models specified in
+<cite>SUPERTAGGING_MODULES</cite>, the field(s) data will be sent to OpenCalais
+for processing.</p>
+<p>Next step: View the <a class="reference external" href="real_world_example.html#real-world-example"><em>Real World Example</em></a> section of how The Washington
+Times has SuperTagging setup.</p>
+</div>
+</div>
+
+
+          </div> 
+        </div>
+      </div>
+    <div class="footer">
+    <p>
+      &copy; Copyright 2010, The Washington Times.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+	</p>
+    </div>
+      <div class="clearer"></div>
+    </div>
+	<div id="breadcrumbs">
+		Getting Started
+		</ul>
+	</div>
+	<script type="text/javascript" charset="utf-8" src="_static/toc.js"></script>
+  </body>
+</html>
