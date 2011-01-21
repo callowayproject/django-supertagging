@@ -14,7 +14,7 @@ setup(
     description = 'An interface to the Open Calais service for semantic markup.',
     author = 'Jose Soares',
     author_email = 'jsoares@washingtontimes.com',
-    url = 'http://opensource.washingtontimes.com/projects/supertagging/',
+    url = 'https://github.com/washingtontimes/django-supertagging',
     packages = find_packages(),
     include_package_data = True,
     install_requires = reqs,
