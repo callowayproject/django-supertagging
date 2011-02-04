@@ -59,6 +59,10 @@ REGISTER_MODELS = getattr(settings, 'SUPERTAGGING_REGISTER_MODELS', False)
 # way to preserve the old tag data.
 SUBSTITUTE_TAG_UPDATE = getattr(settings, 'SUPERTAGGING_SUBSTITUTE_TAG_UPDATE', False)
 
+# If True, all related content to a tag will be removed, items from models 
+# `SuperTaggedItem` and `SuperTaggedRelationItem`
+REMOVE_REL_ON_DISABLE = getattr(settings, 'SUPERTAGGING_REMOVE_REL_ON_DISABLE', False)
+
 # Optional, use freebase to disambiguate tags
 USE_FREEBASE = getattr(settings, 'SUPERTAGGING_USE_FREEBASE', False)
 

@@ -492,15 +492,16 @@ class SuperTag(models.Model):
     class Meta:
         ordering = ('name',)
         
-    def save(self, *args, **kwargs):        
+    def save(self, *args, **kwargs):      
         super(SuperTag, self).save(*args, **kwargs)
         # If display fields are available and FREEBASE_RETRIEVE_DESCRIPTIONS is True
         # and the description field is empty, try to get a description from Freebase
         if self.has_display_fields() and st_settings.FREEBASE_RETRIEVE_DESCRIPTIONS and not self.description:
             self.description = retrieve_freebase_desc(self.name, self.stype)
-        # If tag is set to be disabled, remove all Tagged Items and
-        # Tagged Relation Items
-        if not self.enabled:
+            
+        # If tag is set to be disabled and REMOVE_REL_ON_DISABLE is True, 
+        # remove all Tagged Items and Tagged Relation Items
+        if not self.enabled and st_settings.REMOVE_REL_ON_DISABLE:
             SuperTaggedItem.objects.filter(tag__pk=self.pk).delete()
             SuperTaggedRelationItem.objects.filter(relation__tag__pk=self.pk).delete()
             

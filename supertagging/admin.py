@@ -1,7 +1,10 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 
-from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem, SuperTagProcessQueue
+from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation
+from supertagging.models import SuperTaggedRelationItem, SuperTagProcessQueue
+
+from supertagging.settings import INCLUDE_DISPLAY_FIELDS
 
 def lock_items(modeladmin, request, queryset):
     queryset.update(locked=True)
@@ -19,7 +22,9 @@ class SuperTagAdmin(admin.ModelAdmin):
     
     actions = ['disable_tag', 'enable_tag']
     
-    raw_id_fields = ('substitute',)
+    raw_id_fields = ['substitute',]
+    if INCLUDE_DISPLAY_FIELDS:
+        raw_id_fields.append('related')
     
     def disable_tag(self, request, queryset):
         message_bit = ""
