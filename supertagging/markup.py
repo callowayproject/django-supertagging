@@ -125,6 +125,14 @@ def markup_content(obj, field, markup_template='supertagging/markup.html'):
         else:
             continue
             
+        # This tests to make sure the next tag does
+        # not overlap the current tag
+        if n != 0:
+            if 'offset' in full[n-1]:
+                prev_off = full[n-1]['offset']
+                if ((off+1)+le) > prev_off:
+                    continue
+                    
         # Validate that the data matches the data returned by calais
         if not value[off:(off+le)] == act_val:
             raise FailedMarkupValidation(
@@ -138,13 +146,7 @@ def markup_content(obj, field, markup_template='supertagging/markup.html'):
         pre = value[:off]
         suf = value[(off+le):]
         repl = value[off:(off+le)]
-        # This tests to make sure the next tag does not overlap 
-        # the current tag
-        if n != 0:
-            if 'offset' in full[n-1]:
-                prev_off = full[n-1]['offset']
-                if ((off+1)+le) > prev_off:
-                    continue
+        
         value = pre+val+suf
         
     return value
