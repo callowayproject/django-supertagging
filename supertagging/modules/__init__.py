@@ -144,16 +144,25 @@ def process(obj, tags=[]):
             entities, relations, topics = [], [], []
             # Process entities, relations and topics
             if hasattr(result, 'entities'):
-                entities = _processEntities(field, result.entities, 
-                    obj, ctype, proc_type, tags, date)
-
+                try:
+                    entities = _processEntities(field, result.entities, 
+                        obj, ctype, proc_type, tags, date)
+                except Exception, e:
+                    if settings.ST_DEBUG: raise Exception("Failed to process Entities: %s" % e)
+                    
             if hasattr(result, 'relations') and settings.PROCESS_RELATIONS:
-                relations = _processRelations(field, result.relations, obj, 
-                    ctype, proc_type, tags, date)                
+                try:
+                    relations = _processRelations(field, result.relations, obj, 
+                        ctype, proc_type, tags, date)
+                except Exception, e:
+                    if settings.ST_DEBUG: raise Exception("Failed to process Relations: %s" % e)    
 
             if hasattr(result, 'topics') and settings.PROCESS_TOPICS:
-                topics =  _processTopics(field, result.topics, obj, 
-                    ctype, tags, date)
+                try:
+                    topics =  _processTopics(field, result.topics, obj, 
+                        ctype, tags, date)
+                except Exception, e:
+                    if settings.ST_DEBUG: raise Exception("Failed to process Topics: %s" % e)
                 
             processed_tags.extend(entities)
             processed_tags.extend(topics)
