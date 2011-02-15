@@ -109,10 +109,17 @@ def markup_content(obj, field, markup_template='supertagging/markup.html'):
         if not item.instances:
             continue
         i = item.instances
+        skip = False
         for v in i:
+            if isinstance(v, list):
+                # TODO: figure out a better way to handle list of dicts
+                skip = True
+                continue
             if isinstance(v, dict):
                 v['supertag'] = item.tag
-        full.extend(i)
+                
+        if not skip:
+            full.extend(i)
 
     # Sort the list by the inner dict offset value in reverse
     full.sort(tag_instance_cmp, reverse=True)
