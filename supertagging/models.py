@@ -244,7 +244,11 @@ class SuperTagManager(models.Manager):
 
 class SuperTagRelationManager(models.Manager):
     def get_for_tag(self, tag, **kwargs):
-        return self.filter(tag__pk=tag.id, tag__enabled=True, **kwargs)
+        return self.filter(
+            tag__pk=tag.id, 
+            tag__enabled=True, 
+            supertaggedrelationitem__item_date__isnull=False, 
+            **kwargs).disctinct().order_by('-supertaggedrelationitem__item_date')
 
 
 class SuperTaggedItemManager(models.Manager):
@@ -566,7 +570,10 @@ class SuperTaggedRelationItem(models.Model):
     item_date = models.DateTimeField(null=True, blank=True)
     
     objects = SuperTaggedRelationItemManager()
-
+    
+    class Meta:
+        ordering = ['-item_date']
+    
     def __unicode__(self):
         return "%s of %s" % (self.relation.name, str(self.content_object))
         
