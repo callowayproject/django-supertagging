@@ -15,7 +15,7 @@ def unlock_items(modeladmin, request, queryset):
 unlock_items.short_description = "Unlock selected Queue Items"
 
 class SuperTagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'substitute', 'stype')
+    list_display = ('name', 'enabled', 'substitute', 'stype')
     ordering = ('name', )
     search_fields = ('stype', 'name', )
     list_filter = ('stype', )
