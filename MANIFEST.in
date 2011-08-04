@@ -10,3 +10,5 @@ recursive-include docs *.html *.css *.js *.png *.gif
 recursive-include supertagging *.py
 recursive-include supertagging/sql/ *.sql
 recursive-include supertagging/templates/ *.html
+
+prune example
