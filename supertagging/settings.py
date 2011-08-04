@@ -10,7 +10,7 @@ USER_DIR = getattr(settings, 'SUPERTAGGING_CALAIS_USER_DIRECTIVES', {})
 PROCESSING_DIR = getattr(settings, 'SUPERTAGGING_CALAIS_PROCESSING_DIRECTIVES', {})
 PROCESS_RELATIONS = getattr(settings, 'SUPERTAGGING_PROCESS_RELATIONS', False)
 PROCESS_TOPICS = getattr(settings, 'SUPERTAGGING_PROCESS_TOPICS', False)
-
+PROCESS_SOCIALTAGS = getattr(settings, 'SUPERTAGGING_PROCESS_SOCIALTAGS', False)
 # If True, raise errors when errors occur
 ST_DEBUG = getattr(settings, 'SUPERTAGGING_DEBUG', False)
 
