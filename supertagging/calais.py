@@ -2,6 +2,8 @@
 python-calais v.1.4 -- Python interface to the OpenCalais API
 Author: Jordan Dimov (jdimov@mlke.net)
 Last-Update: 01/12/2009
+
+1.5 updated by Corey Oordt 8/3/2011
 """
 
 import httplib, urllib, re
@@ -14,7 +16,31 @@ PARAMS_XML = """
 
 STRIP_RE = re.compile('<script.*?</script>|<noscript.*?</noscript>|<style.*?</style>', re.IGNORECASE)
 
-__version__ = "1.4"
+__version__ = "1.5"
+
+VALID_CONTENT_TYPES = (
+    'text/xml', 
+    'text/html', 
+    'text/raw', 
+    'text/htmlraw',
+)
+
+VALID_OUTPUT_TYPES = (
+    "xml/rdf", 
+    "text/simple", 
+    "text/microformats", 
+    "application/json",
+    "text/n3",
+)
+
+VALID_BOOLEANS = ('true', 'false', 't', 'f',)
+
+VALID_METADATA_TYPES = (
+    "GenericRelations", 
+    "SocialTags",
+    "GenericRelations,SocialTags",
+    "SocialTags,GenericRelations",
+)
 
 class AppURLopener(urllib.FancyURLopener):
     version = "Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.5) Gecko/2008121623 Ubuntu/8.10 (intrepid)Firefox/3.0.5" # Lie shamelessly to Wikipedia.
@@ -25,26 +51,89 @@ class Calais():
     Python class that knows how to talk to the OpenCalais API.  Use the analyze() and analyze_url() methods, which return CalaisResponse objects.  
     """
     api_key = None
-    processing_directives = {"contentType":"TEXT/RAW", "outputFormat":"application/json", "reltagBaseURL":None, "calculateRelevanceScore":"true", "enableMetadataType":None, "discardMetadata":None, "omitOutputtingOriginalText":"true"}
-    user_directives = {"allowDistribution":"false", "allowSearch":"false", "externalID":None}
+    processing_directives = {
+        "contentType": "TEXT/RAW", 
+        "outputFormat": "application/json", 
+        "reltagBaseURL": '', 
+        "calculateRelevanceScore": True, 
+        "enableMetadataType": '', 
+        "docRDFaccessible": True, 
+    }
+    user_directives = {
+        "allowDistribution": False, 
+        "allowSearch": False, 
+        "externalID": '',
+        "submitter": "python-calais client v.%s" % __version__,
+    }
     external_metadata = {}
 
-    def __init__(self, api_key, submitter="python-calais client v.%s" % __version__):
+    def __init__(self, api_key, submitter=None):
         self.api_key = api_key
-        self.user_directives["submitter"]=submitter
-
-    def _get_params_XML(self):
-        return PARAMS_XML % (" ".join('c:%s="%s"' % (k,v) for (k,v) in self.processing_directives.items() if v), " ".join('c:%s="%s"' % (k,v) for (k,v) in self.user_directives.items() if v), " ".join('c:%s="%s"' % (k,v) for (k,v) in self.external_metadata.items() if v))
-
+        if submitter:
+            self.user_directives["submitter"]=submitter
+    
+    def _validate_directives(self):
+        """
+        Validate that the directives are valid and have valid values
+        """
+        if (self.processing_directives['contentType'] and 
+            self.processing_directives['contentType'].lower() not in VALID_CONTENT_TYPES):
+            raise TypeError("%s is not a valid content type.")
+        if (self.processing_directives['outputFormat'] and
+            self.processing_directives['outputFormat'].lower() not in VALID_OUTPUT_TYPES):
+            raise TypeError("%s is not a valid output type.")
+        if (self.processing_directives['enableMetadataType'] and
+            self.processing_directives['enableMetadataType'].lower() not in VALID_METADATA_TYPES):
+            raise TypeError("%s is not a valid metadata type.")
+        
+        if (self.processing_directives['calculateRelevanceScore'] and 
+            not isinstance(self.processing_directives['calculateRelevanceScore'], bool)):
+            if self.processing_directives['calculateRelevanceScore'].lower() not in VALID_BOOLEAN_TYPES:
+                raise TypeError("%s is not a valid boolean type.")
+        
+        if (self.processing_directives['docRDFaccessible'] and 
+            not isinstance(self.processing_directives['docRDFaccessible'], bool)):
+            if self.processing_directives['docRDFaccessible'].lower() not in VALID_BOOLEAN_TYPES:
+                raise TypeError("%s is not a valid boolean type.")
+        
+        if (self.user_directives['allowDistribution'] and 
+            not isinstance(self.user_directives['allowDistribution'], bool)):
+            if self.user_directives['allowDistribution'].lower() not in VALID_BOOLEAN_TYPES:
+                raise TypeError("%s is not a valid boolean type.")
+        
+        if (self.user_directives['allowSearch'] and 
+            not isinstance(self.user_directives['allowSearch'], bool)):
+            if self.user_directives['allowSearch'].lower() not in VALID_BOOLEAN_TYPES:
+                raise TypeError("%s is not a valid boolean type.")
+    
+    def _get_param_headers(self):
+        headers = {}
+        for key, val in self.processing_directives.items():
+            if key == 'contentType':
+                headers['Content-Type'] = val
+            elif key == 'outputFormat':
+                headers['Accept'] = val
+            elif val:
+                headers[key] = val
+        for key, val in self.user_directives.items():
+            if val:
+                headers[key] = val
+        for key, val in self.external_metadata.items():
+            if val:
+                headers[key] = val
+        return headers
+    
     def rest_POST(self, content):
-        params = urllib.urlencode({'licenseID':self.api_key, 'content':content.encode('utf8'), 'paramsXML':self._get_params_XML()})
-        headers = {"Content-type":"application/x-www-form-urlencoded"}
+        headers = {
+            "x-calais-licenseID": self.api_key,
+        }
+        headers.update(self._get_param_headers())
         conn = httplib.HTTPConnection("api.opencalais.com:80")
-        conn.request("POST", "/enlighten/rest/", params, headers)
+        conn.request("POST", "/tag/rs/enrich", content.encode('utf8'), headers)
         response = conn.getresponse()
         data = response.read()
         conn.close()
-        return (data)
+        return data
 
     def get_random_id(self):
         """
@@ -121,7 +210,7 @@ class CalaisResponse():
         self.__dict__['doc'] = self.raw_response['doc']
         for k,v in self.simplified_response.items():
             self.__dict__[k] = v
-
+    
     def _simplify_json(self, json):
         result = {}
         # First, resolve references
