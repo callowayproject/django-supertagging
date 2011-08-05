@@ -1,3 +1,4 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -5,27 +6,28 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Real World Example &mdash; Django SuperTagging v0.4.5 documentation</title>
+    <title>Real World Example &mdash; Django SuperTagging v0.5beta1 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.4.5',
-        COLLAPSE_MODINDEX: false,
+        VERSION:     '0.5beta1',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Django SuperTagging v0.4.5 documentation" href="index.html" />
+    <link rel="top" title="Django SuperTagging v0.5beta1 documentation" href="index.html" />
     <link rel="next" title="API Reference" href="api.html" />
     <link rel="prev" title="Getting Started" href="getting_started.html" /> 
   </head>
   <body>
 <div id="docstitle">
-	<p>Django SuperTagging v0.4.5 documentation</p>
+	<p>Django SuperTagging v0.5beta1 documentation</p>
 </div>
 <div id="header">
 	<div id="title"><h1>Real World Example</h1></div>
@@ -43,17 +45,17 @@
   <div class="sphinxsidebarwrapper">
 	<ul><li class="toctree-l1"><a href="index.html">Main Page</a></li></ul>
 	<ul class="current">
-<li class="toctree-l1"><a class="reference external" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference external" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1 current"><a class="current reference external" href="">Real World Example</a><ul>
-<li class="toctree-l2"><a class="reference external" href="#our-current-supertagging-settings">Our current SuperTagging settings</a></li>
-<li class="toctree-l2"><a class="reference external" href="#showcasing-what-supertagging-does">Showcasing what SuperTagging does</a></li>
-<li class="toctree-l2"><a class="reference external" href="#running-the-process">Running the process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Real World Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#our-current-supertagging-settings">Our current SuperTagging settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#showcasing-what-supertagging-does">Showcasing what SuperTagging does</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-process">Running the process</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="markup.html">Markup</a></li>
-<li class="toctree-l1"><a class="reference external" href="reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markup.html">Markup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
 </ul>
 
     <div id="searchbox" style="display: none">
@@ -175,7 +177,7 @@ model called &#8216;tagged_content&#8217;. This attribute will contain the conte
 marked up state. This way, if we ever decided to change the way we markup our
 data, or change the location of where the links in the content go, we don&#8217;t
 need to change the instance directly.</p>
-<p>Vist the <a class="reference external" href="markup.html#markup"><em>Markup</em></a> page for more information</p>
+<p>Vist the <a class="reference internal" href="markup.html#markup"><em>Markup</em></a> page for more information</p>
 <p>This next set of settings we use is to exclude the types (entities) and
 relation types (events/facts)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_TAG_TYPE_EXCLUSIONS</span> <span class="o">=</span> <span class="p">[</span>
@@ -412,7 +414,7 @@ objects.</p>
     <div class="footer">
     <p>
       &copy; Copyright 2010, The Washington Times.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
 	</p>
     </div>
       <div class="clearer"></div>
