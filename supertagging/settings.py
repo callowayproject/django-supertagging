@@ -17,8 +17,8 @@ DEFAULT_USER_DIRECTIVES = {
 }
 DEFAULT_CALAIS_SETTINGS = {
     'API_KEY': None,
-    'USER_DIRECTIVES': DEFAULT_USER_DIRECTIVES, 
-    'PROCESSING_DIRECTIVES': DEFAULT_PROCESSING_DIRECTIVES,
+    # 'USER_DIRECTIVES': DEFAULT_USER_DIRECTIVES, 
+    # 'PROCESSING_DIRECTIVES': DEFAULT_PROCESSING_DIRECTIVES,
     'PROCESS_RELATIONS': False,
     'PROCESS_TOPICS': False,
     'PROCESS_SOCIALTAGS': False,
@@ -83,11 +83,20 @@ DEFAULT_SETTINGS = {
                                     # used in the url. 
                                     #   supertagging/tags/barack_obama/stories/
                                     #   supertagging/tags/world_cup/photos/
-    'OPEN_CALAIS': DEFAULT_CALAIS_SETTINGS,
-    'EXCLUSIONS': DEFAULT_EXCLUSIONS,
-    'MARKUP': DEFAULT_MARKUP_SETTINGS,
-    'FREEBASE': DEFAULT_FREEBASE_SETTINGS,
+    # 'OPEN_CALAIS': DEFAULT_CALAIS_SETTINGS,
+    # 'EXCLUSIONS': DEFAULT_EXCLUSIONS,
+    # 'MARKUP': DEFAULT_MARKUP_SETTINGS,
+    # 'FREEBASE': DEFAULT_FREEBASE_SETTINGS,
 }
+
+USER_SETTINGS = dict(DEFAULT_SETTINGS.items() + getattr(settings, 'SUPERTAGGING_SETTINGS', {}).items())
+USER_SETTINGS['OPEN_CALAIS'] = dict(DEFAULT_CALAIS_SETTINGS.items() + USER_SETTINGS.get('OPEN_CALAIS', {}).items())
+USER_SETTINGS['OPEN_CALAIS']['USER_DIRECTIVES'] = dict(DEFAULT_USER_DIRECTIVES.items() + USER_SETTINGS['OPEN_CALAIS'].get('USER_DIRECTIVES', {}).items())
+USER_SETTINGS['OPEN_CALAIS']['PROCESSING_DIRECTIVES'] = dict(DEFAULT_PROCESSING_DIRECTIVES.items() + USER_SETTINGS['OPEN_CALAIS'].get('PROCESSING_DIRECTIVES', {}).items())
+USER_SETTINGS['EXCLUSIONS'] = dict(DEFAULT_EXCLUSIONS.items() + USER_SETTINGS.get('EXCLUSIONS', {}).items())
+USER_SETTINGS['MARKUP'] = dict(DEFAULT_MARKUP_SETTINGS.items() + USER_SETTINGS.get('MARKUP', {}).items())
+USER_SETTINGS['FREEBASE'] = dict(DEFAULT_FREEBASE_SETTINGS.items() + USER_SETTINGS.get('FREEBASE', {}).items())
+
 
 ERR_MSG = "Setting %s is deprecated; use SUPERTAGGING_SETTINGS['%s'] instead."
 
@@ -112,8 +121,8 @@ DEP_SETTINGS = (
 for dep_setting, new_setting, short_name in DEP_SETTINGS:
     if hasattr(settings, dep_setting):
         warnings.warn(ERR_MSG % (dep_setting, new_setting), DeprecationWarning)
-        DEFAULT_SETTINGS[new_setting] = getattr(settings, dep_setting)
-    globals().update({short_name: DEFAULT_SETTINGS[new_setting]})
+        USER_SETTINGS[new_setting] = getattr(settings, dep_setting)
+    globals().update({short_name: USER_SETTINGS[new_setting]})
         
 
 DEP_CALAIS = (
@@ -128,8 +137,8 @@ DEP_CALAIS = (
 for dep_setting, new_setting, short_name in DEP_CALAIS:
     if hasattr(settings, dep_setting):
         warnings.warn(ERR_MSG % (dep_setting, "OPEN_CALAIS']['%s" % new_setting), DeprecationWarning)
-        DEFAULT_SETTINGS['OPEN_CALAIS'][new_setting] = getattr(settings, dep_setting)
-    globals().update({short_name: DEFAULT_SETTINGS['OPEN_CALAIS'][new_setting]})
+        USER_SETTINGS['OPEN_CALAIS'][new_setting] = getattr(settings, dep_setting)
+    globals().update({short_name: USER_SETTINGS['OPEN_CALAIS'][new_setting]})
 
 DEP_EXCLUSIONS = (
     ('SUPERTAGGING_TAG_TYPE_EXCLUSIONS', 'TAG_TYPE_EXCLUSIONS', 'EXCLUSIONS'),
@@ -141,8 +150,8 @@ DEP_EXCLUSIONS = (
 for dep_setting, new_setting, short_name in DEP_EXCLUSIONS:
     if hasattr(settings, dep_setting):
         warnings.warn(ERR_MSG % (dep_setting, "EXCLUSIONS']['%s" % new_setting), DeprecationWarning)
-        DEFAULT_SETTINGS['EXCLUSIONS'][new_setting] = getattr(settings, dep_setting)
-    globals().update({short_name: DEFAULT_SETTINGS['EXCLUSIONS'][new_setting]})
+        USER_SETTINGS['EXCLUSIONS'][new_setting] = getattr(settings, dep_setting)
+    globals().update({short_name: USER_SETTINGS['EXCLUSIONS'][new_setting]})
 
 
 DEP_MARKUP = (
@@ -156,8 +165,8 @@ DEP_MARKUP = (
 for dep_setting, new_setting, short_name in DEP_MARKUP:
     if hasattr(settings, dep_setting):
         warnings.warn(ERR_MSG % (dep_setting, "MARKUP']['%s" % new_setting), DeprecationWarning)
-        DEFAULT_SETTINGS['MARKUP'][new_setting] = getattr(settings, dep_setting)
-    globals().update({short_name: DEFAULT_SETTINGS['MARKUP'][new_setting]})
+        USER_SETTINGS['MARKUP'][new_setting] = getattr(settings, dep_setting)
+    globals().update({short_name: USER_SETTINGS['MARKUP'][new_setting]})
 
 DEP_FREEBASE = (
     ('SUPERTAGGING_USE_FREEBASE', 'ENABLED', 'USE_FREEBASE',),
@@ -169,6 +178,6 @@ DEP_FREEBASE = (
 for dep_setting, new_setting, short_name in DEP_FREEBASE:
     if hasattr(settings, dep_setting):
         warnings.warn(ERR_MSG % (dep_setting, "FREEBASE']['%s" % new_setting), DeprecationWarning)
-        DEFAULT_SETTINGS['FREEBASE'][new_setting] = getattr(settings, dep_setting)
-    globals().update({short_name: DEFAULT_SETTINGS['FREEBASE'][new_setting]})
+        USER_SETTINGS['FREEBASE'][new_setting] = getattr(settings, dep_setting)
+    globals().update({short_name: USER_SETTINGS['FREEBASE'][new_setting]})
 
