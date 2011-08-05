@@ -16,13 +16,13 @@ DEFAULT_USER_DIRECTIVES = {
     "submitter": "python-calais client v.1.5",
 }
 DEFAULT_CALAIS_SETTINGS = {
-    'API_KEY': None,
+    'API_KEY': '',
     # 'USER_DIRECTIVES': DEFAULT_USER_DIRECTIVES, 
     # 'PROCESSING_DIRECTIVES': DEFAULT_PROCESSING_DIRECTIVES,
     'PROCESS_RELATIONS': False,
     'PROCESS_TOPICS': False,
     'PROCESS_SOCIALTAGS': False,
-    
+    'DEFAULT_PROCESS_TYPE': 'TEXT/RAW', 
 }
 DEFAULT_EXCLUSIONS = {
     'TAG_TYPE_EXCLUSIONS': [], # exclude tags of certian types from saving
@@ -46,13 +46,12 @@ DEFAULT_MARKUP_SETTINGS = {
     'FIELD_SUFFIX': "tagged", # The suffix of the field created when using markup.
     'EXCLUDE': [], # List of strings that will be excluded from being marked up, eg: his, her, him etc.
     'CONTENT_CACHE_TIMEOUT': 3600, # Integer for the cache timeout for the markup content.
-    'MIN_RELEVANCE_MARKUP': 0, # Minimum relevance of a tag to include it in 
+    'MIN_RELEVANCE': 0, # Minimum relevance of a tag to include it in 
                            # automatic markup of the content (0-1000)
 }
 DEFAULT_SETTINGS = {
     'ENABLED': False, # Enable supertagging. This will allow starting and 
                       # stopping tag processing while preserving AUTO_PROCESS
-    'DEFAULT_PROCESS_TYPE': 'TEXT/RAW', 
     'DEBUG': False, # If True, raise errors when errors occur
     'WATCHED_FIELDS': {}, # The models/fields to process
     'INCLUDE_DISPLAY_FIELDS': True, # True: include fields: display_name, description, icon, related
@@ -102,7 +101,6 @@ ERR_MSG = "Setting %s is deprecated; use SUPERTAGGING_SETTINGS['%s'] instead."
 
 DEP_SETTINGS = (
     # Old setting name, New setting name, local variable name
-    ('SUPERTAGGING_DEFAULT_PROCESS_TYPE', 'DEFAULT_PROCESS_TYPE', 'DEFAULT_PROCESS_TYPE'),
     ('SUPERTAGGING_MODULES', 'WATCHED_FIELDS', 'MODULES'),
     ('SUPERTAGGING_DEBUG', 'DEBUG', 'ST_DEBUG'),
     ('SUPERTAGGING_RESOLVE_PROPERTY_KEYS', 'RESOLVE_PROPERTY_KEYS', 'RESOLVE_KEYS'),
@@ -132,6 +130,7 @@ DEP_CALAIS = (
     ('SUPERTAGGING_PROCESS_TOPICS', 'PROCESS_TOPICS', 'PROCESS_TOPICS'),
     ('SUPERTAGGING_PROCESS_SOCIALTAGS', 'PROCESS_SOCIALTAGS', 'PROCESS_SOCIALTAGS'),
     ('SUPERTAGGING_CALAIS_API_KEY', 'API_KEY', 'API_KEY'),
+    ('SUPERTAGGING_DEFAULT_PROCESS_TYPE', 'DEFAULT_PROCESS_TYPE', 'DEFAULT_PROCESS_TYPE'),
 )
 
 for dep_setting, new_setting, short_name in DEP_CALAIS:
@@ -156,7 +155,7 @@ for dep_setting, new_setting, short_name in DEP_EXCLUSIONS:
 
 DEP_MARKUP = (
     ('SUPERTAGGING_MARKUP', 'ENABLED', 'MARKUP'),
-    ('SUPERTAGGING_MIN_RELEVANCE_MARKUP', 'MIN_RELEVANCE_MARKUP', 'MIN_RELEVANCE_MARKUP'),
+    ('SUPERTAGGING_MIN_RELEVANCE_MARKUP', 'MIN_RELEVANCE', 'MIN_RELEVANCE_MARKUP'),
     ('SUPERTAGGING_MARKUP_FIELD_SUFFIX', 'FIELD_SUFFIX', 'MARKUP_FIELD_SUFFIX'),
     ('SUPERTAGGING_MARKUP_EXCLUDES', 'EXCLUDE', 'MARKUP_EXCLUDES'),
     ('SUPERTAGGING_MARKUP_CONTENT_CACHE_TIMEOUT', 'CONTENT_CACHE_TIMEOUT', 'MARKUP_CONTENT_CACHE_TIMEOUT'),
