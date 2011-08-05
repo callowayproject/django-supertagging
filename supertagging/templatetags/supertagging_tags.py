@@ -570,3 +570,38 @@ def do_render_item(parser, token):
         return RenderItemNode(argv[1], **kwargs)
         
 register.tag('supertag_render', do_render_item)
+
+
+class IsSupertaggableNode(Node):
+    def __init__(self, obj):
+        self.obj = obj
+    
+    def render(self, context):
+        from django.contrib.contenttypes.models import ContentType
+        from supertagging.settings import WATCHED_FIELDS
+        
+        obj = Variable(self.obj).resolve(context)
+        ctype = ContentType.objects.get_for_model(obj)
+        result = "%s.%s" % (ctype.app_label, ctype.model) in WATCHED_FIELDS
+        context['is_supertaggable'] = result
+        print result
+        return ''
+
+def do_is_supertaggable(parser, token):
+    """
+    {% is_supertaggable obj %}
+    
+    Sets context variable "is_supertaggable" to True or False
+    """
+    try:
+        tag_name, obj = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError("%r tag requires exactly one argument" % token.contents.split()[0])
+    return IsSupertaggableNode(obj)
+
+register.tag('is_supertaggable', do_is_supertaggable)
+
+def do_has_valid_markup(parser, token):
+    """
+    {% has_valid_supertag_markup obj %}
+    """

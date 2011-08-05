@@ -180,3 +180,4 @@ for dep_setting, new_setting, short_name in DEP_FREEBASE:
         USER_SETTINGS['FREEBASE'][new_setting] = getattr(settings, dep_setting)
     globals().update({short_name: USER_SETTINGS['FREEBASE'][new_setting]})
 
+globals().update(USER_SETTINGS)
