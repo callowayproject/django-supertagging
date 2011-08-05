@@ -117,36 +117,38 @@ INSTALLED_APPS = (
     'supertagging',
     'south',
 )
-
-INCLUDE_DISPLAY_FIELDS = True
-SUPERTAGGING_MODULES = {
-    'flatpages.flatpage': {
-        'fields': [{
-            'name': 'content', 
-            'process_type': 'TEXT/RAW', 
-            'markup': False
-        }]
-    }
+SUPERTAGGING_SETTINGS = {
+    'ENABLED': True,
+    'WATCHED_FIELDS': {
+        'flatpages.flatpage': {
+            'fields': [{
+                'name': 'content', 
+                'process_type': 'TEXT/RAW', 
+                'markup': False
+            }]
+        }
+    },
+    'INCLUDE_DISPLAY_FIELDS': True,
+    'AUTO_PROCESS': True,
+    'DEBUG': True,
+    'USE_QUEUE': False,
+    'REGISTER_MODELS': True,
+    'SUBSTITUTE_TAG_UPDATE': True,
+    'RESOLVE_PROPERTY_KEYS': True,
+    'REMOVE_REL_ON_DISABLE': True,
+    'OPEN_CALAIS': {
+        'PROCESSING_DIRECTIVES': {
+            'enableMetadataType': "GenericRelations,SocialTags",
+        },
+        'PROCESS_RELATIONS': True,
+        'PROCESS_TOPICS': True,
+        'PROCESS_SOCIALTAGS': True,
+    },
 }
-SUPERTAGGING_ENABLED = True
-SUPERTAGGING_AUTO_PROCESS = True
-SUPERTAGGING_DEBUG = True
-SUPERTAGGING_DEFAULT_PROCESS_TYPE = 'TEXT/RAW'
-SUPERTAGGING_USE_QUEUE = False
-SUPERTAGGING_CALAIS_USER_DIRECTIVES = {}
-SUPERTAGGING_CALAIS_PROCESSING_DIRECTIVES = {
-    'enableMetadataType': "GenericRelations,SocialTags"
-}
-SUPERTAGGING_CALAIS_EXTERNAL_METADATA = {}
-SUPERTAGGING_PROCESS_RELATIONS = True
-SUPERTAGGING_PROCESS_TOPICS = True
-SUPERTAGGING_PROCESS_SOCIALTAGS = True
-SUPERTAGGING_REGISTER_MODELS = True
-SUPERTAGGING_SUBSTITUTE_TAG_UPDATE = True
-SUPERTAGGING_RESOLVE_PROPERTY_KEYS = True
-
 
 try:
     from local_settings import *
 except ImportError:
     pass
+
+SUPERTAGGING_SETTINGS['OPEN_CALAIS']['API_KEY'] = OPEN_CALAIS_API_KEY
