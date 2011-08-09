@@ -4,13 +4,12 @@ from django.contrib.contenttypes import generic
 from django.template.defaultfilters import slugify
 from django.db.models.signals import pre_delete
 from django.utils.translation import ugettext as _
-from django.db.models import permalink
 
 from supertagging.handlers import setup_handlers
 from supertagging.fields import PickledObjectField
-from supertagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model
-from supertagging.utils import LOGARITHMIC, fix_name_for_freebase, render_item, \
-    retrieve_freebase_name, retrieve_freebase_desc
+from supertagging.utils import (calculate_cloud, get_tag_list, 
+                            get_queryset_and_model, LOGARITHMIC, render_item, 
+                            retrieve_freebase_name, retrieve_freebase_desc)
 from supertagging import settings as st_settings
 
 qn = connection.ops.quote_name
@@ -54,7 +53,6 @@ class SuperTagManager(models.Manager):
         # Retrieve the arguments used to create a new tag
         name = kwargs.get("name", None)
         stype = kwargs.get("stype", None)
-        slug = kwargs.get("slug", None)
         
         # Create and return the new tag if freebase is not used.
         if not (st_settings.USE_FREEBASE and name):
@@ -76,142 +74,136 @@ class SuperTagManager(models.Manager):
         the supertaggingitem table.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        kwgs = {}
+        extra_args = {}
         if 'field' in kwargs:
-            kwgs['supertaggeditem__field'] = kwargs['field']
-        if 'order_by' in kwargs:
-            order_by = kwargs['order_by']
-        else:
-            order_by = '-relevance'
-        # Query to return the relevance along with the tags.
-        rel_q = '''SELECT MAX(relevance) FROM supertagging_supertaggeditem 
-                    WHERE supertagging_supertaggeditem.tag_id = supertagging_supertag.id AND 
-                        supertagging_supertaggeditem.object_id = %s AND 
-                        supertagging_supertaggeditem.content_type_id = %s
-                ''' % (obj.pk, ctype.pk)
+            extra_args['supertaggeditem__field'] = kwargs['field']
+        order_by = kwargs.get('order_by', '-relevance')
         
-        return self.filter(supertaggeditem__content_type__pk=ctype.pk,
-                            supertaggeditem__object_id=obj.pk,
-                            **kwgs).extra(
-                                select={'relevance':rel_q}).order_by(order_by)
-
+        return self.filter(
+            supertaggeditem__content_type__pk=ctype.pk,
+            supertaggeditem__object_id=obj.pk,
+            **extra_args).annotate(
+                relevance=models.Max('supertaggeditem__relevance')
+            ).order_by(order_by)
+    
     def get_topics_for_object(self, obj):
         ctype = ContentType.objects.get_for_model(obj)
         ids = self.filter(supertaggeditem__content_type__pk=ctype.pk,
                           supertaggeditem__object_id=obj.pk, 
                           stype='Topic').values('id')
-
+        
         return self.filter(id__in=ids)
-
-
+    
     def _get_usage(self, model, counts=False, min_count=None, 
         extra_joins=None, extra_criteria=None, params=None):
-       """
-       Perform the custom SQL query for ``usage_for_model`` and
-       ``usage_for_queryset``.
-       """
-       if min_count is not None: counts = True
-
-       model_table = qn(model._meta.db_table)
-       model_pk = '%s.%s' % (model_table, qn(model._meta.pk.column))
-       query = """
-       SELECT DISTINCT %(tag)s.id, %(tag)s.name%(count_sql)s, %(tag)s.slug
-       FROM
+        """
+        Perform the custom SQL query for ``usage_for_model`` and
+        ``usage_for_queryset``.
+        """
+        if min_count is not None: 
+            counts = True
+        
+        model_table = qn(model._meta.db_table)
+        model_pk = '%s.%s' % (model_table, qn(model._meta.pk.column))
+        query = """
+        SELECT DISTINCT %(tag)s.id, %(tag)s.name%(count_sql)s, %(tag)s.slug
+        FROM
            %(tag)s
            INNER JOIN %(tagged_item)s
                ON %(tag)s.id = %(tagged_item)s.tag_id
            INNER JOIN %(model)s
                ON %(tagged_item)s.object_id = %(model_pk)s
            %%s
-       WHERE %(tagged_item)s.content_type_id = %(content_type_id)s
+        WHERE %(tagged_item)s.content_type_id = %(content_type_id)s
            %%s 
-       GROUP BY %(tag)s.id, %(tag)s.name, %(tag)s.slug
-       %%s
-       ORDER BY %(tag)s.name ASC""" % {
-           'tag': qn(self.model._meta.db_table),
-           'count_sql': counts and (', COUNT(%s)' % model_pk) or '',
-           'tagged_item': qn(SuperTaggedItem._meta.db_table),
-           'model': model_table,
-           'model_pk': model_pk,
-           'content_type_id': ContentType.objects.get_for_model(model).pk,
-       }
-
-       min_count_sql = ''
-       if min_count is not None:
-           min_count_sql = 'HAVING COUNT(%s) >= %%s' % model_pk
-           params.append(min_count)
-
-       cursor = connection.cursor()
-       cursor.execute(query % (extra_joins, extra_criteria, min_count_sql), params)
-       tags = []
-       for row in cursor.fetchall():
-           t = self.model(id=row[0],name=row[1], slug=row[3])
-           if counts:
-               t.count = row[2]
-           tags.append(t)
-       return tags
+        GROUP BY %(tag)s.id, %(tag)s.name, %(tag)s.slug
+        %%s
+        ORDER BY %(tag)s.name ASC""" % {
+            'tag': qn(self.model._meta.db_table),
+            'count_sql': counts and (', COUNT(%s)' % model_pk) or '',
+            'tagged_item': qn(SuperTaggedItem._meta.db_table),
+            'model': model_table,
+            'model_pk': model_pk,
+            'content_type_id': ContentType.objects.get_for_model(model).pk,
+        }
+        
+        min_count_sql = ''
+        if min_count is not None:
+            min_count_sql = 'HAVING COUNT(%s) >= %%s' % model_pk
+            params.append(min_count)
+        
+        cursor = connection.cursor()
+        cursor.execute(query % (extra_joins, extra_criteria, min_count_sql), params)
+        tags = []
+        for row in cursor.fetchall():
+            t = self.model(id=row[0], name=row[1], slug=row[3])
+            if counts:
+                t.count = row[2]
+            tags.append(t)
+        return tags
+    
     def usage_for_model(self, model, counts=False, min_count=None, filters=None):
-       """
-       Obtain a list of tags associated with instances of the given
-       Model class.
-
-       If ``counts`` is True, a ``count`` attribute will be added to
-       each tag, indicating how many times it has been used against
-       the Model class in question.
-
-       If ``min_count`` is given, only tags which have a ``count``
-       greater than or equal to ``min_count`` will be returned.
-       Passing a value for ``min_count`` implies ``counts=True``.
-
-       To limit the tags (and counts, if specified) returned to those
-       used by a subset of the Model's instances, pass a dictionary
-       of field lookups to be applied to the given Model as the
-       ``filters`` argument.
-       """
-       if filters is None: filters = {}
-
-       queryset = model._default_manager.filter()
-       for f in filters.items():
-           queryset.query.add_filter(f)
-       usage = self.usage_for_queryset(queryset, counts, min_count)
-
-       return usage
-
+        """
+        Obtain a list of tags associated with instances of the given
+        Model class.
+        
+        If ``counts`` is True, a ``count`` attribute will be added to
+        each tag, indicating how many times it has been used against
+        the Model class in question.
+        
+        If ``min_count`` is given, only tags which have a ``count``
+        greater than or equal to ``min_count`` will be returned.
+        Passing a value for ``min_count`` implies ``counts=True``.
+        
+        To limit the tags (and counts, if specified) returned to those
+        used by a subset of the Model's instances, pass a dictionary
+        of field lookups to be applied to the given Model as the
+        ``filters`` argument.
+        """
+        if filters is None:
+            filters = {}
+        
+        queryset = model._default_manager.filter()
+        for f in filters.items():
+            queryset.query.add_filter(f)
+        usage = self.usage_for_queryset(queryset, counts, min_count)
+        
+        return usage
+    
     def usage_for_queryset(self, queryset, counts=False, min_count=None):
-       """
-       Obtain a list of tags associated with instances of a model
-       contained in the given queryset.
-
-       If ``counts`` is True, a ``count`` attribute will be added to
-       each tag, indicating how many times it has been used against
-       the Model class in question.
-
-       If ``min_count`` is given, only tags which have a ``count``
-       greater than or equal to ``min_count`` will be returned.
-       Passing a value for ``min_count`` implies ``counts=True``.
-       """
-
-       if getattr(queryset.query, 'get_compiler', None):
-           # Django 1.2 and up compatible (multiple databases)
-           compiler = queryset.query.get_compiler(using='default')
-           extra_joins = ' '.join(compiler.get_from_clause()[0][1:])
-           where, params = queryset.query.where.as_sql(compiler.quote_name_unless_alias, compiler.connection)
-       else:
-           # Django 1.1 and down compatible (single database)
-           extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
-           where, params = queryset.query.where.as_sql()
-
-
-       # extra_joins = ' '.join(
-       #  queryset.query.get_compiler(using='default').get_from_clause()[0][1:])
-       # where, params = queryset.query.where.as_sql()
-       if where:
-           extra_criteria = 'AND %s' % where
-       else:
-           extra_criteria = ''
-       return self._get_usage(queryset.model, counts, min_count, 
+        """
+        Obtain a list of tags associated with instances of a model
+        contained in the given queryset.
+        
+        If ``counts`` is True, a ``count`` attribute will be added to
+        each tag, indicating how many times it has been used against
+        the Model class in question.
+        
+        If ``min_count`` is given, only tags which have a ``count``
+        greater than or equal to ``min_count`` will be returned.
+        Passing a value for ``min_count`` implies ``counts=True``.
+        """
+        
+        if getattr(queryset.query, 'get_compiler', None):
+            # Django 1.2 and up compatible (multiple databases)
+            compiler = queryset.query.get_compiler(using='default')
+            extra_joins = ' '.join(compiler.get_from_clause()[0][1:])
+            where, params = queryset.query.where.as_sql(compiler.quote_name_unless_alias, compiler.connection)
+        else:
+            # Django 1.1 and down compatible (single database)
+            extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
+            where, params = queryset.query.where.as_sql()
+        
+        # extra_joins = ' '.join(
+        #  queryset.query.get_compiler(using='default').get_from_clause()[0][1:])
+        # where, params = queryset.query.where.as_sql()
+        if where:
+            extra_criteria = 'AND %s' % where
+        else:
+            extra_criteria = ''
+        return self._get_usage(queryset.model, counts, min_count, 
                                 extra_joins, extra_criteria, params)
-
+    
     def cloud_for_model(self, model, steps=4, distribution=LOGARITHMIC,
                        filters=None, min_count=None):
         """
@@ -219,20 +211,20 @@ class SuperTagManager(models.Manager):
         Model, giving each tag a ``count`` attribute indicating how
         many times it has been used and a ``font_size`` attribute for
         use in displaying a tag cloud.
-
+        
         ``steps`` defines the range of font sizes - ``font_size`` will
         be an integer between 1 and ``steps`` (inclusive).
-
+        
         ``distribution`` defines the type of font size distribution
         algorithm which will be used - logarithmic or linear. It must
         be either ``supertagging.utils.LOGARITHMIC`` or
         ``supertagging.utils.LINEAR``.
-
+        
         To limit the tags displayed in the cloud to those associated
         with a subset of the Model's instances, pass a dictionary of
         field lookups to be applied to the given Model as the
         ``filters`` argument.
-
+        
         To limit the tags displayed in the cloud to those with a
         ``count`` greater than or equal to ``min_count``, pass a value
         for the ``min_count`` argument.
@@ -252,6 +244,12 @@ class SuperTagRelationManager(models.Manager):
 
 
 class SuperTaggedItemManager(models.Manager):
+    def active(self):
+        """
+        Return tagged items that aren't ignored.
+        """
+        return self.get_query_set().filter(ignore=False)
+    
     def get_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified
@@ -259,9 +257,9 @@ class SuperTaggedItemManager(models.Manager):
         """
         tags = get_tag_list(tags)
         tag_count = len(tags)
+        queryset, model = get_queryset_and_model(queryset_or_model)
+
         if tag_count == 0:
-            # No existing tags were given
-            queryset, model = get_queryset_and_model(queryset_or_model)
             return model._default_manager.none()
         elif tag_count == 1:
             # Optimisation for single tag - fall through to the simpler
@@ -269,12 +267,12 @@ class SuperTaggedItemManager(models.Manager):
             tag = tags[0]
         else:
             return self.get_intersection_by_model(queryset_or_model, tags)
-
-        queryset, model = get_queryset_and_model(queryset_or_model)
+        
         content_type = ContentType.objects.get_for_model(model)
         opts = self.model._meta
         tagged_item_table = qn(opts.db_table)
-        return queryset.extra(
+        
+        return queryset.active().extra(
             tables=[opts.db_table],
             where=[
                 '%s.content_type_id = %%s' % tagged_item_table,
@@ -285,7 +283,7 @@ class SuperTaggedItemManager(models.Manager):
             ],
             params=[content_type.pk, tag.pk],
         )
-
+    
     def get_intersection_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified
@@ -294,10 +292,10 @@ class SuperTaggedItemManager(models.Manager):
         tags = get_tag_list(tags)
         tag_count = len(tags)
         queryset, model = get_queryset_and_model(queryset_or_model)
-
+        
         if not tag_count:
             return model._default_manager.none()
-
+        
         model_table = qn(model._meta.db_table)
         # This query selects the ids of all objects which have all the
         # given tags.
@@ -316,7 +314,7 @@ class SuperTaggedItemManager(models.Manager):
             'tag_id_placeholders': ','.join(['%s'] * tag_count),
             'tag_count': tag_count,
         }
-
+        
         cursor = connection.cursor()
         cursor.execute(query, [tag.pk for tag in tags])
         object_ids = [row[0] for row in cursor.fetchall()]
@@ -324,7 +322,7 @@ class SuperTaggedItemManager(models.Manager):
             return queryset.filter(pk__in=object_ids)
         else:
             return model._default_manager.none()
-
+    
     def get_union_by_model(self, queryset_or_model, tags):
         """
         Create a ``QuerySet`` containing instances of the specified
@@ -431,13 +429,12 @@ class SuperTaggedRelationItemManager(models.Manager):
     def get_for_object(self, obj, **kwargs):
         ctype = ContentType.objects.get_for_model(obj)
         return self.filter(content_type__pk=ctype.pk, object_id=obj.pk, **kwargs)
-        
+    
     def get_for_tag_in_object(self, tag, obj):
         ctype = ContentType.objects.get_for_model(obj)
         return self.filter(relation__tag__pk=tag.pk, 
                             content_type__pk=ctype.pk, object_id=obj.pk)
-        
-        
+
 
 ###################
 ##    MODELS     ##
@@ -548,15 +545,14 @@ class SuperTaggedItem(models.Model):
     ignore = models.BooleanField(default=False)
     
     objects = SuperTaggedItemManager()
-
+    
     def __unicode__(self):
         return '%s of %s' % (self.tag, str(self.content_object))
-
+    
     def render(self, template=None, suffix=None):
         return render_item(self, None, template, suffix,
             template_path="supertagging/render/tagged_items", 
             context={'obj': self.content_object, 'content': self})
-        
 
 class SuperTaggedRelationItem(models.Model):
     relation = models.ForeignKey(SuperTagRelation)
@@ -566,7 +562,7 @@ class SuperTaggedRelationItem(models.Model):
     field = models.CharField(max_length=100)
     process_type = models.CharField(max_length=20, null=True, blank=True)
     instances = PickledObjectField(null=True, blank=True)
-
+    
     item_date = models.DateTimeField(null=True, blank=True)
     
     objects = SuperTaggedRelationItemManager()
@@ -576,12 +572,11 @@ class SuperTaggedRelationItem(models.Model):
     
     def __unicode__(self):
         return "%s of %s" % (self.relation.name, str(self.content_object))
-        
+    
     def render(self, template=None, suffix=None):
         return render_item(self, None, template, suffix,
             template_path="supertagging/render/tagged_relations",
             context={'obj': self.content_object, 'content': self})
-    
 
 class SuperTagProcessQueue(models.Model):
     content_type = models.ForeignKey(ContentType)
@@ -593,12 +588,11 @@ class SuperTagProcessQueue(models.Model):
         return 'Queue Item: <%s> %s' % (
             self.content_type, 
             unicode(str(self.content_object), 'utf-8'))
-            
+    
     class Meta:
         verbose_name = "Process Queue"
         verbose_name_plural = "Process Queue"
-        
-        
+
 def _clean_tagged_relation_items(sender, instance, **kwargs):
     if not instance:
         return
@@ -607,7 +601,7 @@ def _clean_tagged_relation_items(sender, instance, **kwargs):
         relation__tag__pk=instance.tag.pk,
         content_type__pk=instance.content_type.pk,
         object_id=instance.object_id).delete()
-    
+
 # When a tagged item is removed, clean up the related tagged items as well.
 pre_delete.connect(_clean_tagged_relation_items, sender=SuperTaggedItem)
 
