@@ -96,29 +96,44 @@ links to another section of your site with more information.</p>
 <div class="section" id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
 <p>In the settings you will need to have</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP</span> <span class="o">=</span> <span class="bp">True</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+
+    <span class="c"># ... Other settings</span>
+
+    <span class="s">&#39;MARKUP&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;ENABLED&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="how-it-works">
 <h2>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
 <p>When SuperTagging loads up and markup is enabled, it will add an additional
-attribute for every field specified in <a class="reference internal" href="reference/settings.html#setting-modules"><em>SUPERTAGGING_MODULES</em></a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP</span> <span class="o">=</span> <span class="bp">True</span>
-<span class="n">MARKUP_FIELD_SUFFIX</span> <span class="o">=</span> <span class="s">&quot;tagged&quot;</span>
-<span class="n">SUPERTAGGING_MODULES</span> <span class="o">=</span> <span class="p">{</span>
-   <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
-        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">,</span>
-             <span class="s">&#39;markup_handler&#39;</span><span class="p">:</span> <span class="s">&#39;MyCustomHandler&#39;</span><span class="p">}]},</span>
-    <span class="s">&#39;media.image&#39;</span><span class="p">:</span>
-        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;caption&#39;</span><span class="p">}]},</span>
-    <span class="s">&#39;blog.entry&#39;</span><span class="p">:</span>
-        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;content&#39;</span><span class="p">},</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;tease&#39;</span><span class="p">,</span>
-             <span class="s">&#39;markup&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}]}</span>
+attribute for every field specified in <a class="reference internal" href="reference/settings.html#setting-modules"><em>WATCHED_FIELDS</em></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;ENABLED&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="s">&#39;WATCHED_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
+            <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;markup_handler&#39;</span><span class="p">:</span> <span class="s">&#39;MyCustomHandler&#39;</span><span class="p">}]},</span>
+        <span class="s">&#39;media.image&#39;</span><span class="p">:</span>
+            <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;caption&#39;</span><span class="p">}]},</span>
+        <span class="s">&#39;blog.entry&#39;</span><span class="p">:</span>
+            <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;content&#39;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;tease&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;markup&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}]}</span>
+    <span class="p">},</span>
+
+    <span class="c"># ... Other settings</span>
+
+    <span class="s">&#39;MARKUP&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;ENABLED&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s">&#39;FIELD_SUFFIX&#39;</span><span class="p">:</span> <span class="s">&quot;tagged&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -133,31 +148,31 @@ tagging, <strong>content</strong> and <strong>tease</strong>, but tease is not t
 attributes for the three different models.</p>
 <ul>
 <li><dl class="first docutils">
-<dt><strong>story model</strong></dt>
+<dt><strong>Story model</strong></dt>
 <dd><ul class="first last simple">
-<li>tagged_body</li>
+<li><tt class="docutils literal"><span class="pre">body__tagged</span></tt></li>
 </ul>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><strong>image model</strong></dt>
+<dt><strong>Image model</strong></dt>
 <dd><ul class="first last simple">
-<li>tagged_caption</li>
+<li><tt class="docutils literal"><span class="pre">caption__tagged</span></tt></li>
 </ul>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><strong>entry</strong></dt>
+<dt><strong>Entry model</strong></dt>
 <dd><ul class="first last simple">
-<li>tagged_content</li>
+<li><tt class="docutils literal"><span class="pre">content__tagged</span></tt></li>
 </ul>
 </dd>
 </dl>
 </li>
 </ul>
-<p>Notice that the a &#8216;tagged_tease&#8217; does not exist for the <strong>entry</strong> model.</p>
+<p>Notice that the a <tt class="docutils literal"><span class="pre">tease__tagged</span></tt> does not exist for the <strong>Entry</strong> model because the markup flag for that field is <tt class="xref docutils literal"><span class="pre">False</span></tt>.</p>
 </div>
 <div class="section" id="markup-handler">
 <h2>Markup handler<a class="headerlink" href="#markup-handler" title="Permalink to this headline">¶</a></h2>
@@ -174,9 +189,8 @@ touched, the original content is returned.</p>
         <span class="k">return</span> <span class="s">&quot;MARKED UP CONTENT&quot;</span>
 </pre></div>
 </div>
-<p>The <cite>handle</cite> method needs to return a string of the marked up content.</p>
-<p>If you want a create a custom handler but use the default markup method, your code
-might look something like this:</p>
+<p>The <tt class="docutils literal"><span class="pre">handle</span></tt> method needs to return a string of the marked up content.</p>
+<p>If you want a create a custom handler but use the default markup method, your code might look something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">supertagging.markup</span> <span class="kn">import</span> <span class="n">MarkupHandler</span><span class="p">,</span> <span class="n">markup_content</span>
 
 <span class="k">class</span> <span class="nc">MyCustomHandler</span><span class="p">(</span><span class="n">MarkupHandler</span><span class="p">):</span>

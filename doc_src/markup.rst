@@ -14,33 +14,48 @@ In the settings you will need to have
 
 .. code-block:: python
 
-    SUPERTAGGING_MARKUP = True
+	SUPERTAGGING_SETTINGS = {
     
+	    # ... Other settings
+    
+	    'MARKUP': {
+	        'ENABLED': True,
+	    }
+	}
+
 How It Works
 ************
 
 When SuperTagging loads up and markup is enabled, it will add an additional 
-attribute for every field specified in :ref:`setting_modules`.
+attribute for every field specified in :ref:`setting_modules`\ .
 
 .. code-block:: python
 
+	SUPERTAGGING_SETTINGS = {
+	    'ENABLED': True,
+	    'WATCHED_FIELDS': {
+	        'stories.story': 
+	            {'fields':[
+	                {'name': 'body',
+	                 'markup_handler': 'MyCustomHandler'}]},
+	        'media.image':
+	            {'fields':[
+	                {'name': 'caption'}]},
+	        'blog.entry':
+	            {'fields':[
+	                {'name': 'content'},
+	                {'name': 'tease',
+	                 'markup': False}]}
+	    },
+	    
+	    # ... Other settings
+	    
+	    'MARKUP': {
+	        'ENABLED': True,
+	        'FIELD_SUFFIX': "tagged",
+	    },
+	}
 
-    SUPERTAGGING_MARKUP = True
-    MARKUP_FIELD_SUFFIX = "tagged"
-    SUPERTAGGING_MODULES = {
-       'stories.story': 
-            {'fields':[
-                {'name': 'body',
-                 'markup_handler': 'MyCustomHandler'}]},
-        'media.image':
-            {'fields':[
-                {'name': 'caption'}]},
-        'blog.entry':
-            {'fields':[
-                {'name': 'content'},
-                {'name': 'tease',
-                 'markup': False}]}
-    }
 
 Lets take the code sample above as an example. We notice that markup is 
 enabled and the prefix for the markup fields is `tagged`. The first module 
@@ -53,14 +68,11 @@ tagging, **content** and **tease**, but tease is not to be marked up.
 After `SuperTagging` is done loading you will end up with three additional
 attributes for the three different models.
 
-* **story model**
-    * tagged_body
-* **image model**
-    * tagged_caption
-* **entry**
-    * tagged_content
-    
-Notice that the a 'tagged_tease' does not exist for the **entry** model.
+* **Story model:** ``body__tagged``
+* **Image model:** ``caption__tagged``
+* **Entry model:** ``content__tagged``
+
+Notice that the a ``tease__tagged`` does not exist for the **Entry** model because the markup flag for that field is ``False``\ .
     
 Markup handler
 **************
@@ -81,10 +93,9 @@ You can create your own custom handler as well.
             # DO YOUR CUSTOM MARKUP HERE
             return "MARKED UP CONTENT"
             
-The `handle` method needs to return a string of the marked up content.
+The ``handle`` method needs to return a string of the marked up content.
 
-If you want a create a custom handler but use the default markup method, your code
-might look something like this:
+If you want a create a custom handler but use the default markup method, your code might look something like this:
 
 .. code-block:: python
 

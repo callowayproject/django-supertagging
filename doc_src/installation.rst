@@ -8,10 +8,12 @@ Download SuperTagging
 
 There are a couple ways for you to get Django-SuperTagging,
 
-    1. Clone the git repository `from here <http://opensource.washingtontimes.com/projects/supertagging/>`_
-    2. Download the latest build from our opensource site `here <http://opensource.washingtontimes.com/pypi/simple/supertagging/>`_
-    3. Use PIP to install from our opensource site pypi 
-        * pip install --extra-index-url=http://opensource.washingtontimes.com/pypi/simple/ supertagging
+    1. Clone the git repository `from GitHub <https://github.com/callowayproject/django-supertagging>`_
+    2. Use pip to install it from `PyPI <http://pypi.python.org/pypi/supertagging>`_
+
+::
+
+	pip install supertagging
 
 
 Dependencies
