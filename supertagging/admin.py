@@ -117,8 +117,10 @@ class SuperTaggedItemAdmin(admin.ModelAdmin):
     def relevance_bar(self, obj):
         from django.template import Context
         from django.template.loader import get_template
-        print obj.relevance
-        relevance = "%d%%" % (obj.relevance / 10.0)
+        if obj.relevance is not None:
+            relevance = "%d%%" % (obj.relevance / 10.0)
+        else:
+            relevance = "0"
         
         tmpl = get_template("admin/supertagging/relevancebar.html")
         ctxt = Context({'relevance': relevance})
