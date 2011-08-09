@@ -94,13 +94,39 @@ class SuperTagAdmin(admin.ModelAdmin):
     enable_tag.short_description = "Enable selected tags"
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
-    list_display = ('content_object', 'tag', 'field', 'process_type', 'relevance', 'item_date')
-    list_filter = ('process_type', 'field')
+    list_display = ('tag_name', 'tag_type', 'relevance_bar', 'ignore')
+    list_filter = ('field', 'tag__stype')
     search_fields = ('tag__name',)
-    
     raw_id_fields = ('tag',)
+    list_editable = ('ignore',)
     
+    def tag_name(self, obj):
+        if INCLUDE_DISPLAY_FIELDS:
+            return obj.tag.display_name
+        return obj.tag.name
     
+    def tag_type(self, obj):
+        return obj.tag.stype
+    
+    def get_changelist(self, request, **kwargs):
+        """
+        Returns the ChangeList class for use on the changelist page.
+        """
+        return SupertagChangeList
+    
+    def relevance_bar(self, obj):
+        from django.template import Context
+        from django.template.loader import get_template
+        print obj.relevance
+        relevance = "%d%%" % (obj.relevance / 10.0)
+        
+        tmpl = get_template("admin/supertagging/relevancebar.html")
+        ctxt = Context({'relevance': relevance})
+        return tmpl.render(ctxt)
+    relevance_bar.allow_tags = True
+    relevance_bar.admin_order_field = 'relevance'
+    relevance_bar.short_description = 'Relevance'
+
 class SuperTaggedRelationItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'relation', 'field', 'process_type', 'item_date')  
     list_filter = ('process_type', 'field')

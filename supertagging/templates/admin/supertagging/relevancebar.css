@@ -1,0 +1,21 @@
+<style type="text/css" media="screen">
+.relevance-wrap {
+    position: relative;
+}
+
+.relevance-wrap, .relevance-value, .relevance-text {
+    width: 73px;
+    height: 13px;
+}
+.relevance-value {
+    background-color: #a9d2f2;
+}
+.relevance-wrap, {
+    background-color: #999;
+}
+
+.relevance-text {
+    color: #125a95;
+    text-align: left;
+}
+</style>

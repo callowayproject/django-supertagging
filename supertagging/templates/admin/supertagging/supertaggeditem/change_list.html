@@ -22,6 +22,7 @@
 {% block extrahead %}
 {{ block.super }}
 {{ media.js }}
+{% include "admin/supertagging/relevancebar.css" %}
 {% if action_form %}{% if actions_on_top or actions_on_bottom %}
 <script type="text/javascript">
 (function($) {
