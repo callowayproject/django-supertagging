@@ -135,7 +135,7 @@ def process(obj, tags=[]):
 
             # Remove existing items, this ensures tagged items 
             # are updated correctly
-            SuperTaggedItem.objects.filter(content_type=ctype, 
+            SuperTaggedItem.objects.active().filter(content_type=ctype, 
                 object_id=obj.pk, field=field).delete()
             if settings.PROCESS_RELATIONS:
                 SuperTaggedRelationItem.objects.filter(content_type=ctype, 
@@ -231,11 +231,12 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         # if type is in EXLCUSIONS, continue to next item.
         if stype.lower() in map(lambda s: s.lower(), settings.EXCLUSIONS):
             continue
-            
-        name = entity.pop('name', '').lower()
+        
+        display_name = entity.pop('name', '')
+        name = display_name.lower()
         if tags and name not in tags:
             continue
-
+        
         slug = slugify(name)
         tag = None
         try:
@@ -244,8 +245,15 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
             try:
                 tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
-                    stype=stype, name=name)
+                kwargs = {
+                    'calais_id': calais_id,
+                    'slug': slug,
+                    'stype': stype,
+                    'name': name,
+                }
+                if settings.INCLUDE_DISPLAY_FIELDS:
+                    kwargs['display_name'] = display_name
+                tag = SuperTag.objects.create_alternate(**kwargs)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
@@ -354,7 +362,9 @@ def _processTopics(field, data, obj, ctype, tags, date):
         
         calais_id = re.match(REF_REGEX, str(di.pop('category'))).group('key')
         stype = 'Topic'
-        name = di.pop('categoryName', '').lower()
+        display_name = di.pop('categoryName', '')
+        name = display_name.lower()
+        
         if tags and name not in tags:
             continue
         rel = int(float(str(di.pop('score', '0'))) * 1000)
@@ -367,8 +377,15 @@ def _processTopics(field, data, obj, ctype, tags, date):
             try:
                 tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
-                    stype=stype, name=name)
+                kwargs = {
+                    'calais_id': calais_id,
+                    'slug': slug,
+                    'stype': stype,
+                    'name': name,
+                }
+                if settings.INCLUDE_DISPLAY_FIELDS:
+                    kwargs['display_name'] = display_name
+                tag = SuperTag.objects.create_alternate(**kwargs)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
@@ -398,7 +415,8 @@ def _processSocialTags(field, data, obj, ctype, tags, date):
         
         calais_id = re.match(REF_REGEX, str(di.pop('socialTag'))).group('key')
         stype = 'Social Tag'
-        name = di.pop('name', '').lower()
+        display_name = di.pop('name', '')
+        name = display_name.lower()
         if tags and name not in tags:
             continue
         rel = rel_map.get(di.get('importance', '3'), 500)
@@ -410,8 +428,15 @@ def _processSocialTags(field, data, obj, ctype, tags, date):
             try:
                 tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
-                    stype=stype, name=name)
+                kwargs = {
+                    'calais_id': calais_id,
+                    'slug': slug,
+                    'stype': stype,
+                    'name': name,
+                }
+                if settings.INCLUDE_DISPLAY_FIELDS:
+                    kwargs['display_name'] = display_name
+                tag = SuperTag.objects.create_alternate(**kwargs)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
