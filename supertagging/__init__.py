@@ -34,6 +34,8 @@ def register(model, tag_descriptor_attr='supertags',
     """
 
     from supertagging.managers import ModelTaggedItemManager, TagDescriptor
+    from supertagging.models import SuperTaggedItem
+    from django.contrib.contenttypes.generic import GenericRelation
 
     if model in registry:
         raise AlreadyRegistered("The model '%s' has already been "
@@ -58,6 +60,9 @@ def register(model, tag_descriptor_attr='supertags',
 
     # Add custom manager
     ModelTaggedItemManager().contribute_to_class(model, tagged_item_manager_attr)
-
+    
+    # Add a reverse generic relationship to supertaggeditems
+    GenericRelation(SuperTaggedItem).contribute_to_class(model, 'supertaggeditem_set')
+    
     # Finally register in registry
     registry.append(model)
