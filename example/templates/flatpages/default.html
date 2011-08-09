@@ -30,6 +30,12 @@
     white-space: nowrap;
   }
 </style>
+{% if flatpage.content__tagged %}
+    <h2>Tagged Content</h2>
+    {{ flatpage.content__tagged|safe }}
+    <hr>
+{% endif %}
+    <h2>Original Content</h2>
     {{ flatpage.content }}
     <hr>
     <h2>Supertags</h2>

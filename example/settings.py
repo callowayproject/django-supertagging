@@ -126,7 +126,7 @@ SUPERTAGGING_SETTINGS = {
             'fields': [{
                 'name': 'content', 
                 'process_type': 'TEXT/RAW', 
-                'markup': False
+                'markup': True
             }]
         }
     },
@@ -146,6 +146,9 @@ SUPERTAGGING_SETTINGS = {
         'PROCESS_TOPICS': True,
         'PROCESS_SOCIALTAGS': True,
     },
+    'MARKUP': {
+        'ENABLED': True
+    }
 }
 
 try:
