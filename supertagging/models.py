@@ -240,7 +240,7 @@ class SuperTagRelationManager(models.Manager):
             tag__pk=tag.id, 
             tag__enabled=True, 
             supertaggedrelationitem__item_date__isnull=False, 
-            **kwargs).disctinct().order_by('-supertaggedrelationitem__item_date')
+            **kwargs).distinct().order_by('-supertaggedrelationitem__item_date')
 
 
 class SuperTaggedItemManager(models.Manager):
