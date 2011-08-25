@@ -130,7 +130,7 @@ def process(obj, tags=[]):
             if comb_fields is None:
                 data = force_unicode(getattr(obj, field))
             else:
-                data = '\n'.join([getattr(obj, item, '') for item in comb_fields])
+                data = '\n'.join([force_unicode(getattr(obj, item, '')) for item in comb_fields])
             
             # Analyze the text (data)
             result = c.analyze(data)
