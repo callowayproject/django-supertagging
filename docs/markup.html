@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Markup &mdash; Django SuperTagging v0.5beta1 documentation</title>
+    <title>Markup &mdash; Django SuperTagging v0.5 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5beta1',
+        VERSION:     '0.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,13 +21,13 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Django SuperTagging v0.5beta1 documentation" href="index.html" />
+    <link rel="top" title="Django SuperTagging v0.5 documentation" href="index.html" />
     <link rel="next" title="Reference" href="reference/index.html" />
     <link rel="prev" title="API Reference" href="api.html" /> 
   </head>
   <body>
 <div id="docstitle">
-	<p>Django SuperTagging v0.5beta1 documentation</p>
+	<p>Django SuperTagging v0.5 documentation</p>
 </div>
 <div id="header">
 	<div id="title"><h1>Markup</h1></div>
@@ -146,31 +146,10 @@ tagging. The last model is an <strong>entry</strong> model and it has 2 fields m
 tagging, <strong>content</strong> and <strong>tease</strong>, but tease is not to be marked up.</p>
 <p>After <cite>SuperTagging</cite> is done loading you will end up with three additional
 attributes for the three different models.</p>
-<ul>
-<li><dl class="first docutils">
-<dt><strong>Story model</strong></dt>
-<dd><ul class="first last simple">
-<li><tt class="docutils literal"><span class="pre">body__tagged</span></tt></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><strong>Image model</strong></dt>
-<dd><ul class="first last simple">
-<li><tt class="docutils literal"><span class="pre">caption__tagged</span></tt></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><strong>Entry model</strong></dt>
-<dd><ul class="first last simple">
-<li><tt class="docutils literal"><span class="pre">content__tagged</span></tt></li>
-</ul>
-</dd>
-</dl>
-</li>
+<ul class="simple">
+<li><strong>Story model:</strong> <tt class="docutils literal"><span class="pre">body__tagged</span></tt></li>
+<li><strong>Image model:</strong> <tt class="docutils literal"><span class="pre">caption__tagged</span></tt></li>
+<li><strong>Entry model:</strong> <tt class="docutils literal"><span class="pre">content__tagged</span></tt></li>
 </ul>
 <p>Notice that the a <tt class="docutils literal"><span class="pre">tease__tagged</span></tt> does not exist for the <strong>Entry</strong> model because the markup flag for that field is <tt class="xref docutils literal"><span class="pre">False</span></tt>.</p>
 </div>

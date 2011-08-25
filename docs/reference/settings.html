@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Settings &mdash; Django SuperTagging v0.5beta1 documentation</title>
+    <title>Settings &mdash; Django SuperTagging v0.5 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5beta1',
+        VERSION:     '0.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,14 +21,14 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Django SuperTagging v0.5beta1 documentation" href="../index.html" />
+    <link rel="top" title="Django SuperTagging v0.5 documentation" href="../index.html" />
     <link rel="up" title="Reference" href="index.html" />
     <link rel="next" title="Template Tags" href="template_tags.html" />
     <link rel="prev" title="Reference" href="index.html" /> 
   </head>
   <body>
 <div id="docstitle">
-	<p>Django SuperTagging v0.5beta1 documentation</p>
+	<p>Django SuperTagging v0.5 documentation</p>
 </div>
 <div id="header">
 	<div id="title"><h1>Settings</h1></div>
@@ -213,6 +213,7 @@ and options.</p>
 <li><strong>name</strong> - <em>(Required)</em> <tt class="docutils literal"><span class="pre">String</span></tt> The name of the field</li>
 <li><strong>process_type</strong> - <em>(Optional)</em> <tt class="docutils literal"><span class="pre">String</span></tt> The process type that OpenCalais should use when tagging the data, possible values are <tt class="docutils literal"><span class="pre">TEXT/RAW</span></tt>, <tt class="docutils literal"><span class="pre">TEXT/HTML</span></tt>, <tt class="docutils literal"><span class="pre">TEXT/HTMLRAW</span></tt>, or <tt class="docutils literal"><span class="pre">TEXT/XML</span></tt>. Default is the value of <a class="reference internal" href="#settings-default-process-type"><em>DEFAULT_PROCESS_TYPE</em></a>.</li>
 <li><strong>markup</strong> - <em>(Optional)</em> <tt class="docutils literal"><span class="pre">bool</span></tt> Should SuperTagging automatically markup this field? Default is <tt class="xref docutils literal"><span class="pre">False</span></tt>.</li>
+<li><strong>combine_fields</strong> - <em>(Optional)</em> <tt class="docutils literal"><span class="pre">list</span></tt> A list of two or more fields on the model to combine into one submission to OpenCalais for processing. Markup is not available for these combined fields.</li>
 </ul>
 </li>
 <li><strong>match_kwargs</strong> - <em>(Optional)</em> <tt class="docutils literal"><span class="pre">dict</span></tt> A dictionary of extra query parameters to check when processing instances of the model. Performs an extra <tt class="docutils literal"><span class="pre">.get(**kwargs)</span></tt> on the instance to ensure it validates against the extra query parameters.</li>

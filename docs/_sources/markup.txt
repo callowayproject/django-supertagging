@@ -68,13 +68,10 @@ tagging, **content** and **tease**, but tease is not to be marked up.
 After `SuperTagging` is done loading you will end up with three additional
 attributes for the three different models.
 
-* **Story model**
-    * ``body__tagged``
-* **Image model**
-    * ``caption__tagged``
-* **Entry model**
-    * ``content__tagged``
-    
+* **Story model:** ``body__tagged``
+* **Image model:** ``caption__tagged``
+* **Entry model:** ``content__tagged``
+
 Notice that the a ``tease__tagged`` does not exist for the **Entry** model because the markup flag for that field is ``False``\ .
     
 Markup handler

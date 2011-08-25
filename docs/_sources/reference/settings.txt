@@ -98,6 +98,7 @@ The keys of the dictionary are strings in the format ``app_name.model_name``\ . 
   * **name** - *(Required)* ``String`` The name of the field
   * **process_type** - *(Optional)* ``String`` The process type that OpenCalais should use when tagging the data, possible values are ``TEXT/RAW``\ , ``TEXT/HTML``\ , ``TEXT/HTMLRAW``\ , or ``TEXT/XML``\ . Default is the value of :ref:`settings_default_process_type`\ .
   * **markup** - *(Optional)* ``bool`` Should SuperTagging automatically markup this field? Default is ``False``\ .
+  * **combine_fields** - *(Optional)* ``list`` A list of two or more fields on the model to combine into one submission to OpenCalais for processing. Markup is not available for these combined fields.
 
 * **match_kwargs** - *(Optional)* ``dict`` A dictionary of extra query parameters to check when processing instances of the model. Performs an extra ``.get(**kwargs)`` on the instance to ensure it validates against the extra query parameters. 
 * **date_field** - *(Optional)* ``String`` The name of the field to retrieve the instance date. If this is not specified, supertagging will try to retrieve the data from the instance ``_meta.get_latest_by`` or ``_meta.ordering``\ . This field is saved into ``SuperTaggedItem`` to allow easy sorting of the items by date. 
