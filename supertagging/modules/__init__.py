@@ -60,7 +60,7 @@ def process(obj, tags=[]):
             raise KeyError(e)
         return
         
-    # If not fields are found, nothing can be processed.
+    # If no fields are found, nothing can be processed.
     if not params.has_key('fields'):
         if settings.ST_DEBUG:
             raise Exception('No "fields" found.')
@@ -125,14 +125,16 @@ def process(obj, tags=[]):
             
             field = d.pop('name')
             proc_type = d.pop('process_type', process_type)
-
-            data = getattr(obj, field)
-
-            data = force_unicode(getattr(obj, field))
+            comb_fields = d.pop('combine_fields', None)
+            
+            if comb_fields is None:
+                data = force_unicode(getattr(obj, field))
+            else:
+                data = '\n'.join([getattr(obj, item, '') for item in comb_fields])
             
             # Analyze the text (data)
             result = c.analyze(data)
-
+            
             # Remove existing items, this ensures tagged items 
             # are updated correctly
             SuperTaggedItem.objects.active().filter(content_type=ctype, 
@@ -240,7 +242,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         slug = slugify(name)
         tag = None
         try:
-            tag = SuperTag.objects.get_by_name(name__iexact=name)
+            tag = SuperTag.objects.get_by_name(name__iexact=name, stype=stype)
         except SuperTag.DoesNotExist:
             try:
                 tag = SuperTag.objects.get(calais_id=calais_id)

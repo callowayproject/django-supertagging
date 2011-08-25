@@ -546,6 +546,9 @@ class SuperTaggedItem(models.Model):
     
     objects = SuperTaggedItemManager()
     
+    class Meta:
+        ordering = ('-relevance',)
+    
     def __unicode__(self):
         return '%s of %s' % (self.tag, str(self.content_object))
     
