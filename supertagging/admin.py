@@ -1,3 +1,4 @@
+import django
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext, ugettext_lazy
@@ -95,7 +96,11 @@ class SuperTagAdmin(admin.ModelAdmin):
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
     list_display = ('tag_name', 'tag_type', 'relevance_bar', 'ignore')
-    list_filter = ('field', 'tag__stype')
+    if django.VERSION[1] > 1:
+        list_filter = ('field', 'tag__stype')
+    else:
+        list_filter = ('field', )
+    
     search_fields = ('tag__name',)
     raw_id_fields = ('tag',)
     list_editable = ('ignore',)

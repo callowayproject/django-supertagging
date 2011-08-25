@@ -687,20 +687,33 @@ def items_for_result(cl, result, form):
 
 
 def results(cl):
-    from django.contrib.admin.templatetags.admin_list import ResultList
-    if cl.formset:
-        for res, form in zip(cl.result_list, cl.formset.forms):
-            yield ResultList(form, items_for_result(cl, res, form))
-    else:
-        for res in cl.result_list:
-            yield ResultList(None, items_for_result(cl, res, None))
+    try:
+        from django.contrib.admin.templatetags.admin_list import ResultList
+        if cl.formset:
+            for res, form in zip(cl.result_list, cl.formset.forms):
+                yield ResultList(form, items_for_result(cl, res, form))
+        else:
+            for res in cl.result_list:
+                yield ResultList(None, items_for_result(cl, res, None))
+    except ImportError:
+        if cl.formset:
+            for res, form in zip(cl.result_list, cl.formset.forms):
+                yield list(items_for_result(cl, res, form))
+        else:
+            for res in cl.result_list:
+                yield list(items_for_result(cl, res, None))
 
 @register.inclusion_tag("admin/supertagging/supertaggeditem/change_list_results.html")
 def supertaggeditem_result_list(cl):
     """
     Displays special non-selectable tag list for an item.
     """
-    from django.contrib.admin.templatetags.admin_list import result_headers, result_hidden_fields
+    from django.contrib.admin.templatetags.admin_list import result_headers
+    try:
+        from django.contrib.admin.templatetags.admin_list import result_hidden_fields
+    except ImportError:
+        result_hidden_fields = lambda x: []
+    
     headers = list(result_headers(cl))
     cl.list_editable = cl.model_admin.list_editable
     return {'cl': cl,
