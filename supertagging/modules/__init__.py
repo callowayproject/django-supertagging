@@ -60,7 +60,7 @@ def process(obj, tags=[]):
             raise KeyError(e)
         return
         
-    # If not fields are found, nothing can be processed.
+    # If no fields are found, nothing can be processed.
     if not params.has_key('fields'):
         if settings.ST_DEBUG:
             raise Exception('No "fields" found.')
@@ -125,23 +125,25 @@ def process(obj, tags=[]):
             
             field = d.pop('name')
             proc_type = d.pop('process_type', process_type)
-
-            data = getattr(obj, field)
-
-            data = force_unicode(getattr(obj, field))
+            comb_fields = d.pop('combine_fields', None)
+            
+            if comb_fields is None:
+                data = force_unicode(getattr(obj, field))
+            else:
+                data = '\n'.join([force_unicode(getattr(obj, item, '')) for item in comb_fields])
             
             # Analyze the text (data)
             result = c.analyze(data)
-
+            
             # Remove existing items, this ensures tagged items 
             # are updated correctly
-            SuperTaggedItem.objects.filter(content_type=ctype, 
+            SuperTaggedItem.objects.active().filter(content_type=ctype, 
                 object_id=obj.pk, field=field).delete()
             if settings.PROCESS_RELATIONS:
                 SuperTaggedRelationItem.objects.filter(content_type=ctype, 
                     object_id=obj.pk, field=field).delete()
 
-            entities, relations, topics = [], [], []
+            entities, relations, topics, socialtags = [], [], [], []
             # Process entities, relations and topics
             if hasattr(result, 'entities'):
                 try:
@@ -163,9 +165,17 @@ def process(obj, tags=[]):
                         ctype, tags, date)
                 except Exception, e:
                     if settings.ST_DEBUG: raise Exception("Failed to process Topics: %s" % e)
-                
+            
+            if hasattr(result, 'socialTag') and settings.PROCESS_SOCIALTAGS:
+                try:
+                    socialtags = _processSocialTags(field, result.socialTag, obj, 
+                        ctype, tags, date)
+                except Exception, e:
+                    if settings.ST_DEBUG: raise Exception("Failed to process SocialTags: %s" % e)
+            
             processed_tags.extend(entities)
             processed_tags.extend(topics)
+            processed_tags.extend(socialtags)
             
             if settings.MARKUP:
                 invalidate_markup_cache(obj, field)
@@ -223,21 +233,29 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         # if type is in EXLCUSIONS, continue to next item.
         if stype.lower() in map(lambda s: s.lower(), settings.EXCLUSIONS):
             continue
-            
-        name = entity.pop('name', '').lower()
+        
+        display_name = entity.pop('name', '')
+        name = display_name.lower()
         if tags and name not in tags:
             continue
-
+        
         slug = slugify(name)
         tag = None
         try:
-            tag = SuperTag.objects.get_by_name(name__iexact=name)
+            tag = SuperTag.objects.get_by_name(name__iexact=name, stype=stype)
         except SuperTag.DoesNotExist:
             try:
                 tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
-                    stype=stype, name=name)
+                kwargs = {
+                    'calais_id': calais_id,
+                    'slug': slug,
+                    'stype': stype,
+                    'name': name,
+                }
+                if settings.INCLUDE_DISPLAY_FIELDS:
+                    kwargs['display_name'] = display_name
+                tag = SuperTag.objects.create_alternate(**kwargs)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
@@ -343,13 +361,16 @@ def _processTopics(field, data, obj, ctype, tags, date):
     processed_tags = []
     for di in data:
         di.pop('__reference')
-
+        
         calais_id = re.match(REF_REGEX, str(di.pop('category'))).group('key')
         stype = 'Topic'
-        name = di.pop('categoryName', '').lower()
+        display_name = di.pop('categoryName', '')
+        name = display_name.lower()
+        
         if tags and name not in tags:
             continue
-
+        rel = int(float(str(di.pop('score', '0'))) * 1000)
+        
         slug = slugify(name)
         tag = None
         try:
@@ -358,8 +379,15 @@ def _processTopics(field, data, obj, ctype, tags, date):
             try:
                 tag = SuperTag.objects.get(calais_id=calais_id)
             except SuperTag.DoesNotExist:
-                tag = SuperTag.objects.create_alternate(calais_id=calais_id, slug=slug, 
-                    stype=stype, name=name)
+                kwargs = {
+                    'calais_id': calais_id,
+                    'slug': slug,
+                    'stype': stype,
+                    'name': name,
+                }
+                if settings.INCLUDE_DISPLAY_FIELDS:
+                    kwargs['display_name'] = display_name
+                tag = SuperTag.objects.create_alternate(**kwargs)
         except SuperTag.MultipleObjectsReturned:
             tag = SuperTag.objects.filter(name__iexact=name)[0]
             
@@ -372,7 +400,58 @@ def _processTopics(field, data, obj, ctype, tags, date):
         tag.save()
 
         SuperTaggedItem.objects.create(tag=tag, content_type=ctype, 
-            object_id=obj.pk, field=field, item_date=date)
+            object_id=obj.pk, field=field, relevance=rel, item_date=date)
+
+        processed_tags.append(tag)
+    return processed_tags
+
+def _processSocialTags(field, data, obj, ctype, tags, date):
+    """
+    Process Topics, this opertaion is similar to _processEntities, the only
+    difference is that there are no instances
+    """
+    rel_map = {'1': 900, '2': 700}
+    processed_tags = []
+    for di in data:
+        di.pop('__reference')
+        
+        calais_id = re.match(REF_REGEX, str(di.pop('socialTag'))).group('key')
+        stype = 'Social Tag'
+        display_name = di.pop('name', '')
+        name = display_name.lower()
+        if tags and name not in tags:
+            continue
+        rel = rel_map.get(di.get('importance', '3'), 500)
+        slug = slugify(name)
+        tag = None
+        try:
+            tag = SuperTag.objects.get_by_name(name__iexact=name)
+        except SuperTag.DoesNotExist:
+            try:
+                tag = SuperTag.objects.get(calais_id=calais_id)
+            except SuperTag.DoesNotExist:
+                kwargs = {
+                    'calais_id': calais_id,
+                    'slug': slug,
+                    'stype': stype,
+                    'name': name,
+                }
+                if settings.INCLUDE_DISPLAY_FIELDS:
+                    kwargs['display_name'] = display_name
+                tag = SuperTag.objects.create_alternate(**kwargs)
+        except SuperTag.MultipleObjectsReturned:
+            tag = SuperTag.objects.filter(name__iexact=name)[0]
+            
+        tag = tag.substitute or tag
+        
+        if not tag.enabled:
+            continue
+
+        tag.properties = di
+        tag.save()
+
+        SuperTaggedItem.objects.create(tag=tag, content_type=ctype, 
+            object_id=obj.pk, field=field, relevance=rel, item_date=date)
 
         processed_tags.append(tag)
     return processed_tags

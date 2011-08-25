@@ -177,4 +177,4 @@ try:
 except ImportError:
     pass
 else:
-    add_introspection_rules([], [r"^picklefield\.fields\.PickledObjectField"])
+    add_introspection_rules([], [r"^supertagging\.fields\.PickledObjectField"])

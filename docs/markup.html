@@ -1,3 +1,4 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -5,27 +6,28 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Markup &mdash; Django SuperTagging v0.4.5 documentation</title>
+    <title>Markup &mdash; Django SuperTagging v0.5 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.4.5',
-        COLLAPSE_MODINDEX: false,
+        VERSION:     '0.5',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Django SuperTagging v0.4.5 documentation" href="index.html" />
+    <link rel="top" title="Django SuperTagging v0.5 documentation" href="index.html" />
     <link rel="next" title="Reference" href="reference/index.html" />
     <link rel="prev" title="API Reference" href="api.html" /> 
   </head>
   <body>
 <div id="docstitle">
-	<p>Django SuperTagging v0.4.5 documentation</p>
+	<p>Django SuperTagging v0.5 documentation</p>
 </div>
 <div id="header">
 	<div id="title"><h1>Markup</h1></div>
@@ -43,20 +45,20 @@
   <div class="sphinxsidebarwrapper">
 	<ul><li class="toctree-l1"><a href="index.html">Main Page</a></li></ul>
 	<ul class="current">
-<li class="toctree-l1"><a class="reference external" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference external" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference external" href="real_world_example.html">Real World Example</a></li>
-<li class="toctree-l1"><a class="reference external" href="api.html">API Reference</a></li>
-<li class="toctree-l1 current"><a class="current reference external" href="">Markup</a><ul>
-<li class="toctree-l2"><a class="reference external" href="#setup">Setup</a></li>
-<li class="toctree-l2"><a class="reference external" href="#how-it-works">How It Works</a></li>
-<li class="toctree-l2"><a class="reference external" href="#markup-handler">Markup handler</a></li>
-<li class="toctree-l2"><a class="reference external" href="#markup-template">Markup Template</a></li>
-<li class="toctree-l2"><a class="reference external" href="#caching">Caching</a></li>
-<li class="toctree-l2"><a class="reference external" href="#gotchas">Gotchas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="real_world_example.html">Real World Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Markup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-it-works">How It Works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#markup-handler">Markup handler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#markup-template">Markup Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#caching">Caching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gotchas">Gotchas</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
 </ul>
 
     <div id="searchbox" style="display: none">
@@ -94,29 +96,44 @@ links to another section of your site with more information.</p>
 <div class="section" id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
 <p>In the settings you will need to have</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP</span> <span class="o">=</span> <span class="bp">True</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+
+    <span class="c"># ... Other settings</span>
+
+    <span class="s">&#39;MARKUP&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;ENABLED&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="how-it-works">
 <h2>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
 <p>When SuperTagging loads up and markup is enabled, it will add an additional
-attribute for every field specified in <a class="reference external" href="reference/settings.html#setting-modules"><em>SUPERTAGGING_MODULES</em></a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_MARKUP</span> <span class="o">=</span> <span class="bp">True</span>
-<span class="n">MARKUP_FIELD_SUFFIX</span> <span class="o">=</span> <span class="s">&quot;tagged&quot;</span>
-<span class="n">SUPERTAGGING_MODULES</span> <span class="o">=</span> <span class="p">{</span>
-   <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
-        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">,</span>
-             <span class="s">&#39;markup_handler&#39;</span><span class="p">:</span> <span class="s">&#39;MyCustomHandler&#39;</span><span class="p">}]},</span>
-    <span class="s">&#39;media.image&#39;</span><span class="p">:</span>
-        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;caption&#39;</span><span class="p">}]},</span>
-    <span class="s">&#39;blog.entry&#39;</span><span class="p">:</span>
-        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;content&#39;</span><span class="p">},</span>
-            <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;tease&#39;</span><span class="p">,</span>
-             <span class="s">&#39;markup&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}]}</span>
+attribute for every field specified in <a class="reference internal" href="reference/settings.html#setting-modules"><em>WATCHED_FIELDS</em></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SUPERTAGGING_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;ENABLED&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="s">&#39;WATCHED_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;stories.story&#39;</span><span class="p">:</span>
+            <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;body&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;markup_handler&#39;</span><span class="p">:</span> <span class="s">&#39;MyCustomHandler&#39;</span><span class="p">}]},</span>
+        <span class="s">&#39;media.image&#39;</span><span class="p">:</span>
+            <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;caption&#39;</span><span class="p">}]},</span>
+        <span class="s">&#39;blog.entry&#39;</span><span class="p">:</span>
+            <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;content&#39;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;tease&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;markup&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}]}</span>
+    <span class="p">},</span>
+
+    <span class="c"># ... Other settings</span>
+
+    <span class="s">&#39;MARKUP&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;ENABLED&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s">&#39;FIELD_SUFFIX&#39;</span><span class="p">:</span> <span class="s">&quot;tagged&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -129,33 +146,12 @@ tagging. The last model is an <strong>entry</strong> model and it has 2 fields m
 tagging, <strong>content</strong> and <strong>tease</strong>, but tease is not to be marked up.</p>
 <p>After <cite>SuperTagging</cite> is done loading you will end up with three additional
 attributes for the three different models.</p>
-<ul>
-<li><dl class="first docutils">
-<dt><strong>story model</strong></dt>
-<dd><ul class="first last simple">
-<li>tagged_body</li>
+<ul class="simple">
+<li><strong>Story model:</strong> <tt class="docutils literal"><span class="pre">body__tagged</span></tt></li>
+<li><strong>Image model:</strong> <tt class="docutils literal"><span class="pre">caption__tagged</span></tt></li>
+<li><strong>Entry model:</strong> <tt class="docutils literal"><span class="pre">content__tagged</span></tt></li>
 </ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><strong>image model</strong></dt>
-<dd><ul class="first last simple">
-<li>tagged_caption</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><strong>entry</strong></dt>
-<dd><ul class="first last simple">
-<li>tagged_content</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-<p>Notice that the a &#8216;tagged_tease&#8217; does not exist for the <strong>entry</strong> model.</p>
+<p>Notice that the a <tt class="docutils literal"><span class="pre">tease__tagged</span></tt> does not exist for the <strong>Entry</strong> model because the markup flag for that field is <tt class="xref docutils literal"><span class="pre">False</span></tt>.</p>
 </div>
 <div class="section" id="markup-handler">
 <h2>Markup handler<a class="headerlink" href="#markup-handler" title="Permalink to this headline">¶</a></h2>
@@ -172,9 +168,8 @@ touched, the original content is returned.</p>
         <span class="k">return</span> <span class="s">&quot;MARKED UP CONTENT&quot;</span>
 </pre></div>
 </div>
-<p>The <cite>handle</cite> method needs to return a string of the marked up content.</p>
-<p>If you want a create a custom handler but use the default markup method, your code
-might look something like this:</p>
+<p>The <tt class="docutils literal"><span class="pre">handle</span></tt> method needs to return a string of the marked up content.</p>
+<p>If you want a create a custom handler but use the default markup method, your code might look something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">supertagging.markup</span> <span class="kn">import</span> <span class="n">MarkupHandler</span><span class="p">,</span> <span class="n">markup_content</span>
 
 <span class="k">class</span> <span class="nc">MyCustomHandler</span><span class="p">(</span><span class="n">MarkupHandler</span><span class="p">):</span>
@@ -194,11 +189,11 @@ default html rendered.</p>
 </div>
 <p><strong>Context</strong></p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>actual_value - the value of the tag, this might be the same as the tag name or a reference to the tag, IE: &#8216;his&#8217;, &#8216;her&#8217; etc.</li>
 <li>tag - a <cite>SuperTag</cite> instance</li>
 </ul>
-</blockquote>
+</div></blockquote>
 </div>
 <div class="section" id="caching">
 <h2>Caching<a class="headerlink" href="#caching" title="Permalink to this headline">¶</a></h2>
@@ -229,7 +224,7 @@ OpenCalais.</p>
     <div class="footer">
     <p>
       &copy; Copyright 2010, The Washington Times.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
 	</p>
     </div>
       <div class="clearer"></div>

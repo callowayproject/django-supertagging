@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load supertagging_tags %}
+{% block title %}{{ flatpage.title }}{% endblock %}
+{% block content %}
+{# bar graph code adapted from http://djangosnippets.org/snippets/44/ #}
+<style type="text/css" media="screen">
+  ul {
+    margin: 0;
+    padding: 0;
+    width: 190px;
+    background-color: #fff;
+  }
+  
+  ul li {
+    font-size: 11px;
+    line-height: 20px;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    border-bottom: 1px solid #ebeff2;
+    background-color: #fff;
+  }
+ 
+ ul li span {
+    background-color: #a9d2f2;
+    display: block;
+    color: #125a95;
+    font-weight: bold;
+    padding: 0 0 0 5px;
+    white-space: nowrap;
+  }
+</style>
+{% if flatpage.content__tagged %}
+    <h2>Tagged Content</h2>
+    {{ flatpage.content__tagged|safe }}
+    <hr>
+{% endif %}
+    <h2>Original Content</h2>
+    {{ flatpage.content }}
+    <hr>
+    <h2>Supertags</h2>
+    <ul>
+        {% for tag in flatpage.supertags %}
+            <li>{{ tag.display_name }} <em>({{ tag.stype}})</em> 
+                <span style="width: {% widthratio tag.relevance 1000 190 %}px">{% widthratio tag.relevance 1000 100 %}%</span></li>
+        {% endfor %}
+    </ul>
+    <hr>
+    
+{% endblock %}

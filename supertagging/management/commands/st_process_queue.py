@@ -55,7 +55,7 @@ class Core(object):
         SuperTagProcessQueue.objects.filter(pk__in=objs_to_reset).update(locked=False)
         transaction.commit()
         print 'Done'
-        print 'Deleting processed objects form queue...'
+        print 'Deleting processed objects from queue...'
         SuperTagProcessQueue.objects.filter(pk__in=objs_to_del).delete()
         transaction.commit()
         print 'Done'

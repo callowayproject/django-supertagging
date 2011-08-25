@@ -13,7 +13,8 @@ class ModelTagManager(models.Manager):
     def get_query_set(self):
         ctype = ContentType.objects.get_for_model(self.model)
         return SuperTag.objects.filter(
-            items__content_type__pk=ctype.pk).distinct()
+            items__content_type__pk=ctype.pk,
+            items__ignore=False).distinct()
 
     def cloud(self, *args, **kwargs):
         return SuperTag.objects.cloud_for_model(self.model, *args, **kwargs)

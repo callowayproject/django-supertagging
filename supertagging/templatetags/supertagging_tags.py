@@ -3,6 +3,18 @@
 from django.db.models import get_model
 from django.template import Library, Node, TemplateSyntaxError, Variable, resolve_variable
 from django.utils.translation import ugettext as _
+from django.contrib.admin.views.main import (ALL_VAR, EMPTY_CHANGELIST_VALUE,
+    ORDER_VAR, ORDER_TYPE_VAR, PAGE_VAR, SEARCH_VAR)
+from django.core.exceptions import ObjectDoesNotExist
+try:
+    from django.contrib.admin.util import lookup_field, display_for_field, label_for_field
+except ImportError:
+    from supertagging.utils import lookup_field, display_for_field, label_for_field
+from django.utils.safestring import mark_safe
+from django.utils.encoding import smart_unicode, force_unicode
+from django.utils.html import escape, conditional_escape
+from django.db import models
+
 
 from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem
 from supertagging.utils import LINEAR, LOGARITHMIC
@@ -570,3 +582,143 @@ def do_render_item(parser, token):
         return RenderItemNode(argv[1], **kwargs)
         
 register.tag('supertag_render', do_render_item)
+
+
+class IsSupertaggableNode(Node):
+    def __init__(self, obj):
+        self.obj = obj
+    
+    def render(self, context):
+        from django.contrib.contenttypes.models import ContentType
+        from supertagging.settings import WATCHED_FIELDS
+        
+        obj = Variable(self.obj).resolve(context)
+        ctype = ContentType.objects.get_for_model(obj)
+        result = "%s.%s" % (ctype.app_label, ctype.model) in WATCHED_FIELDS
+        context['is_supertaggable'] = result
+        return ''
+
+def do_is_supertaggable(parser, token):
+    """
+    {% is_supertaggable obj %}
+    
+    Sets context variable "is_supertaggable" to True or False
+    """
+    try:
+        tag_name, obj = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError("%r tag requires exactly one argument" % token.contents.split()[0])
+    return IsSupertaggableNode(obj)
+
+register.tag('is_supertaggable', do_is_supertaggable)
+
+def items_for_result(cl, result, form):
+    """
+    Generates the actual list of data.
+    """
+    first = True
+    pk = cl.lookup_opts.pk.attname
+    for field_name in cl.list_display:
+        row_class = ''
+        try:
+            f, attr, value = lookup_field(field_name, result, cl.model_admin)
+        except (AttributeError, ObjectDoesNotExist):
+            result_repr = EMPTY_CHANGELIST_VALUE
+        else:
+            if f is None:
+                if field_name == u'action_checkbox':
+                    row_class = ' class="action-checkbox"'
+                allow_tags = getattr(attr, 'allow_tags', False)
+                boolean = getattr(attr, 'boolean', False)
+                if boolean:
+                    allow_tags = True
+                    result_repr = _boolean_icon(value)
+                else:
+                    result_repr = smart_unicode(value)
+                # Strip HTML tags in the resulting text, except if the
+                # function has an "allow_tags" attribute set to True.
+                if not allow_tags:
+                    result_repr = escape(result_repr)
+                else:
+                    result_repr = mark_safe(result_repr)
+            else:
+                if isinstance(f.rel, models.ManyToOneRel):
+                    field_val = getattr(result, f.name)
+                    if field_val is None:
+                        result_repr = EMPTY_CHANGELIST_VALUE
+                    else:
+                        result_repr = escape(field_val)
+                else:
+                    result_repr = display_for_field(value, f)
+                if isinstance(f, models.DateField)\
+                or isinstance(f, models.TimeField)\
+                or isinstance(f, models.ForeignKey):
+                    row_class = ' class="nowrap"'
+        if force_unicode(result_repr) == '':
+            result_repr = mark_safe('&nbsp;')
+        # If list_display_links not defined, add the link tag to the first field
+        if (first and not cl.list_display_links) or field_name in cl.list_display_links:
+            table_tag = {True:'th', False:'td'}[first]
+            first = False
+            # Convert the pk to something that can be used in Javascript.
+            # Problem cases are long ints (23L) and non-ASCII strings.
+            if cl.to_field:
+                attr = str(cl.to_field)
+            else:
+                attr = pk
+            value = result.serializable_value(attr)
+            result_id = repr(force_unicode(value))[1:]
+            yield mark_safe(u'<%s%s>%s</%s>' % \
+                (table_tag, row_class, conditional_escape(result_repr), table_tag))
+        else:
+            # By default the fields come from ModelAdmin.list_editable, but if we pull
+            # the fields out of the form instead of list_editable custom admins
+            # can provide fields on a per request basis
+            if (form and field_name in form.fields and not (
+                    field_name == cl.model._meta.pk.name and
+                        form[cl.model._meta.pk.name].is_hidden)):
+                bf = form[field_name]
+                result_repr = mark_safe(force_unicode(bf.errors) + force_unicode(bf))
+            else:
+                result_repr = conditional_escape(result_repr)
+            yield mark_safe(u'<td%s>%s</td>' % (row_class, result_repr))
+    if form and not form[cl.model._meta.pk.name].is_hidden:
+        yield mark_safe(u'<td>%s</td>' % force_unicode(form[cl.model._meta.pk.name]))
+
+
+def results(cl):
+    try:
+        from django.contrib.admin.templatetags.admin_list import ResultList
+        if cl.formset:
+            for res, form in zip(cl.result_list, cl.formset.forms):
+                yield ResultList(form, items_for_result(cl, res, form))
+        else:
+            for res in cl.result_list:
+                yield ResultList(None, items_for_result(cl, res, None))
+    except ImportError:
+        if cl.formset:
+            for res, form in zip(cl.result_list, cl.formset.forms):
+                yield list(items_for_result(cl, res, form))
+        else:
+            for res in cl.result_list:
+                yield list(items_for_result(cl, res, None))
+
+@register.inclusion_tag("admin/supertagging/supertaggeditem/change_list_results.html")
+def supertaggeditem_result_list(cl):
+    """
+    Displays special non-selectable tag list for an item.
+    """
+    from django.contrib.admin.templatetags.admin_list import result_headers
+    try:
+        from django.contrib.admin.templatetags.admin_list import result_hidden_fields
+    except ImportError:
+        result_hidden_fields = lambda x: []
+    
+    headers = list(result_headers(cl))
+    cl.list_editable = cl.model_admin.list_editable
+    return {'cl': cl,
+            'result_hidden_fields': list(result_hidden_fields(cl)),
+            'result_headers': headers,
+            'reset_sorting_url': cl.get_query_string(remove=[ORDER_VAR]),
+            'results': list(results(cl))}
+    

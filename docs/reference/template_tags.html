@@ -1,3 +1,4 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -5,27 +6,28 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Template Tags &mdash; Django SuperTagging v0.4.5 documentation</title>
+    <title>Template Tags &mdash; Django SuperTagging v0.5 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.5',
-        COLLAPSE_MODINDEX: false,
+        VERSION:     '0.5',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Django SuperTagging v0.4.5 documentation" href="../index.html" />
+    <link rel="top" title="Django SuperTagging v0.5 documentation" href="../index.html" />
     <link rel="up" title="Reference" href="index.html" />
     <link rel="prev" title="Settings" href="settings.html" /> 
   </head>
   <body>
 <div id="docstitle">
-	<p>Django SuperTagging v0.4.5 documentation</p>
+	<p>Django SuperTagging v0.5 documentation</p>
 </div>
 <div id="header">
 	<div id="title"><h1>Template Tags</h1></div>
@@ -42,14 +44,14 @@
   <div class="sphinxsidebarwrapper">
 	<ul><li class="toctree-l1"><a href="../index.html">Main Page</a></li></ul>
 	<ul class="current">
-<li class="toctree-l1"><a class="reference external" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference external" href="../getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference external" href="../real_world_example.html">Real World Example</a></li>
-<li class="toctree-l1"><a class="reference external" href="../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="../markup.html">Markup</a></li>
-<li class="toctree-l1 current"><a class="reference external" href="index.html">Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference external" href="settings.html">Settings</a></li>
-<li class="toctree-l2 current"><a class="current reference external" href="">Template Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../real_world_example.html">Real World Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markup.html">Markup</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Template Tags</a></li>
 </ul>
 </li>
 </ul>
@@ -166,7 +168,7 @@ attributes set, and stores them in a context variable.</p>
 each option being specified in <tt class="docutils literal"><span class="pre">[name]=[value]</span></tt> format. Valid extra
 options are:</p>
 <blockquote>
-<dl class="docutils">
+<div><dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">steps</span></tt></dt>
 <dd>Integer. Defines the range of font sizes.</dd>
 <dt><tt class="docutils literal"><span class="pre">min_count</span></tt></dt>
@@ -176,7 +178,7 @@ been used to appear in the cloud.</dd>
 <dd>One of <tt class="docutils literal"><span class="pre">linear</span></tt> or <tt class="docutils literal"><span class="pre">log</span></tt>. Defines the font-size
 distribution algorithm to use when generating the tag cloud.</dd>
 </dl>
-</blockquote>
+</div></blockquote>
 <p>Examples</p>
 <div class="highlight-django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">supertag_cloud_for_model</span> <span class="nv">products.Widget</span> <span class="k">as</span> <span class="nv">widget_tags</span> <span class="cp">%}</span><span class="x"></span>
 <span class="cp">{%</span> <span class="k">supertag_cloud_for_model</span> <span class="nv">products.Widget</span> <span class="k">as</span> <span class="nv">widget_tags</span> <span class="k">with</span> <span class="nv">steps</span><span class="o">=</span><span class="m">9</span> <span class="nv">min_count</span><span class="o">=</span><span class="m">3</span> <span class="nv">distribution</span><span class="o">=</span><span class="nv">log</span> <span class="cp">%}</span><span class="x"></span>
@@ -270,7 +272,7 @@ given <tt class="docutils literal"><span class="pre">SuperTag</span></tt> and st
 </pre></div>
 </div>
 <p>Only suffix OR template can be specified, but not both.</p>
-<p>View <a class="reference external" href="../api.html#id14"><em>Rendering Items</em></a> for more information about rendering.</p>
+<p>View <a class="reference internal" href="../api.html#id14"><em>Rendering Items</em></a> for more information about rendering.</p>
 </div>
 </div>
 </div>
@@ -283,7 +285,7 @@ given <tt class="docutils literal"><span class="pre">SuperTag</span></tt> and st
     <div class="footer">
     <p>
       &copy; Copyright 2010, The Washington Times.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
 	</p>
     </div>
       <div class="clearer"></div>
