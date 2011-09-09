@@ -133,6 +133,10 @@ class SuperTaggedItemAdmin(admin.ModelAdmin):
     relevance_bar.allow_tags = True
     relevance_bar.admin_order_field = 'relevance'
     relevance_bar.short_description = 'Relevance'
+    
+    def get_actions(self, request):
+        return []
+
 
 class SuperTaggedRelationItemAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'relation', 'field', 'process_type', 'item_date')  
