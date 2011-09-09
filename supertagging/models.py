@@ -550,7 +550,7 @@ class SuperTaggedItem(models.Model):
         ordering = ('-relevance',)
     
     def __unicode__(self):
-        return '%s of %s' % (self.tag, str(self.content_object))
+        return u'%s of %s' % (self.tag, unicode(self.content_object))
     
     def render(self, template=None, suffix=None):
         return render_item(self, None, template, suffix,
