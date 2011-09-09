@@ -1,5 +1,6 @@
 # Most template tags were borrowed from django-tagging.
 
+import django
 from django.db.models import get_model
 from django.template import Library, Node, TemplateSyntaxError, Variable, resolve_variable
 from django.utils.translation import ugettext as _
@@ -14,7 +15,6 @@ from django.utils.safestring import mark_safe
 from django.utils.encoding import smart_unicode, force_unicode
 from django.utils.html import escape, conditional_escape
 from django.db import models
-
 
 from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem
 from supertagging.utils import LINEAR, LOGARITHMIC
@@ -659,6 +659,8 @@ def items_for_result(cl, result, form):
         # If list_display_links not defined, add the link tag to the first field
         if (first and not cl.list_display_links) or field_name in cl.list_display_links:
             table_tag = {True:'th', False:'td'}[first]
+            if form and django.VERSION[1] == 1: # Django 1.1 
+                result_repr += force_unicode(form[cl.model._meta.pk.name])
             first = False
             # Convert the pk to something that can be used in Javascript.
             # Problem cases are long ints (23L) and non-ASCII strings.
