@@ -96,7 +96,7 @@ class SuperTagAdmin(admin.ModelAdmin):
     enable_tag.short_description = "Enable selected tags"
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
-    list_display = ('tag_name', 'tag_type', 'relevance_bar', 'ignore')
+    list_display = ('tag_name', 'tag_type', 'field', 'relevance_bar', 'ignore')
     # if django.VERSION[1] > 1:
     #     list_filter = ('field', 'tag__stype')
     # else:
@@ -126,8 +126,12 @@ class SuperTaggedItemAdmin(admin.ModelAdmin):
     
     def changelist_view(self, request, extra_context=None):
         if request.method == 'POST' and '_update_tags' in request.POST:
-            ctype = ContentType.objects.get(id=request.POST['_content_type'])
-            obj = ctype.get_object_for_this_type(id=request.POST['_object_id'])
+            ctype_id = request.GET.get(u'content_type__id', [False,])
+            obj_id = request.GET.get('object_id', [False])
+            if ctype_id == False or obj_id == False:
+                return HttpResponseRedirect(request.get_full_path())
+            ctype = ContentType.objects.get(id=ctype_id)
+            obj = ctype.get_object_for_this_type(id=obj_id)
             from supertagging.modules import process
             process(obj)
             msg = "Supertags have been updated."
