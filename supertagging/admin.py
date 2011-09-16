@@ -96,12 +96,12 @@ class SuperTagAdmin(admin.ModelAdmin):
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
     list_display = ('tag_name', 'tag_type', 'relevance_bar', 'ignore')
-    if django.VERSION[1] > 1:
-        list_filter = ('field', 'tag__stype')
-    else:
-        list_filter = ('field', )
+    # if django.VERSION[1] > 1:
+    #     list_filter = ('field', 'tag__stype')
+    # else:
+    #     list_filter = ('field', )
     
-    search_fields = ('tag__name',)
+    #search_fields = ('tag__name',)
     raw_id_fields = ('tag',)
     list_editable = ('ignore',)
     
