@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext, ugettext_lazy
 from django.utils.encoding import force_unicode, smart_str
+from django.http import HttpResponseRedirect
 
 from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation
 from supertagging.models import SuperTaggedRelationItem, SuperTagProcessQueue
@@ -95,15 +96,19 @@ class SuperTagAdmin(admin.ModelAdmin):
     enable_tag.short_description = "Enable selected tags"
     
 class SuperTaggedItemAdmin(admin.ModelAdmin):
-    list_display = ('tag_name', 'tag_type', 'relevance_bar', 'ignore')
-    if django.VERSION[1] > 1:
-        list_filter = ('field', 'tag__stype')
-    else:
-        list_filter = ('field', )
+    list_display = ('tag_name', 'tag_type', 'field', 'relevance_bar', 'ignore')
+    # if django.VERSION[1] > 1:
+    #     list_filter = ('field', 'tag__stype')
+    # else:
+    #     list_filter = ('field', )
     
-    search_fields = ('tag__name',)
+    #search_fields = ('tag__name',)
     raw_id_fields = ('tag',)
     list_editable = ('ignore',)
+    
+    class Media:
+        css = {'all': ('css/supertagloading.css',)}
+        js = ('js/jquery.loading.1.6.4.min.js',)
     
     def tag_name(self, obj):
         if INCLUDE_DISPLAY_FIELDS:
@@ -118,6 +123,22 @@ class SuperTaggedItemAdmin(admin.ModelAdmin):
         Returns the ChangeList class for use on the changelist page.
         """
         return SupertagChangeList
+    
+    def changelist_view(self, request, extra_context=None):
+        if request.method == 'POST' and '_update_tags' in request.POST:
+            ctype_id = request.GET.get(u'content_type__id', [False,])
+            obj_id = request.GET.get('object_id', [False])
+            if ctype_id == False or obj_id == False:
+                return HttpResponseRedirect(request.get_full_path())
+            ctype = ContentType.objects.get(id=ctype_id)
+            obj = ctype.get_object_for_this_type(id=obj_id)
+            from supertagging.modules import process
+            process(obj)
+            msg = "Supertags have been updated."
+            self.message_user(request, msg)
+            return HttpResponseRedirect(request.get_full_path())
+        else:
+            return super(SuperTaggedItemAdmin, self).changelist_view(request, extra_context)
     
     def relevance_bar(self, obj):
         from django.template import Context

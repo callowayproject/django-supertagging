@@ -4,8 +4,9 @@ include NOTICE
 include README
 include requirements.txt
 
-recursive-include doc_src *.rst *.html *.css *.js *.png *.gif
-recursive-include docs *.html *.css *.js *.png *.gif
+recursive-include doc_src *.rst *.html *.css *.js *.png
+recursive-include docs *.html *.css *.js *.png
+recursive-include supertagging/static *.css *.js
 
 recursive-include supertagging *.py
 recursive-include supertagging/sql/ *.sql

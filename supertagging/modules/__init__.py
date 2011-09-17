@@ -119,6 +119,15 @@ def process(obj, tags=[]):
         continue
         
     processed_tags = []
+    
+    # Remove existing items, this ensures tagged items 
+    # are updated correctly
+    SuperTaggedItem.objects.active().filter(content_type=ctype, 
+        object_id=obj.pk).delete()
+    if settings.PROCESS_RELATIONS:
+        SuperTaggedRelationItem.objects.filter(content_type=ctype, 
+            object_id=obj.pk).delete()
+    
     for item in params['fields']:
         try:
             d = item.copy()
@@ -135,14 +144,6 @@ def process(obj, tags=[]):
             # Analyze the text (data)
             result = c.analyze(data)
             
-            # Remove existing items, this ensures tagged items 
-            # are updated correctly
-            SuperTaggedItem.objects.active().filter(content_type=ctype, 
-                object_id=obj.pk, field=field).delete()
-            if settings.PROCESS_RELATIONS:
-                SuperTaggedRelationItem.objects.filter(content_type=ctype, 
-                    object_id=obj.pk, field=field).delete()
-
             entities, relations, topics, socialtags = [], [], [], []
             # Process entities, relations and topics
             if hasattr(result, 'entities'):
