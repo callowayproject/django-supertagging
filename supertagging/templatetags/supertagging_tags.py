@@ -2,21 +2,25 @@
 
 import django
 from django.db.models import get_model
-from django.template import Library, Node, TemplateSyntaxError, Variable, resolve_variable
+from django.template import (Library, Node, TemplateSyntaxError, Variable, 
+                            resolve_variable, VariableDoesNotExist)
 from django.utils.translation import ugettext as _
 from django.contrib.admin.views.main import (ALL_VAR, EMPTY_CHANGELIST_VALUE,
     ORDER_VAR, ORDER_TYPE_VAR, PAGE_VAR, SEARCH_VAR)
 from django.core.exceptions import ObjectDoesNotExist
 try:
-    from django.contrib.admin.util import lookup_field, display_for_field, label_for_field
+    from django.contrib.admin.util import (lookup_field, display_for_field, 
+                                            label_for_field)
 except ImportError:
-    from supertagging.utils import lookup_field, display_for_field, label_for_field
+    from supertagging.utils import (lookup_field, display_for_field, 
+                                    label_for_field)
 from django.utils.safestring import mark_safe
 from django.utils.encoding import smart_unicode, force_unicode
 from django.utils.html import escape, conditional_escape
 from django.db import models
 
-from supertagging.models import SuperTag, SuperTaggedItem, SuperTagRelation, SuperTaggedRelationItem
+from supertagging.models import (SuperTag, SuperTaggedItem, SuperTagRelation, 
+                                 SuperTaggedRelationItem)
 from supertagging.utils import LINEAR, LOGARITHMIC
 
 register = Library()
