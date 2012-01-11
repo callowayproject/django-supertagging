@@ -18,6 +18,17 @@ def add_to_queue(instance):
     """
     Add object to the queue.
     """
+    # Only add the queue if supplied match_kwargs returns the instance
+    params = settings.MODULES.get('%s.%s' % (instance._meta.app_label, 
+            instance._meta.module_name), {})
+    if 'match_kwargs' in params:
+        model = get_model(instance._meta.app_label, instance._meta.module_name)
+        try:
+            # Make sure this obj matches the match kwargs
+            instance = model.objects.get(pk=instance.pk, **params['match_kwargs'])
+        except model.DoesNotExist:
+            return
+    
     cont_type = ContentType.objects.get_for_model(instance)
     # If ONLY_NON_TAGGED_OBJECTS is True and 'instance' has been 
     # tagged, DO NOT add to queue
@@ -61,13 +72,13 @@ def process(obj, tags=[]):
         return
         
     # If no fields are found, nothing can be processed.
-    if not params.has_key('fields'):
+    if not 'fields' in params:
         if settings.ST_DEBUG:
             raise Exception('No "fields" found.')
         else:
             return
         
-    if params.has_key('match_kwargs'):
+    if 'match_kwargs' in params:
         try:
             # Make sure this obj matches the match kwargs
             obj = model.objects.get(pk=obj.pk, **params['match_kwargs'])
@@ -83,7 +94,7 @@ def process(obj, tags=[]):
         process_type = settings.PROCESSING_DIR['contentType']
     
     # If the MODULES setting specifies a process type set the process type.
-    if params.has_key('process_type'):
+    if 'process_type' in params:
         process_type = params['process_type']
 
     # Create the instance of Calais and setup the parameters,
@@ -100,7 +111,7 @@ def process(obj, tags=[]):
     # in the meta class.
     date = None
     date_fields = []
-    if params.has_key('date_field'):
+    if 'date_field' in params:
         date_fields.append(params['date_field'])
     elif obj._meta.get_latest_by:
         date_fields.append(obj._meta.get_latest_by)
