@@ -7,21 +7,15 @@ import types
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
-from django.template.defaultfilters import slugify
-from django.template.loader import render_to_string, get_template
+from django.template.loader import render_to_string, select_template
 from supertagging import settings
-# Python 2.3 compatibility
-try:
-    set
-except NameError:
-    from sets import Set as set
 
-from operator import itemgetter
 
 def tag_instance_cmp(x, y):
     if isinstance(x, dict) and isinstance(y, dict):
-        return cmp(x['offset'],y['offset'])
+        return cmp(x['offset'], y['offset'])
     return cmp(1, 1)
+
 
 def parse_tag_input(input):
     """
@@ -92,7 +86,8 @@ def parse_tag_input(input):
     words = list(set(words))
     words.sort()
     return words
-    
+
+
 def split_strip(input, delimiter=u','):
     """
     Splits ``input`` on ``delimiter``, stripping each resulting string
@@ -103,6 +98,7 @@ def split_strip(input, delimiter=u','):
 
     words = [w.strip() for w in input.split(delimiter)]
     return [w for w in words if w]
+
 
 def edit_string_for_tags(tags):
     """
@@ -134,6 +130,7 @@ def edit_string_for_tags(tags):
         glue = u' '
     return glue.join(names)
 
+
 def get_queryset_and_model(queryset_or_model):
     """
     Given a ``QuerySet`` or a ``Model``, returns a two-tuple of
@@ -146,6 +143,7 @@ def get_queryset_and_model(queryset_or_model):
         return queryset_or_model, queryset_or_model.model
     except AttributeError:
         return queryset_or_model._default_manager.all(), queryset_or_model
+
 
 def get_tag_list(tags):
     """
@@ -165,7 +163,6 @@ def get_tag_list(tags):
 
        * A list or tuple of ``SuperTag`` objects.
        * A ``SuperTag`` ``QuerySet``.
-
     """
     from supertagging.models import SuperTag
     if isinstance(tags, SuperTag):
@@ -173,8 +170,8 @@ def get_tag_list(tags):
     elif isinstance(tags, QuerySet) and tags.model is SuperTag:
         return tags
     elif isinstance(tags, types.StringTypes):
-        return SuperTag.objects.filter(name__in=parse_tag_input(tags))\
-                |SuperTag.objects.filter(slug__in=parse_tag_input(tags))
+        return (SuperTag.objects.filter(name__in=parse_tag_input(tags))
+                | SuperTag.objects.filter(slug__in=parse_tag_input(tags)))
     elif isinstance(tags, (types.ListType, types.TupleType)):
         if len(tags) == 0:
             return tags
@@ -182,22 +179,23 @@ def get_tag_list(tags):
         for item in tags:
             if isinstance(item, types.StringTypes):
                 contents.add('string')
-            elif isinstance(item, Tag):
-                contents.add('tag')
             elif isinstance(item, (types.IntType, types.LongType)):
                 contents.add('int')
         if len(contents) == 1:
             if 'string' in contents:
-                return SuperTag.objects.filter(name__in=[force_unicode(tag) for tag in tags])\
-                        |SuperTag.objects.filter(slug__in=[force_unicode(tag) for tag in tags])
+                tagstrings = [force_unicode(tag) for tag in tags]
+                return (SuperTag.objects.filter(name__in=tagstrings)
+                        | SuperTag.objects.filter(slug__in=tagstrings))
             elif 'tag' in contents:
                 return tags
             elif 'int' in contents:
                 return SuperTag.objects.filter(id__in=tags)
         else:
-            raise ValueError(_('If a list or tuple of tags is provided, they must all be tag names, SuperTag objects or Tag ids.'))
+            raise ValueError(_('If a list or tuple of tags is provided, they '
+                        'must all be tag names, SuperTag objects or Tag ids.'))
     else:
         raise ValueError(_('The tag input given was invalid.'))
+
 
 def get_tag(tag):
     """
@@ -227,9 +225,11 @@ def get_tag(tag):
 # Font size distribution algorithms
 LOGARITHMIC, LINEAR = 1, 2
 
+
 def _calculate_thresholds(min_weight, max_weight, steps):
     delta = (max_weight - min_weight) / float(steps)
     return [min_weight + i * delta for i in range(1, steps + 1)]
+
 
 def _calculate_tag_weight(weight, max_weight, distribution):
     """
@@ -243,6 +243,7 @@ def _calculate_tag_weight(weight, max_weight, distribution):
     elif distribution == LOGARITHMIC:
         return math.log(weight) * max_weight / math.log(max_weight)
     raise ValueError(_('Invalid distribution algorithm specified: %s.') % distribution)
+
 
 def calculate_cloud(tags, steps=4, distribution=LOGARITHMIC):
     """
@@ -270,7 +271,7 @@ def calculate_cloud(tags, steps=4, distribution=LOGARITHMIC):
                     tag.font_size = i + 1
                     font_set = True
     return tags
-    
+
 ###########################
 # Freebase Util Functions #
 ###########################
@@ -283,6 +284,7 @@ except ImportError:
 # The key from freebase that will have the topic description
 FREEBASE_DESC_KEY = "/common/topic/article"
 
+
 def fix_name_for_freebase(value):
     """
     Takes a name and replaces spaces with underscores, removes periods
@@ -293,40 +295,47 @@ def fix_name_for_freebase(value):
         word = word.replace(".", "")
         words.append(word.title())
     return "_".join(words)
-    
+
+
 def retrieve_freebase_name(name, stype):
     if not freebase:
         return name
-    
+
     search_key = fix_name_for_freebase(name)
     fb_type = settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
     value = None
     try:
         # Try to get the exact match
-        value = freebase.mqlread(
-            {"name": None, "type":fb_type or [], 
-             "key": {"value": search_key}})
+        value = freebase.mqlread({
+            "name": None,
+            "type": fb_type or [],
+            "key": {"value": search_key}
+        })
     except:
         try:
             # Try to get a results has a generator and return its top result
-            values = freebase.mqlreaditer(
-                {"name": None, "type":fb_type or [], 
-                 "key": {"value": search_key}})
+            values = freebase.mqlreaditer({
+                "name": None,
+                "type": fb_type or [],
+                "key": {"value": search_key}
+            })
             value = values.next()
         except Exception, e:
             # Only print error as freebase is only optional
-            if settings.ST_DEBUG: print "Error using `freebase`: %s" % e
-            
+            if settings.ST_DEBUG:
+                print "Error using `freebase`: %s" % e
+
     if value:
         return value["name"]
     return name
-    
+
+
 def retrieve_freebase_desc(name, stype):
     if not freebase:
         return ""
-        
+
     print "Retrieving the description for %s" % name
-    
+
     fb_type = settings.FREEBASE_TYPE_MAPPINGS.get(stype, None)
     value, data = None, ""
     try:
@@ -341,8 +350,9 @@ def retrieve_freebase_desc(name, stype):
             value = values.next()
         except Exception, e:
             # Only print error as freebase is only optional
-            if settings.ST_DEBUG: print "Error using `freebase`: %s" % e
-            
+            if settings.ST_DEBUG:
+                print "Error using `freebase`: %s" % e
+
     if value and FREEBASE_DESC_KEY in value and value[FREEBASE_DESC_KEY]:
         guid = value[FREEBASE_DESC_KEY][0].get("id", None)
         if not guid:
@@ -351,173 +361,47 @@ def retrieve_freebase_desc(name, stype):
             import urllib
             desc_url = "%s%s" % (settings.FREEBASE_DESCRIPTION_URL, guid)
             sock = urllib.urlopen(desc_url)
-            data = sock.read()                            
+            data = sock.read()
             sock.close()
         except Exception, e:
-            if settings.ST_DEBUG: print "Error getting description from freebase for tag \"%s\" - %s" % (name, e)
-        
+            if settings.ST_DEBUG:
+                print "Error getting description from freebase for tag \"%s\" - %s" % (name, e)
+
     return data
-    
+
+
 ################
 # Render Utils #
 ################
-
 def render_item(item, stype, template, suffix, template_path='supertagging/render', context={}):
     """
     Use to render tags, relations, tagged items and tagger relations.
     """
     t, model, app, = None, "", ""
-    
+
     if item:
         model = item.content_type.model.lower()
         app = item.content_type.app_label.lower()
-    
+
     tp = "%s/%s" % (template_path, (stype or ""))
-    
-    try:
-        # Retreive the template passed in
-        t = get_template(template)
-    except:
-        if suffix:
-            try:
-                # Retrieve the template based off of type and the content object with a suffix
-                t = get_template('%s/%s__%s__%s.html' % (
-                    tp, app, model, suffix.lower()))
-            except:
-                pass
-        else:
-            try:
-                # Retrieve the template based off of type and the content object
-                t = get_template('%s/%s__%s.html' % (
-                    tp, app, model))
-            except:
-                pass
-        if not t:
-            if suffix:
-                try:
-                    # Retrieve the template without the app/model with suffix
-                    t = get_template('%s/default__%s.html' % (tp, suffix))
-                except:
-                    pass
-            else:
-                try:
-                    # Retrieve the template without the app/model
-                    t = get_template('%s/default.html' % tp)
-                except:
-                    try:
-                        # Retreive the default template using just the starting template path
-                        t = get_template('%s/default.html' % template_path)
-                    except:
-                        pass
-    
-    if not t: return None
-    
-    # Render the template
+
+    # Retreive the template passed in
+    # Retrieve the template based off of type and the content object with a suffix
+    # Retrieve the template based off of type and the content object
+    # Retrieve the template without the app/model with suffix
+    # Retrieve the template without the app/model
+    # Retreive the default template using just the starting template path
+    templates = (
+        template,
+        '%s/%s__%s__%s.html' % (tp, app, model, suffix.lower()),
+        '%s/%s__%s.html' % (tp, app, model),
+        '%s/default__%s.html' % (tp, suffix.lower()),
+        '%s/default.html' % tp,
+        '%s/default.html' % template_path,
+    )
+
+    t = select_template(templates)
+
     ret = render_to_string(t.name, context)
 
     return ret
-
-
-"""
-Provides compatibility with Django 1.1
-
-Copied from django.contrib.admin.util
-"""
-from django.db import models
-from django.utils.encoding import force_unicode, smart_unicode, smart_str
-
-def lookup_field(name, obj, model_admin=None):
-    opts = obj._meta
-    try:
-        f = opts.get_field(name)
-    except models.FieldDoesNotExist:
-        # For non-field values, the value is either a method, property or
-        # returned via a callable.
-        if callable(name):
-            attr = name
-            value = attr(obj)
-        elif (model_admin is not None and hasattr(model_admin, name) and
-          not name == '__str__' and not name == '__unicode__'):
-            attr = getattr(model_admin, name)
-            value = attr(obj)
-        else:
-            attr = getattr(obj, name)
-            if callable(attr):
-                value = attr()
-            else:
-                value = attr
-        f = None
-    else:
-        attr = None
-        value = getattr(obj, name)
-    return f, attr, value
-
-
-def label_for_field(name, model, model_admin=None, return_attr=False):
-    """
-    Returns a sensible label for a field name. The name can be a callable or the
-    name of an object attributes, as well as a genuine fields. If return_attr is
-    True, the resolved attribute (which could be a callable) is also returned.
-    This will be None if (and only if) the name refers to a field.
-    """
-    attr = None
-    try:
-        field = model._meta.get_field_by_name(name)[0]
-        if isinstance(field, RelatedObject):
-            label = field.opts.verbose_name
-        else:
-            label = field.verbose_name
-    except models.FieldDoesNotExist:
-        if name == "__unicode__":
-            label = force_unicode(model._meta.verbose_name)
-            attr = unicode
-        elif name == "__str__":
-            label = smart_str(model._meta.verbose_name)
-            attr = str
-        else:
-            if callable(name):
-                attr = name
-            elif model_admin is not None and hasattr(model_admin, name):
-                attr = getattr(model_admin, name)
-            elif hasattr(model, name):
-                attr = getattr(model, name)
-            else:
-                message = "Unable to lookup '%s' on %s" % (name, model._meta.object_name)
-                if model_admin:
-                    message += " or %s" % (model_admin.__class__.__name__,)
-                raise AttributeError(message)
-
-            if hasattr(attr, "short_description"):
-                label = attr.short_description
-            elif callable(attr):
-                if attr.__name__ == "<lambda>":
-                    label = "--"
-                else:
-                    label = pretty_name(attr.__name__)
-            else:
-                label = pretty_name(name)
-    if return_attr:
-        return (label, attr)
-    else:
-        return label
-
-def display_for_field(value, field):
-    from django.contrib.admin.templatetags.admin_list import _boolean_icon
-    from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
-    
-    if field.flatchoices:
-        return dict(field.flatchoices).get(value, EMPTY_CHANGELIST_VALUE)
-    # NullBooleanField needs special-case null-handling, so it comes
-    # before the general null test.
-    elif isinstance(field, models.BooleanField) or isinstance(field, models.NullBooleanField):
-        return _boolean_icon(value)
-    elif value is None:
-        return EMPTY_CHANGELIST_VALUE
-    elif isinstance(field, models.DateField) or isinstance(field, models.TimeField):
-        return formats.localize(value)
-    elif isinstance(field, models.DecimalField):
-        return formats.number_format(value, field.decimal_places)
-    elif isinstance(field, models.FloatField):
-        return formats.number_format(value)
-    else:
-        return smart_unicode(value)

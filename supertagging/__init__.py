@@ -1,10 +1,11 @@
 __version_info__ = {
     'major': 0,
-    'minor': 5,
-    'micro': 4,
-    'releaselevel': 'final',
+    'minor': 6,
+    'micro': 0,
+    'releaselevel': 'beta',
     'serial': 1
 }
+
 
 def get_version():
     vers = ["%(major)i.%(minor)i" % __version_info__, ]
@@ -16,6 +17,7 @@ def get_version():
     return ''.join(vers)
 
 __version__ = get_version()
+
 
 class AlreadyRegistered(Exception):
     """
@@ -60,9 +62,9 @@ def register(model, tag_descriptor_attr='supertags',
 
     # Add custom manager
     ModelTaggedItemManager().contribute_to_class(model, tagged_item_manager_attr)
-    
+
     # Add a reverse generic relationship to supertaggeditems
     GenericRelation(SuperTaggedItem).contribute_to_class(model, 'supertaggeditem_set')
-    
+
     # Finally register in registry
     registry.append(model)

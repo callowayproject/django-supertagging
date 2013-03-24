@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from supertagging.models import SuperTag, SuperTaggedItem
 
+
 class ModelTagManager(models.Manager):
     """
     A manager for retrieving tags for a particular model.
@@ -24,6 +25,7 @@ class ModelTagManager(models.Manager):
 
     def usage(self, *args, **kwargs):
         return SuperTag.objects.usage_for_model(self.model, *args, **kwargs)
+
 
 class ModelTaggedItemManager(models.Manager):
     """
@@ -47,6 +49,7 @@ class ModelTaggedItemManager(models.Manager):
         else:
             return SuperTaggedItem.objects.get_union_by_model(queryset, tags)
 
+
 class TagDescriptor(object):
     """
     A descriptor which provides access to a ``ModelTagManager`` for
@@ -62,7 +65,7 @@ class TagDescriptor(object):
             return SuperTag.objects.get_for_object(instance)
 
     def __set__(self, instance, value):
-        # Cannot update tags 
+        # Cannot update tags
         raise NotImplementedError
 
     def __delete__(self, instance):

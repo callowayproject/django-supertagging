@@ -6,7 +6,9 @@ Last-Update: 01/12/2009
 1.5 updated by Corey Oordt 8/3/2011
 """
 
-import httplib, urllib, re
+import httplib
+import urllib
+import re
 import simplejson as json
 from StringIO import StringIO
 
@@ -19,16 +21,16 @@ STRIP_RE = re.compile('<script.*?</script>|<noscript.*?</noscript>|<style.*?</st
 __version__ = "1.5"
 
 VALID_CONTENT_TYPES = (
-    'text/xml', 
-    'text/html', 
-    'text/raw', 
+    'text/xml',
+    'text/html',
+    'text/raw',
     'text/htmlraw',
 )
 
 VALID_OUTPUT_TYPES = (
-    "xml/rdf", 
-    "text/simple", 
-    "text/microformats", 
+    "xml/rdf",
+    "text/simple",
+    "text/microformats",
     "application/json",
     "text/n3",
 )
@@ -36,32 +38,35 @@ VALID_OUTPUT_TYPES = (
 VALID_BOOLEANS = ('true', 'false', 't', 'f',)
 
 VALID_METADATA_TYPES = (
-    "GenericRelations", 
+    "GenericRelations",
     "SocialTags",
     "GenericRelations,SocialTags",
     "SocialTags,GenericRelations",
 )
 
+
 class AppURLopener(urllib.FancyURLopener):
-    version = "Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.5) Gecko/2008121623 Ubuntu/8.10 (intrepid)Firefox/3.0.5" # Lie shamelessly to Wikipedia.
+    version = "Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.5) Gecko/2008121623 Ubuntu/8.10 (intrepid)Firefox/3.0.5"  # Lie shamelessly to Wikipedia.
 urllib._urlopener = AppURLopener()
+
 
 class Calais():
     """
-    Python class that knows how to talk to the OpenCalais API.  Use the analyze() and analyze_url() methods, which return CalaisResponse objects.  
+    Python class that knows how to talk to the OpenCalais API.  Use the
+    analyze() and analyze_url() methods, which return CalaisResponse objects.
     """
     api_key = None
     processing_directives = {
-        "contentType": "TEXT/RAW", 
-        "outputFormat": "application/json", 
-        "reltagBaseURL": '', 
-        "calculateRelevanceScore": True, 
-        "enableMetadataType": '', 
-        "docRDFaccessible": True, 
+        "contentType": "TEXT/RAW",
+        "outputFormat": "application/json",
+        "reltagBaseURL": '',
+        "calculateRelevanceScore": True,
+        "enableMetadataType": '',
+        "docRDFaccessible": True,
     }
     user_directives = {
-        "allowDistribution": False, 
-        "allowSearch": False, 
+        "allowDistribution": False,
+        "allowSearch": False,
         "externalID": '',
         "submitter": "python-calais client v.%s" % __version__,
     }
@@ -70,42 +75,49 @@ class Calais():
     def __init__(self, api_key, submitter=None):
         self.api_key = api_key
         if submitter:
-            self.user_directives["submitter"]=submitter
-    
+            self.user_directives["submitter"] = submitter
+
     def _validate_directives(self):
         """
         Validate that the directives are valid and have valid values
         """
-        if (self.processing_directives['contentType'] and 
-            self.processing_directives['contentType'].lower() not in VALID_CONTENT_TYPES):
+        if (self.processing_directives['contentType'] and
+            self.processing_directives['contentType'].lower()
+            not in VALID_CONTENT_TYPES):
             raise TypeError("%s is not a valid content type.")
         if (self.processing_directives['outputFormat'] and
-            self.processing_directives['outputFormat'].lower() not in VALID_OUTPUT_TYPES):
+            self.processing_directives['outputFormat'].lower()
+            not in VALID_OUTPUT_TYPES):
             raise TypeError("%s is not a valid output type.")
         if (self.processing_directives['enableMetadataType'] and
-            self.processing_directives['enableMetadataType'].lower() not in VALID_METADATA_TYPES):
+            self.processing_directives['enableMetadataType'].lower()
+            not in VALID_METADATA_TYPES):
             raise TypeError("%s is not a valid metadata type.")
-        
-        if (self.processing_directives['calculateRelevanceScore'] and 
+
+        if (self.processing_directives['calculateRelevanceScore'] and
             not isinstance(self.processing_directives['calculateRelevanceScore'], bool)):
-            if self.processing_directives['calculateRelevanceScore'].lower() not in VALID_BOOLEAN_TYPES:
+            if (self.processing_directives['calculateRelevanceScore'].lower()
+                not in VALID_BOOLEANS):
                 raise TypeError("%s is not a valid boolean type.")
-        
-        if (self.processing_directives['docRDFaccessible'] and 
+
+        if (self.processing_directives['docRDFaccessible'] and
             not isinstance(self.processing_directives['docRDFaccessible'], bool)):
-            if self.processing_directives['docRDFaccessible'].lower() not in VALID_BOOLEAN_TYPES:
+            if (self.processing_directives['docRDFaccessible'].lower()
+                not in VALID_BOOLEANS):
                 raise TypeError("%s is not a valid boolean type.")
-        
-        if (self.user_directives['allowDistribution'] and 
+
+        if (self.user_directives['allowDistribution'] and
             not isinstance(self.user_directives['allowDistribution'], bool)):
-            if self.user_directives['allowDistribution'].lower() not in VALID_BOOLEAN_TYPES:
+            if (self.user_directives['allowDistribution'].lower()
+                not in VALID_BOOLEANS):
                 raise TypeError("%s is not a valid boolean type.")
-        
-        if (self.user_directives['allowSearch'] and 
+
+        if (self.user_directives['allowSearch'] and
             not isinstance(self.user_directives['allowSearch'], bool)):
-            if self.user_directives['allowSearch'].lower() not in VALID_BOOLEAN_TYPES:
+            if (self.user_directives['allowSearch'].lower()
+                not in VALID_BOOLEANS):
                 raise TypeError("%s is not a valid boolean type.")
-    
+
     def _get_param_headers(self):
         headers = {}
         for key, val in self.processing_directives.items():
@@ -122,7 +134,7 @@ class Calais():
             if val:
                 headers[key] = val
         return headers
-    
+
     def rest_POST(self, content):
         headers = {
             "x-calais-licenseID": self.api_key,
@@ -137,7 +149,7 @@ class Calais():
 
     def get_random_id(self):
         """
-        Creates a random 10-character ID for your submission.  
+        Creates a random 10-character ID for your submission.
         """
         import string
         from random import choice
@@ -149,7 +161,7 @@ class Calais():
 
     def get_content_id(self, text):
         """
-        Creates a SHA1 hash of the text of your submission.  
+        Creates a SHA1 hash of the text of your submission.
         """
         import hashlib
         h = hashlib.sha1()
@@ -162,9 +174,9 @@ class Calais():
         return html
 
     def analyze(self, content, content_type="TEXT/RAW", external_id=None):
-        if not (content and  len(content.strip())):
+        if not (content and len(content.strip())):
             return None
-        self.processing_directives["contentType"]=content_type
+        self.processing_directives["contentType"] = content_type
         if external_id:
             self.user_directives["externalID"] = external_id
         return CalaisResponse(self.rest_POST(content))
@@ -181,7 +193,7 @@ class Calais():
         except:
             raise ValueError("Can not determine file type for '%s'" % fn)
         if filetype == "text/plain":
-            content_type="TEXT/RAW"
+            content_type = "TEXT/RAW"
             f = open(fn)
             content = f.read()
             f.close()
@@ -191,16 +203,18 @@ class Calais():
             content = self.preprocess_html(f.read())
             f.close()
         else:
-            raise ValueError("Only plaintext and HTML files are currently supported.  ")
+            raise ValueError("Only plaintext and HTML files are currently supported.")
         return self.analyze(content, content_type=content_type, external_id=fn)
+
 
 class CalaisResponse():
     """
-    Encapsulates a parsed Calais response and provides easy pythonic access to the data.
+    Encapsulates a parsed Calais response and provides easy pythonic access
+    to the data.
     """
     raw_response = None
     simplified_response = None
-    
+
     def __init__(self, raw_result):
         try:
             self.raw_response = json.load(StringIO(raw_result))
@@ -208,21 +222,21 @@ class CalaisResponse():
             raise ValueError(raw_result)
         self.simplified_response = self._simplify_json(self.raw_response)
         self.__dict__['doc'] = self.raw_response['doc']
-        for k,v in self.simplified_response.items():
+        for k, v in self.simplified_response.items():
             self.__dict__[k] = v
-    
+
     def _simplify_json(self, json):
         result = {}
         # First, resolve references
         for element in json.values():
-            for k,v in element.items():
-                if isinstance(v, unicode) and v.startswith("http://") and json.has_key(v):
+            for k, v in element.items():
+                if isinstance(v, unicode) and v.startswith("http://") and v in json:
                     element[k] = json[v]
         for k, v in json.items():
-            if v.has_key("_typeGroup"):
+            if "_typeGroup" in v:
                 group = v["_typeGroup"]
-                if not result.has_key(group):
-                    result[group]=[]
+                if group not in result:
+                    result[group] = []
                 del v["_typeGroup"]
                 v["__reference"] = k
                 result[group].append(v)
@@ -233,13 +247,13 @@ class CalaisResponse():
             return None
         info = self.doc['info']
         print "Calais Request ID: %s" % info['calaisRequestID']
-        if info.has_key('externalID'): 
+        if 'externalID' in info:
             print "External ID: %s" % info['externalID']
-        if info.has_key('docTitle'):
+        if 'docTitle' in info:
             print "Title: %s " % info['docTitle']
         print "Language: %s" % self.doc['meta']['language']
         print "Extractions: "
-        for k,v in self.simplified_response.items():
+        for k, v in self.simplified_response.items():
             print "\t%d %s" % (len(v), k)
 
     def print_entities(self):
@@ -259,9 +273,9 @@ class CalaisResponse():
             return None
         for relation in self.relations:
             print relation['_type']
-            for k,v in relation.items():
+            for k, v in relation.items():
                 if not k.startswith("_"):
                     if isinstance(v, unicode):
-                        print "\t%s:%s" % (k,v)
-                    elif isinstance(v, dict) and v.has_key('name'):
+                        print "\t%s:%s" % (k, v)
+                    elif isinstance(v, dict) and 'name' in v:
                         print "\t%s:%s" % (k, v['name'])

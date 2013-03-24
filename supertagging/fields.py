@@ -33,6 +33,7 @@ from django.utils.encoding import force_unicode
 
 DEFAULT_PROTOCOL = 2
 
+
 class PickledObject(str):
     """
     A subclass of string so it can be told whether a string is a pickled

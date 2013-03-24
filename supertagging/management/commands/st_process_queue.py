@@ -2,12 +2,10 @@
 import time
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 
 from supertagging.models import SuperTagProcessQueue
 from supertagging.modules import process
-from supertagging import settings as st_settings
+
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
@@ -18,7 +16,7 @@ class Command(BaseCommand):
 class Core(object):
     """
     The Core is responsible for driving Supertagging
-    """ 
+    """
     @transaction.commit_manually
     def execute(self):
         """
@@ -50,7 +48,7 @@ class Core(object):
                 print 'Done'
                 failed += 1
             time.sleep(1)
-            
+
         print 'Unlocking objects...'
         SuperTagProcessQueue.objects.filter(pk__in=objs_to_reset).update(locked=False)
         transaction.commit()
@@ -59,5 +57,5 @@ class Core(object):
         SuperTagProcessQueue.objects.filter(pk__in=objs_to_del).delete()
         transaction.commit()
         print 'Done'
-        print '%s of %s objects processed. %s failed.' % (processed, 
+        print '%s of %s objects processed. %s failed.' % (processed,
             processed + failed, failed)
