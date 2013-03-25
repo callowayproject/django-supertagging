@@ -255,7 +255,7 @@ def _processEntities(field, data, obj, ctype, process_type, tags, date):
         stype = entity.pop('_type', '')
 
         # if type is in EXLCUSIONS, continue to next item.
-        if stype.lower() in map(lambda s: s.lower(), settings.EXCLUSIONS):
+        if stype.lower() in map(lambda s: s.lower(), settings.EXCLUSIONS['TAG_TYPE_EXCLUSIONS']):
             continue
 
         display_name = entity.pop('name', '')
