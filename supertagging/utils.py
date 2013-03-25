@@ -373,7 +373,7 @@ def retrieve_freebase_desc(name, stype):
 ################
 # Render Utils #
 ################
-def render_item(item, stype, template, suffix, template_path='supertagging/render', context={}):
+def render_item(item, stype, template, suffix="", template_path='supertagging/render', context={}):
     """
     Use to render tags, relations, tagged items and tagger relations.
     """
@@ -384,7 +384,7 @@ def render_item(item, stype, template, suffix, template_path='supertagging/rende
         app = item.content_type.app_label.lower()
 
     tp = "%s/%s" % (template_path, (stype or ""))
-
+    suffix = suffix or ""
     # Retreive the template passed in
     # Retrieve the template based off of type and the content object with a suffix
     # Retrieve the template based off of type and the content object
