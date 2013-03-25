@@ -16,7 +16,9 @@ class SupertagChangeList(ChangeList):
     """
     Lets list_editable work even if it is a popup
     """
-    def __init__(self, request, model, list_display, list_display_links, list_filter, date_hierarchy, search_fields, list_select_related, list_per_page, list_editable, model_admin):
+    def __init__(self, request, model, list_display, list_display_links,
+        list_filter, date_hierarchy, search_fields, list_select_related,
+        list_per_page, list_max_show_all, list_editable, model_admin):
         self.model = model
         self.opts = model._meta
         self.lookup_opts = self.opts
@@ -28,6 +30,7 @@ class SupertagChangeList(ChangeList):
         self.search_fields = search_fields
         self.list_select_related = list_select_related
         self.list_per_page = list_per_page
+        self.list_max_show_all = list_max_show_all
         self.model_admin = model_admin
 
         # Get search parameters from the query string.
@@ -45,12 +48,10 @@ class SupertagChangeList(ChangeList):
             del self.params[ERROR_FLAG]
 
         self.list_editable = list_editable
-        self.order_field, self.order_type = self.get_ordering()
         self.query = request.GET.get(SEARCH_VAR, '')
-        self.query_set = self.get_query_set()
+        self.query_set = self.get_query_set(request)
         self.get_results(request)
         self.title = (self.is_popup and ugettext('Select %s') % force_unicode(self.opts.verbose_name) or ugettext('Select %s to change') % force_unicode(self.opts.verbose_name))
-        self.filter_specs, self.has_filters = self.get_filters(request)
         self.pk_attname = self.lookup_opts.pk.attname
 
 
