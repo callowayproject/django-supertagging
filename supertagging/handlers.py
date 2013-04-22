@@ -28,8 +28,8 @@ def setup_handlers():
     try:
         for k, v in MODULES.items():
             app_label, model_name = k.split('.')
-            model = get_model(app_label, model_name)
 
+            model = get_model(app_label, model_name, only_installed=False)
             # Add a tag attribute to the instance.
             if REGISTER_MODELS:
                 register(model)
