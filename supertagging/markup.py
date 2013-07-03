@@ -30,7 +30,7 @@ class MarkupHandler(object):
             if settings.ST_DEBUG:
                 raise Exception(e)
 
-        cache.set(self._get_cache_key(instance), data, settings.MARKUP_CONTENT_CACHE_TIMEOUT)
+        cache.set(self._get_cache_key(instance), data, settings.MARKUP['CONTENT_CACHE_TIMEOUT'])
         return data
 
     def _get_cache_key(self, instance=None):
@@ -133,7 +133,7 @@ def markup_content(obj, field, markup_template='supertagging/markup.html'):
     for n, i in enumerate(full):
         if 'offset' in i and 'length' in i and 'exact' in i:
             off, le, act_val = i['offset'], i['length'], i['exact']
-            if act_val.lower() in settings.MARKUP_EXCLUDES:
+            if act_val.lower() in settings.MARKUP['EXCLUDE']:
                 continue
         else:
             continue

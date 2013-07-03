@@ -198,7 +198,7 @@ def process(obj, tags=[]):
             processed_tags.extend(topics)
             processed_tags.extend(socialtags)
 
-            if settings.MARKUP:
+            if settings.MARKUP['ENABLED']:
                 invalidate_markup_cache(obj, field)
 
         except Exception, e:

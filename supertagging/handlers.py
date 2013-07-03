@@ -2,7 +2,7 @@ from django.db.models import get_model
 from django.db.models.signals import post_save, post_delete
 
 from supertagging.settings import (USE_QUEUE, MODULES, AUTO_PROCESS, ST_DEBUG,
-                                MARKUP, MARKUP_FIELD_SUFFIX, REGISTER_MODELS)
+                                MARKUP, REGISTER_MODELS)
 from supertagging import register
 
 
@@ -39,7 +39,7 @@ def setup_handlers():
                 post_save.connect(save_handler, sender=model)
                 post_delete.connect(delete_handler, sender=model)
 
-            if MARKUP:
+            if MARKUP['ENABLED']:
                 # Add a custom attribute to a model with a marked up
                 # version of the field specified.
                 for f in v.get('fields', []):
@@ -48,7 +48,7 @@ def setup_handlers():
                     if markup and MARKUP and field:
                         from supertagging.markup import get_handler_module
                         handler = get_handler_module(f.get('markup_handler', None))
-                        nfield = "%s__%s" % (field, MARKUP_FIELD_SUFFIX)
+                        nfield = "%s__%s" % (field, MARKUP['FIELD_SUFFIX'])
                         setattr(model, nfield, handler(model, field))
 
     except Exception, e:
