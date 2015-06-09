@@ -22,7 +22,9 @@ class SupertagChangeList(ChangeList):
         self.model = model
         self.opts = model._meta
         self.lookup_opts = self.opts
-        self.root_query_set = model_admin.queryset(request)
+        # qset = model_admin.queryset(request)
+        # rqset = self.root_queryset
+        self.root_queryset = model_admin.queryset(request)
         self.list_display = list_display
         self.list_display_links = list_display_links
         self.list_filter = list_filter
@@ -49,7 +51,7 @@ class SupertagChangeList(ChangeList):
 
         self.list_editable = list_editable
         self.query = request.GET.get(SEARCH_VAR, '')
-        self.query_set = self.get_query_set(request)
+        self.queryset = self.get_queryset(request)
         self.get_results(request)
         self.title = (self.is_popup and ugettext('Select %s') % force_unicode(self.opts.verbose_name) or ugettext('Select %s to change') % force_unicode(self.opts.verbose_name))
         self.pk_attname = self.lookup_opts.pk.attname
